@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitor OT — Taller</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #060a14;
+      --panel:    #0b1120;
+      --border:   #1a2a40;
+      --accent:   #00d4ff;
+      --warn:     #ff6b35;
+      --danger:   #ff2d55;
+      --success:  #00ff9d;
+      --purple:   #a855f7;
+      --text:     #c8d8f0;
+      --dim:      #4a6a8a;
+      --mono:     'Share Tech Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Fondo grid */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(6,10,20,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hdr-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    .hdr-title span { color: var(--accent); }
+
+    .hdr-badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--dim);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .hdr-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #clock {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+
+    .pulse-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: blink 2s ease infinite;
+    }
+
+    .pulse-dot.error { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      position: relative; z-index: 1;
+      display: flex;
+      gap: 12px;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      min-width: 100px;
+    }
+
+    .stat-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .stat-lbl {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--dim);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .stat-box.s-pendiente .stat-num { color: var(--warn); }
+    .stat-box.s-iniciada  .stat-num { color: var(--accent); }
+    .stat-box.s-critica   .stat-num { color: var(--danger); }
+    .stat-box.s-total     .stat-num { color: var(--success); }
+
+    #last-update {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      align-self: center;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── ALERTA NUEVA ORDEN ── */
+    #alerta-nueva {
+      display: none;
+      position: fixed;
+      top: 80px; right: 24px;
+      z-index: 999;
+      background: linear-gradient(135deg, #1a0a00, #2a1000);
+      border: 2px solid var(--warn);
+      border-radius: 16px;
+      padding: 18px 24px;
+      min-width: 300px;
+      max-width: 380px;
+      box-shadow: 0 0 40px rgba(255,107,53,0.4), 0 8px 32px rgba(0,0,0,0.6);
+      animation: alertaPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    #alerta-nueva.visible { display: block; }
+
+    @keyframes alertaPop {
+      from { transform: translateX(120%) scale(0.8); opacity: 0; }
+      to   { transform: translateX(0) scale(1);     opacity: 1; }
+    }
+
+    .alerta-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .alerta-icon {
+      font-size: 1.6rem;
+      animation: shake 0.5s ease infinite;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: rotate(0deg); }
+      25%      { transform: rotate(-8deg); }
+      75%      { transform: rotate(8deg); }
+    }
+
+    .alerta-titulo {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--warn);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .alerta-folio {
+      font-family: var(--mono);
+      font-size: 1.3rem;
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .alerta-detalle {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .alerta-close {
+      position: absolute;
+      top: 10px; right: 12px;
+      background: none;
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-family: var(--mono);
+    }
+
+    /* ── TABLA ── */
+    .wrap {
+      position: relative; z-index: 1;
+      padding: 20px 28px;
+    }
+
+    .section-title {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: ''; flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 6px;
+    }
+
+    thead th {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      text-transform: uppercase;
+      padding: 6px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr {
+      background: var(--panel);
+      border-radius: 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: rowIn 0.4s ease both;
+    }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    tbody tr:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    tbody tr.nueva-orden {
+      box-shadow: 0 0 0 1px var(--warn), 0 0 20px rgba(255,107,53,0.2);
+      animation: rowIn 0.4s ease both, pulseRow 2s ease infinite;
+    }
+
+    @keyframes pulseRow {
+      0%,100% { box-shadow: 0 0 0 1px var(--warn), 0 0 16px rgba(255,107,53,0.15); }
+      50%      { box-shadow: 0 0 0 2px var(--warn), 0 0 28px rgba(255,107,53,0.35); }
+    }
+
+    tbody td {
+      padding: 12px 12px;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    tbody td:first-child { border-radius: 10px 0 0 10px; }
+    tbody td:last-child  { border-radius: 0 10px 10px 0; }
+
+    /* Columnas específicas */
+    .td-folio {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .td-fecha {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--dim);
+      white-space: nowrap;
+    }
+
+    .td-maquina { font-weight: 600; color: #fff; }
+
+    .td-falla {
+      font-size: 0.82rem;
+      color: var(--text);
+      max-width: 220px;
+    }
+
+    .td-tm {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .td-tm.alto  { color: var(--danger); }
+    .td-tm.medio { color: var(--warn); }
+    .td-tm.bajo  { color: var(--success); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .badge-prioridad-CRITICA   { background: rgba(255,45,85,0.2);  color: #ff2d55; border: 1px solid #ff2d55; }
+    .badge-prioridad-ALTA      { background: rgba(255,107,53,0.2); color: #ff6b35; border: 1px solid #ff6b35; }
+    .badge-prioridad-MEDIA     { background: rgba(251,192,45,0.2); color: #fbc02d; border: 1px solid #fbc02d; }
+    .badge-prioridad-BAJA      { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid #00d4ff; }
+
+    .badge-estado-PENDIENTE    { background: rgba(255,107,53,0.15); color: #ff6b35; border: 1px solid rgba(255,107,53,0.4); }
+    .badge-estado-INICIADA     { background: rgba(0,212,255,0.15);  color: #00d4ff; border: 1px solid rgba(0,212,255,0.4); }
+    .badge-estado-EN-PROCESO   { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.4); }
+    .badge-estado-EN_PROCESO   { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.4); }
+    .badge-estado-ESPERA       { background: rgba(251,192,45,0.15); color: #fbc02d; border: 1px solid rgba(251,192,45,0.4); }
+
+    .td-img img {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .td-img img:hover { transform: scale(1.1); }
+    .td-img .no-img { color: var(--dim); font-size: 0.7rem; font-family: var(--mono); }
+
+    /* Modal imagen */
+    #img-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #img-modal.open { display: flex; }
+
+    #img-modal img {
+      max-width: 85vw;
+      max-height: 85vh;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
+
+    /* Loader */
+    #loader {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .loader-ring {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-txt {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--dim);
+      letter-spacing: 0.2em;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.2; }
+    }
+
+    /* Filtros */
+    .filtros {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filtro-btn {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .filtro-btn.active, .filtro-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(0,212,255,0.08);
+    }
+
+    @media (max-width: 900px) {
+      .wrap { padding: 12px; }
+      header { padding: 10px 14px; }
+      .stats-bar { padding: 10px 14px; }
+      thead th:nth-child(6),
+      thead th:nth-child(8),
+      tbody td:nth-child(6),
+      tbody td:nth-child(8) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-txt">Conectando con base de datos...</div>
+</div>
+
+<!-- MODAL IMAGEN -->
+<div id="img-modal" onclick="this.classList.remove('open')">
+  <img id="img-modal-src" src="" alt="Referencia">
+</div>
+
+<!-- ALERTA NUEVA ORDEN -->
+<div id="alerta-nueva">
+  <button class="alerta-close" onclick="cerrarAlerta()">✕</button>
+  <div class="alerta-header">
+    <div class="alerta-icon">🚨</div>
+    <div class="alerta-titulo">Nueva Orden Pendiente</div>
+  </div>
+  <div class="alerta-folio" id="alerta-folio">—</div>
+  <div class="alerta-detalle" id="alerta-detalle">—</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-title">Monitor <span>OM</span></div>
+  <div class="hdr-badge">TALLER · TIEMPO REAL</div>
+  <div class="hdr-right">
+    <div id="clock">--:--:--</div>
+    <div class="pulse-dot" id="status-dot"></div>
+  </div>
+</header>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-box s-total">
+    <div class="stat-num" id="s-total">0</div>
+    <div class="stat-lbl">Órdenes vivas</div>
+  </div>
+  <div class="stat-box s-pendiente">
+    <div class="stat-num" id="s-pendiente">0</div>
+    <div class="stat-lbl">Pendientes</div>
+  </div>
+  <div class="stat-box s-iniciada">
+    <div class="stat-num" id="s-iniciada">0</div>
+    <div class="stat-lbl">En proceso</div>
+  </div>
+  <div class="stat-box s-critica">
+    <div class="stat-num" id="s-critica">0</div>
+    <div class="stat-lbl">Críticas</div>
+  </div>
+  <div id="last-update">Actualizando...</div>
+</div>
+
+<!-- CONTENIDO -->
+<div class="wrap">
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="setFiltro('TODAS', this)">Todas</button>
+    <button class="filtro-btn" onclick="setFiltro('PENDIENTE', this)">Pendientes</button>
+    <button class="filtro-btn" onclick="setFiltro('INICIADA', this)">Iniciadas</button>
+    <button class="filtro-btn" onclick="setFiltro('EN PROCESO', this)">En Proceso</button>
+    <button class="filtro-btn" onclick="setFiltro('CRITICA', this)">Críticas</button>
+  </div>
+
+  <div class="section-title">Órdenes activas</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Folio</th>
+        <th>Fecha</th>
+        <th>Máquina</th>
+        <th>Área</th>
+        <th>Falla</th>
+        <th>Tipo</th>
+        <th>Prioridad</th>
+        <th>Técnico</th>
+        <th>T.M. Hrs</th>
+        <th>Estado</th>
+        <th>Ref.</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-body">
+    </tbody>
+  </table>
+
+  <div id="empty-state" class="empty-state" style="display:none">
+    <div class="icon">✅</div>
+    Sin órdenes activas en este momento
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ──
+  const SHEET_ID  = '1v21_Glgvk3ZV4SYpsMGbqNc97I7MO98BqkwmiJvYvnI';
+  const SHEET_TAB = 'OM';
+  const SERIE     = 'OM-';          // Cambiar a 'OH|OT' para la otra pantalla
+  const INTERVALO = 60 * 1000;      // 60 segundos
+
+  // Índices de columnas (0-based, col A=0)
+  const COL = {
+    FECHA:        1,  // B
+    FOLIO:        2,  // C
+    MAQUINA:      3,  // D
+    AREA:         4,  // E
+    FALLA:        5,  // F
+    TIPO:         6,  // G
+    PRIORIDAD:    7,  // H
+    FECHA_INICIO: 9,  // J
+    FECHA_CIERRE: 10, // K
+    HRS_TM:       12, // M
+    TECNICOS:     14, // O
+    ESTADO:       17, // R
+    URL:          21  // V
+  };
+
+  const ESTADOS_EXCLUIR = ['CERRADA', 'CANCELADA'];
+  let datosPrevios = [];
+  let filtroActivo = 'TODAS';
+
+  // ── RELOJ ──
+  setInterval(() => {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString('es-MX', { hour12: false });
+  }, 1000);
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('es-MX', { hour12: false });
+
+  // ── FILTRO ──
+  function setFiltro(f, btn) {
+    filtroActivo = f;
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTabla(datosPrevios);
+  }
+
+  // ── FETCH DATOS ──
+  async function fetchDatos() {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TAB)}`;
+    try {
+      const res  = await fetch(url);
+      const text = await res.text();
+      // La respuesta viene envuelta: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+      const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+      const rows = json.table.rows;
+      return rows;
+    } catch(e) {
+      console.error('Error fetch:', e);
+      return null;
+    }
+  }
+
+  // ── PARSEAR VALOR DE CELDA ──
+  function val(row, col) {
+    try {
+      const c = row.c[col];
+      if (!c || c.v === null || c.v === undefined) return '';
+      // Fechas: Google devuelve Date(año,mes,día,h,m,s)
+      if (typeof c.v === 'string' && c.v.startsWith('Date(')) {
+        const parts = c.v.replace('Date(','').replace(')','').split(',').map(Number);
+        const d = new Date(parts[0], parts[1], parts[2], parts[3]||0, parts[4]||0, parts[5]||0);
+        return d;
+      }
+      return c.v;
+    } catch { return ''; }
+  }
+
+  function fmtFecha(v) {
+    if (!v) return '—';
+    if (v instanceof Date) {
+      return v.toLocaleDateString('es-MX', {day:'2-digit',month:'2-digit'}) + ' ' +
+             v.toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit',hour12:false});
+    }
+    return String(v);
+  }
+
+  // ── CALCULAR TM LIVE ──
+  function calcTM(row) {
+    // Si ya tiene HRS_TM calculado, úsalo si la orden sigue abierta
+    const estado = String(val(row, COL.ESTADO)).toUpperCase().trim();
+    const hrsTM  = val(row, COL.HRS_TM);
+    if (hrsTM && estado !== 'PENDIENTE') return parseFloat(hrsTM).toFixed(1);
+
+    // Para PENDIENTE: calcular desde FECHA hasta ahora
+    const fechaGen = val(row, COL.FECHA);
+    if (!fechaGen || !(fechaGen instanceof Date)) return '—';
+    const diffMs  = Date.now() - fechaGen.getTime();
+    const diffHrs = diffMs / 3600000;
+    return diffHrs.toFixed(1);
+  }
+
+  function classTM(hrs) {
+    const h = parseFloat(hrs);
+    if (isNaN(h)) return '';
+    if (h >= 4)  return 'alto';
+    if (h >= 2)  return 'medio';
+    return 'bajo';
+  }
+
+  // ── DETECTAR NUEVAS ÓRDENES ──
+  function detectarNuevas(filas) {
+    if (datosPrevios.length === 0) return; // primera carga, no alertar
+    const foliosPrev  = new Set(datosPrevios.map(r => val(r, COL.FOLIO)));
+    const nuevasPend  = filas.filter(r => {
+      const folio  = String(val(r, COL.FOLIO));
+      const estado = String(val(r, COL.ESTADO)).toUpperCase().trim();
+      return !foliosPrev.has(folio) && estado === 'PENDIENTE';
+    });
+    if (nuevasPend.length > 0) mostrarAlerta(nuevasPend[0]);
+  }
+
+  // ── ALERTA ──
+  function mostrarAlerta(row) {
+    const folio   = val(row, COL.FOLIO);
+    const maquina = val(row, COL.MAQUINA);
+    const falla   = val(row, COL.FALLA);
+    const prio    = val(row, COL.PRIORIDAD);
+    document.getElementById('alerta-folio').textContent   = folio || '—';
+    document.getElementById('alerta-detalle').innerHTML   =
+      `<b>${maquina}</b> · ${falla}<br>Prioridad: <b>${prio}</b>`;
+    const el = document.getElementById('alerta-nueva');
+    el.classList.add('visible');
+    // Auto-cerrar tras 15 segundos
+    setTimeout(cerrarAlerta, 15000);
+  }
+
+  function cerrarAlerta() {
+    document.getElementById('alerta-nueva').classList.remove('visible');
+  }
+
+  // ── RENDER TABLA ──
+  function renderTabla(filas) {
+    const tbody = document.getElementById('tabla-body');
+    tbody.innerHTML = '';
+
+    // Filtrar por serie (OM- / OH / OT)
+    let filtradas = filas.filter(r => {
+      const folio = String(val(r, COL.FOLIO));
+      return folio.startsWith(SERIE);
+    });
+
+    // Filtrar estados activos
+    filtradas = filtradas.filter(r => {
+      const estado = String(val(r, COL.ESTADO)).toUpperCase().trim();
+      return !ESTADOS_EXCLUIR.includes(estado);
+    });
+
+    // Filtro de botones
+    if (filtroActivo === 'CRITICA') {
+      filtradas = filtradas.filter(r =>
+        String(val(r, COL.PRIORIDAD)).toUpperCase().includes('CRIT'));
+    } else if (filtroActivo !== 'TODAS') {
+      filtradas = filtradas.filter(r =>
+        String(val(r, COL.ESTADO)).toUpperCase().trim().includes(filtroActivo));
+    }
+
+    // Ordenar: CRITICA primero, luego por fecha
+    filtradas.sort((a,b) => {
+      const pa = String(val(a, COL.PRIORIDAD)).toUpperCase();
+      const pb = String(val(b, COL.PRIORIDAD)).toUpperCase();
+      if (pa.includes('CRIT') && !pb.includes('CRIT')) return -1;
+      if (!pa.includes('CRIT') && pb.includes('CRIT')) return 1;
+      return 0;
+    });
+
+    // Stats
+    const total    = filtradas.length;
+    const pendient = filtradas.filter(r => String(val(r,COL.ESTADO)).toUpperCase().includes('PENDIENTE')).length;
+    const iniciada = filtradas.filter(r => {
+      const e = String(val(r,COL.ESTADO)).toUpperCase();
+      return e.includes('INICIADA') || e.includes('PROCESO');
+    }).length;
+    const criticas = filtradas.filter(r => String(val(r,COL.PRIORIDAD)).toUpperCase().includes('CRIT')).length;
+
+    document.getElementById('s-total').textContent    = total;
+    document.getElementById('s-pendiente').textContent = pendient;
+    document.getElementById('s-iniciada').textContent  = iniciada;
+    document.getElementById('s-critica').textContent   = criticas;
+
+    if (filtradas.length === 0) {
+      document.getElementById('empty-state').style.display = 'block';
+      return;
+    }
+    document.getElementById('empty-state').style.display = 'none';
+
+    filtradas.forEach((row, idx) => {
+      const folio    = val(row, COL.FOLIO)    || '—';
+      const fecha    = val(row, COL.FECHA);
+      const maquina  = val(row, COL.MAQUINA)  || '—';
+      const area     = val(row, COL.AREA)      || '—';
+      const falla    = val(row, COL.FALLA)     || '—';
+      const tipo     = val(row, COL.TIPO)      || '—';
+      const prioridad= String(val(row, COL.PRIORIDAD) || '').toUpperCase().trim();
+      const tecnicos = val(row, COL.TECNICOS)  || '—';
+      const estado   = String(val(row, COL.ESTADO) || '').toUpperCase().trim();
+      const urlImg   = val(row, COL.URL)       || '';
+      const tm       = calcTM(row);
+      const tmClass  = classTM(tm);
+
+      const esPendiente = estado === 'PENDIENTE';
+      const estadoKey   = estado.replace(' ', '-');
+
+      // Convertir URL de Drive a link directo si es necesario
+      let imgHTML = '<span class="no-img">—</span>';
+      if (urlImg && urlImg.toString().includes('drive.google')) {
+        const match = urlImg.toString().match(/\/d\/(.*?)\//);
+        if (match) {
+          const fileId = match[1];
+          const thumb  = `https://drive.google.com/thumbnail?id=${fileId}&sz=w80`;
+          imgHTML = `<img src="${thumb}" alt="ref" onclick="abrirImg('${thumb}')">`;
+        }
+      } else if (urlImg && urlImg.toString().startsWith('http')) {
+        imgHTML = `<img src="${urlImg}" alt="ref" onclick="abrirImg('${urlImg}')">`;
+      }
+
+      const tr = document.createElement('tr');
+      if (esPendiente) tr.classList.add('nueva-orden');
+      tr.style.animationDelay = (idx * 0.04) + 's';
+      tr.innerHTML = `
+        <td class="td-folio">${folio}</td>
+        <td class="td-fecha">${fmtFecha(fecha)}</td>
+        <td class="td-maquina">${maquina}</td>
+        <td>${area}</td>
+        <td class="td-falla">${falla}</td>
+        <td style="font-size:.8rem;color:var(--dim)">${tipo}</td>
+        <td><span class="badge badge-prioridad-${prioridad}">${prioridad}</span></td>
+        <td style="font-size:.82rem">${tecnicos}</td>
+        <td class="td-tm ${tmClass}">${tm} h</td>
+        <td><span class="badge badge-estado-${estadoKey}">${estado}</span></td>
+        <td class="td-img">${imgHTML}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ── IMAGEN MODAL ──
+  function abrirImg(src) {
+    document.getElementById('img-modal-src').src = src;
+    document.getElementById('img-modal').classList.add('open');
+  }
+
+  // ── CICLO PRINCIPAL ──
+  async function actualizar() {
+    const dot = document.getElementById('status-dot');
+    const filas = await fetchDatos();
+
+    if (!filas) {
+      dot.classList.add('error');
+      document.getElementById('last-update').textContent = 'Error de conexión — reintentando...';
+      return;
+    }
+
+    dot.classList.remove('error');
+    detectarNuevas(filas);
+    datosPrevios = filas;
+    renderTabla(filas);
+
+    const ahora = new Date().toLocaleTimeString('es-MX',{hour12:false});
+    document.getElementById('last-update').textContent = `Actualizado: ${ahora}`;
+    document.getElementById('loader').style.display = 'none';
+  }
+
+  // Arrancar
+  actualizar();
+  setInterval(actualizar, INTERVALO);
+
+  // Actualizar TM en vivo cada 30 segundos sin refetch
+  setInterval(() => {
+    if (datosPrevios.length > 0) renderTabla(datosPrevios);
+  }, 30000);
+</script>
+</body>
+</html>
