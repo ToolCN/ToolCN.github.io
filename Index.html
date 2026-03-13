@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToolCN — Portal de Aplicaciones</title>
+
+  <!-- PWA / Acceso directo -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"ToolCN","short_name":"ToolCN","display":"standalone","background_color":"#0a0f1e","theme_color":"#00d4ff","icons":[{"src":"https://i.imgur.com/OgCXcvt.png","sizes":"512x512","type":"image/png"}]}'>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ToolCN">
+  <meta name="theme-color" content="#00d4ff">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/OgCXcvt.png">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/OgCXcvt.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:       #0a0f1e;
+      --panel:    #0d1428;
+      --border:   #1a2a4a;
+      --accent:   #00d4ff;
+      --accent2:  #ff6b35;
+      --text:     #c8d8f0;
+      --dim:      #5a7a9a;
+      --success:  #00ff9d;
+      --card-bg:  #0f1a30;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── FONDO ANIMADO ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0,212,255,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Grid de líneas de fondo */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 36px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .logo-ring {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+    }
+
+    .logo-ring::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--accent);
+      border-right-color: var(--accent);
+      animation: spin 3s linear infinite;
+    }
+
+    .logo-ring img {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border);
+    }
+
+    .header-text h1 {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .header-text h1 span {
+      color: var(--accent);
+    }
+
+    .header-text p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--dim);
+      letter-spacing: 0.2em;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--success);
+      letter-spacing: 0.15em;
+    }
+
+    .status-dot::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: blink 2s ease infinite;
+    }
+
+    /* ── SECCIÓN LABEL ── */
+    .section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── GRID DE APPS ── */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    /* ── CARD ── */
+    .app-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 22px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .app-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-color, var(--accent)), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .app-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent-color, var(--accent));
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,212,255,0.08);
+    }
+
+    .app-card:hover::before { opacity: 1; }
+
+    .app-card:nth-child(1) { animation-delay: 0.05s; }
+    .app-card:nth-child(2) { animation-delay: 0.10s; }
+    .app-card:nth-child(3) { animation-delay: 0.15s; }
+    .app-card:nth-child(4) { animation-delay: 0.20s; }
+    .app-card:nth-child(5) { animation-delay: 0.25s; }
+    .app-card:nth-child(6) { animation-delay: 0.30s; }
+    .app-card:nth-child(7) { animation-delay: 0.35s; }
+    .app-card:nth-child(8) { animation-delay: 0.40s; }
+
+    .app-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: transform 0.25s;
+    }
+
+    .app-card:hover .app-icon {
+      transform: scale(1.1) rotate(-3deg);
+    }
+
+    .app-info { flex: 1; min-width: 0; }
+
+    .app-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app-desc {
+      font-size: 0.75rem;
+      color: var(--dim);
+      margin-top: 3px;
+      letter-spacing: 0.05em;
+    }
+
+    .app-arrow {
+      font-size: 1.1rem;
+      color: var(--dim);
+      transition: transform 0.25s, color 0.25s;
+      flex-shrink: 0;
+    }
+
+    .app-card:hover .app-arrow {
+      transform: translateX(4px);
+      color: var(--accent-color, var(--accent));
+    }
+
+    /* Colores por categoría */
+    .cat-prod  { --accent-color: #00d4ff; }
+    .cat-mant  { --accent-color: #ff6b35; }
+    .cat-rrhh  { --accent-color: #a855f7; }
+    .cat-comp  { --accent-color: #22c55e; }
+    .cat-pend  { --accent-color: #64748b; opacity: 0.6; cursor: not-allowed; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    footer span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--dim);
+      letter-spacing: 0.15em;
+    }
+
+    /* ── ANIMACIONES ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 520px) {
+      .header-text h1 { font-size: 1.8rem; }
+      .status-dot { display: none; }
+      .apps-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-ring">
+      <img src="https://i.imgur.com/OgCXcvt.png" alt="ToolCN Logo">
+    </div>
+    <div class="header-text">
+      <h1>Tool<span>CN</span></h1>
+      <p>Portal de Aplicaciones Industriales</p>
+    </div>
+    <div class="status-dot">Sistemas en línea</div>
+  </header>
+
+  <!-- PRODUCCIÓN -->
+  <div class="section-label">Producción &amp; Planeación</div>
+  <div class="apps-grid">
+
+    <a class="app-card cat-prod"
+       href="https://script.google.com/macros/s/AKfycbyDxTSHPygL1Ba93kHFisiInmZZf6zHM63jOHfqPGv45bdbOJ1Av2lg-DigAGjH50Co1w/exec"
+       target="_blank" rel="noopener">
+      <div class="app-icon">🏭</div>
+      <div class="app-info">
+        <div class="app-name">Producción</div>
+        <div class="app-desc">Control y planeación de producción</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+    <a class="app-card cat-comp"
+       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=existencia"
+       target="_blank" rel="noopener">
+      <div class="app-icon">🧪</div>
+      <div class="app-info">
+        <div class="app-name">Materia Prima</div>
+        <div class="app-desc">Existencias e inventario</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+    <a class="app-card cat-comp"
+       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_embarques"
+       target="_blank" rel="noopener">
+      <div class="app-icon">🚚</div>
+      <div class="app-info">
+        <div class="app-name">Embarques</div>
+        <div class="app-desc">Gestión de embarques y envíos</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+  </div>
+
+  <!-- COMPRAS -->
+  <div class="section-label">Compras &amp; Abastecimiento</div>
+  <div class="apps-grid">
+
+    <a class="app-card cat-comp"
+       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras"
+       target="_blank" rel="noopener">
+      <div class="app-icon">🛒</div>
+      <div class="app-info">
+        <div class="app-name">Compras</div>
+        <div class="app-desc">Gestión de compras y proveedores</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+    <a class="app-card cat-pend">
+      <div class="app-icon">📋</div>
+      <div class="app-info">
+        <div class="app-name">Generar Requisición</div>
+        <div class="app-desc">URL pendiente de configurar</div>
+      </div>
+      <div class="app-arrow">⏳</div>
+    </a>
+
+  </div>
+
+  <!-- MANTENIMIENTO -->
+  <div class="section-label">Mantenimiento</div>
+  <div class="apps-grid">
+
+    <a class="app-card cat-mant"
+       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_app"
+       target="_blank" rel="noopener">
+      <div class="app-icon">🔧</div>
+      <div class="app-info">
+        <div class="app-name">Mantenimiento</div>
+        <div class="app-desc">Sistema principal CMMS</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+    <a class="app-card cat-mant"
+       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=mantenimiento"
+       target="_blank" rel="noopener">
+      <div class="app-icon">📝</div>
+      <div class="app-info">
+        <div class="app-name">Generar Orden</div>
+        <div class="app-desc">Crear nueva orden de trabajo</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+    <a class="app-card cat-mant"
+       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=gestionordenes"
+       target="_blank" rel="noopener">
+      <div class="app-icon">📊</div>
+      <div class="app-info">
+        <div class="app-name">Gestionar Órdenes</div>
+        <div class="app-desc">Ver y administrar órdenes activas</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+  </div>
+
+  <!-- RRHH -->
+  <div class="section-label">Recursos Humanos</div>
+  <div class="apps-grid">
+
+    <a class="app-card cat-rrhh"
+       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras"
+       target="_blank" rel="noopener">
+      <div class="app-icon">👥</div>
+      <div class="app-info">
+        <div class="app-name">Recursos Humanos</div>
+        <div class="app-desc">Gestión de personal</div>
+      </div>
+      <div class="app-arrow">→</div>
+    </a>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 ToolCN — Sistemas Industriales</span>
+    <span id="clock">--:--:--</span>
+  </footer>
+
+</div>
+
+<script>
+  // Reloj en tiempo real
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('es-MX', { hour12: false });
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // Bloquear cards pendientes
+  document.querySelectorAll('.cat-pend').forEach(card => {
+    card.addEventListener('click', e => e.preventDefault());
+  });
+</script>
+</body>
+</html>
