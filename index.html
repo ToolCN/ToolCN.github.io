@@ -91,11 +91,11 @@
     }
 
     @keyframes bubbleFloat {
-      0%   { transform: translateY(110vh) scale(0.85); opacity: 0; }
-      8%   { opacity: 0.14; }
-      50%  { opacity: 0.11; }
-      90%  { opacity: 0.05; }
-      100% { transform: translateY(-180px) scale(0.9); opacity: 0; }
+      0%   { transform: translateY(110vh); opacity: 0; }
+      7%   { opacity: 0.15; }
+      50%  { opacity: 0.12; }
+      88%  { opacity: 0.06; }
+      100% { transform: translateY(-360px); opacity: 0; }
     }
 
 
@@ -521,7 +521,7 @@
   }
 
 
-  // Burbujas de imágenes — círculos grandes sin encime
+  // Burbujas de imágenes — círculos sin encime garantizado
   const imgs = [
     'https://i.imgur.com/P6NyVhs.jpeg',
     'https://i.imgur.com/wvDbdwl.jpeg',
@@ -540,30 +540,27 @@
     'https://i.imgur.com/0tCZ0Cx.png'
   ];
 
-  const SIZE = 160; // px — tamaño de cada círculo
+  const SIZE = 320;      // px diámetro del círculo (doble de 160)
+  const COLS = 5;        // columnas de carril
+  const ROWS = 3;        // filas (3 imágenes por columna)
+  // Duración fija por columna: todas las imágenes de la misma columna
+  // usan la misma duración para que el ciclo sea predecible
+  const COL_DUR = [38, 42, 36, 44, 40]; // segundos por columna
   const pContainer = document.getElementById('particles');
-
-  // Dividir la pantalla en 15 carriles verticales equidistantes
-  // Cada imagen tiene su carril exclusivo → nunca se enciman
-  const totalCols = 5;
-  const totalRows = 3;
-  // Carril[i] = columna i % totalCols, fila i / totalCols
-  // left de cada carril: centrado en su columna
-  const colWidth = 100 / totalCols; // % de pantalla
+  const colWidth = 100 / COLS;
 
   imgs.forEach((src, i) => {
-    const col = i % totalCols;
-    const row = Math.floor(i / totalCols);
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const dur = COL_DUR[col];
 
-    // Centro del carril en vw, con pequeño offset por fila para variar
-    const centerVw = colWidth * col + colWidth / 2;
-    const offsetVw = (row % 2 === 0 ? 1 : -1) * 2; // ±2vw de variación
-    const leftVw = Math.min(Math.max(centerVw + offsetVw, 2), 92);
+    // Delay = row * (dur / ROWS)  →  cada imagen arranca exactamente
+    // 1/3 del ciclo después de la anterior en su misma columna
+    // Así siempre hay separación uniforme y nunca se juntan
+    const delay = row * (dur / ROWS);
 
-    // Duración escalonada: las de arriba más lentas
-    const dur   = 28 + row * 5 + Math.random() * 6;
-    // Delay escalonado para que no arranquen todas juntas
-    const delay = i * 2.2;
+    // Posición horizontal: centro del carril, sin offset para mantener separación
+    const leftVw = colWidth * col + colWidth / 2;
 
     const b = document.createElement('div');
     b.className = 'bubble';
