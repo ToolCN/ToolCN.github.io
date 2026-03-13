@@ -82,20 +82,20 @@
     /* ── BURBUJAS DE IMÁGENES ── */
     .bubble {
       position: fixed;
-      border-radius: 16px;
+      border-radius: 50%;
       pointer-events: none;
       z-index: 0;
       opacity: 0;
+      overflow: hidden;
       animation: bubbleFloat linear infinite;
     }
 
     @keyframes bubbleFloat {
-      0%   { transform: translateY(110vh) translateX(0px) rotate(-2deg) scale(0.85); opacity: 0; }
-      8%   { opacity: 0.12; }
-      45%  { transform: translateY(55vh) translateX(20px) rotate(2deg) scale(1); opacity: 0.10; }
-      80%  { transform: translateY(15vh) translateX(-12px) rotate(-1deg) scale(0.93); opacity: 0.07; }
-      95%  { opacity: 0.03; }
-      100% { transform: translateY(-130px) translateX(6px) rotate(1deg) scale(0.8); opacity: 0; }
+      0%   { transform: translateY(110vh) scale(0.85); opacity: 0; }
+      8%   { opacity: 0.14; }
+      50%  { opacity: 0.11; }
+      90%  { opacity: 0.05; }
+      100% { transform: translateY(-180px) scale(0.9); opacity: 0; }
     }
 
 
@@ -521,7 +521,7 @@
   }
 
 
-  // Burbujas de imágenes flotantes
+  // Burbujas de imágenes — círculos grandes sin encime
   const imgs = [
     'https://i.imgur.com/P6NyVhs.jpeg',
     'https://i.imgur.com/wvDbdwl.jpeg',
@@ -540,24 +540,44 @@
     'https://i.imgur.com/0tCZ0Cx.png'
   ];
 
+  const SIZE = 160; // px — tamaño de cada círculo
   const pContainer = document.getElementById('particles');
+
+  // Dividir la pantalla en 15 carriles verticales equidistantes
+  // Cada imagen tiene su carril exclusivo → nunca se enciman
+  const totalCols = 5;
+  const totalRows = 3;
+  // Carril[i] = columna i % totalCols, fila i / totalCols
+  // left de cada carril: centrado en su columna
+  const colWidth = 100 / totalCols; // % de pantalla
+
   imgs.forEach((src, i) => {
+    const col = i % totalCols;
+    const row = Math.floor(i / totalCols);
+
+    // Centro del carril en vw, con pequeño offset por fila para variar
+    const centerVw = colWidth * col + colWidth / 2;
+    const offsetVw = (row % 2 === 0 ? 1 : -1) * 2; // ±2vw de variación
+    const leftVw = Math.min(Math.max(centerVw + offsetVw, 2), 92);
+
+    // Duración escalonada: las de arriba más lentas
+    const dur   = 28 + row * 5 + Math.random() * 6;
+    // Delay escalonado para que no arranquen todas juntas
+    const delay = i * 2.2;
+
     const b = document.createElement('div');
     b.className = 'bubble';
-    const size = 55 + Math.floor(Math.random() * 55); // 55-110px
-    const dur  = 22 + Math.random() * 20;              // 22-42s
-    const delay = i * 2.8 + Math.random() * 4;         // escalonado
     b.style.cssText = `
-      left: ${3 + Math.random() * 88}vw;
-      width: ${size}px;
-      height: ${size}px;
+      left: calc(${leftVw}vw - ${SIZE/2}px);
+      width: ${SIZE}px;
+      height: ${SIZE}px;
       animation-duration: ${dur}s;
-      animation-delay: ${delay}s;
-      object-fit: cover;
+      animation-delay: -${delay}s;
     `;
+
     const img = document.createElement('img');
     img.src = src;
-    img.style.cssText = `width:100%;height:100%;object-fit:cover;border-radius:16px;opacity:1;`;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
     b.appendChild(img);
     pContainer.appendChild(b);
   });
