@@ -197,7 +197,7 @@ const PG = [
   {
     corner:"Introduccion",
     badge:"Descripcion general",badgeC:"#0d5c5c",badgeBg:"rgba(13,92,92,.1)",
-    title:"Que es una Orden de Trabajo?",
+    title:"Definiciones",
     actor:"Sistema de Mantenimiento — ToolCN",
     estado:null,
     paths:[
@@ -210,14 +210,15 @@ const PG = [
   {
     corner:"Paso 1 de 7",
     badge:"Solicitante",badgeC:"#185FA5",badgeBg:"rgba(24,95,165,.1)",
-    title:"Iniciar sesion en el sistema",
+    title:"Iniciar Sesion",
     actor:"Quien lo hace: Operador, tecnico o jefe de area",
     estado:null,
     paths:[
       {c:"#185FA5",t:"Credenciales correctas → accede al formulario de la orden"},
       {c:"#8b2000",t:"Credenciales incorrectas → aparece mensaje de error"}
     ],
-    user:"Ingresa tu usuario (en mayusculas) y contrasena. Si ves el aviso de contrasena debil, actualiza primero en Mi Usuario. Asegurate de tener conexion a internet activa antes de continuar."
+    user:"Ingresa tu usuario (en mayusculas) y contrasena. Si ves el aviso de contrasena debil, actualiza primero en Mi Usuario. Asegurate de tener conexion a internet activa antes de continuar.",
+    img:"https://i.imgur.com/koMt5iJ.png"
   },
   {
     corner:"Paso 2 de 7",
@@ -309,6 +310,7 @@ function pageHTML(d){
     <div class="paths">${d.paths.map(p=>`<div class="path-item" style="border-color:${p.c};background:${p.c}14">${p.t}</div>`).join('')}</div>
     <div class="sec-lbl">Para el usuario</div>
     <div class="sec-body">${d.user}</div>
+    ${d.img?`<img src="${d.img}" alt="Ayuda visual" style="width:100%;border-radius:8px;margin-top:14px;border:1px solid #e0d8c8;">`:''}
   `;
 }
 
