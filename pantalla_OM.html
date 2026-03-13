@@ -355,12 +355,10 @@ function ff(d) {
 }
 
 function calcTM(row) {
-  const e = String(v(row,C.ESTADO)).toUpperCase().trim();
-  const h = v(row,C.HRS_TM);
-  if (h && e !== 'PENDIENTE') return parseFloat(h).toFixed(1);
-  const f = v(row,C.FECHA);
+  // Siempre: NOW - Col B (fecha generacion), en tiempo real
+  const f = v(row, C.FECHA);
   if (!(f instanceof Date)) return '—';
-  return ((Date.now() - f.getTime()) / 3600000).toFixed(1);
+  return ((Date.now() - f.getTime()) / 3600000).toFixed(2);
 }
 
 function tmClass(h) {
@@ -718,12 +716,46 @@ async function actualizar() {
 }
 
 // ═══════════════════════════
+//  TIMER TM EN VIVO (cada 5s)
+// ═══════════════════════════
+function actualizarTMEnVivo() {
+  // Actualizar TM en tabla visible
+  if (modo === 'tabla') {
+    const filas = document.querySelectorAll('#tbody tr');
+    filas.forEach((tr, i) => {
+      const page  = tablaPage;
+      const idx   = page * MAX_FILAS + i;
+      if (idx >= ordenes.length) return;
+      const row   = ordenes[idx];
+      const t     = calcTM(row);
+      // La celda TM es la 9a (índice 8)
+      const tdTM  = tr.cells[8];
+      if (tdTM) {
+        tdTM.textContent = t + 'h';
+        tdTM.className   = 'ttm ' + tmClass(t);
+      }
+    });
+  }
+  // Actualizar TM en detalle visible
+  if (modo === 'detalle' && cidx < ordenes.length) {
+    const t    = calcTM(ordenes[cidx]);
+    const tmEl = document.getElementById('d-tm');
+    if (tmEl) {
+      tmEl.textContent = t + ' h';
+      tmEl.style.color = parseFloat(t) >= 4 ? 'var(--danger)' :
+                         parseFloat(t) >= 2 ? 'var(--warn)'   : 'var(--success)';
+    }
+  }
+}
+
+// ═══════════════════════════
 //  ARRANQUE
 // ═══════════════════════════
 (async () => {
   await actualizar();
   irTabla();
-  setInterval(actualizar, 60000);
+  setInterval(actualizar, 60000);      // refresco datos cada 60s
+  setInterval(actualizarTMEnVivo, 5000); // TM en vivo cada 5s
 })();
 </script>
 </body>
