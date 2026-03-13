@@ -149,17 +149,20 @@
       color: #fff;
       text-transform: uppercase;
       line-height: 1;
-      animation: glitch 7s ease infinite;
     }
 
-    @keyframes glitch {
-      0%,94%,100% { text-shadow: none; transform: none; }
-      95% { text-shadow: 3px 0 var(--accent2), -3px 0 var(--accent); transform: skewX(-2deg); }
-      96% { text-shadow: -3px 0 var(--accent2), 3px 0 var(--accent); transform: skewX(2deg); }
-      97% { text-shadow: none; transform: none; }
+    @keyframes blurIn {
+      0%   { filter: blur(12px); opacity: 0; }
+      100% { filter: blur(0px);  opacity: 1; }
+    }
+
+    @keyframes blurOut {
+      0%   { filter: blur(0px);  opacity: 1; }
+      100% { filter: blur(12px); opacity: 0; }
     }
 
     .header-text h1 span { color: var(--accent); }
+    .ac { color: var(--accent); }
 
     .header-text p {
       font-family: 'Share Tech Mono', monospace;
@@ -398,12 +401,12 @@
 <div class="wrap">
 
   <header>
-    <div class="logo-box">
-      <img src="https://i.imgur.com/OgCXcvt.png" alt="ToolCN">
+    <div class="logo-box" id="logoBox">
+      <img id="logoImg" src="https://i.imgur.com/OgCXcvt.png" alt="ToolCN">
     </div>
     <div class="header-text">
-      <h1>Tool<span>CN</span></h1>
-      <p>Portal de Aplicaciones Industriales</p>
+      <h1 id="mainTitle"><span id="titleText">Tool<span class="ac">CN</span></span></h1>
+      <p>Planta Querétaro</p>
     </div>
     <div class="status-pill">Sistemas en línea</div>
   </header>
@@ -500,6 +503,32 @@
   }
   tick(); setInterval(tick, 1000);
 
+  // Alternancia ToolCN <-> Clavos Nacionales CN
+  const titleEl  = document.getElementById('titleText');
+  const logoImg  = document.getElementById('logoImg');
+  const stateA = { html: 'Tool<span class="ac">CN</span>',        logo: 'https://i.imgur.com/OgCXcvt.png' };
+  const stateB = { html: 'Clavos Nacionales <span class="ac">CN</span>', logo: 'https://i.imgur.com/YeWmNff.jpeg' };
+  let current = 'A';
+
+  function switchTitle() {
+    // Fase 1: blur out
+    titleEl.style.animation = 'blurOut 0.6s ease forwards';
+    logoImg.style.animation  = 'blurOut 0.6s ease forwards';
+    setTimeout(() => {
+      // Fase 2: cambiar contenido
+      const next = current === 'A' ? stateB : stateA;
+      titleEl.innerHTML = next.html;
+      logoImg.src       = next.logo;
+      current = current === 'A' ? 'B' : 'A';
+      // Fase 3: blur in
+      titleEl.style.animation = 'blurIn 0.6s ease forwards';
+      logoImg.style.animation  = 'blurIn 0.6s ease forwards';
+    }, 620);
+  }
+
+  // Alterna cada 6 segundos
+  setInterval(switchTitle, 6000);
+
   // Bloquear pendientes
   document.querySelectorAll('.cat-pend').forEach(c =>
     c.addEventListener('click', e => e.preventDefault())
@@ -521,7 +550,7 @@
   }
 
 
-  // Burbujas de imágenes — 4 columnas, espaciado generoso, sin encime
+  // Burbujas — 4 cols, equidistantes, la más reciente encima
   const imgs = [
     'https://i.imgur.com/P6NyVhs.jpeg',
     'https://i.imgur.com/wvDbdwl.jpeg',
@@ -540,53 +569,51 @@
     'https://i.imgur.com/0tCZ0Cx.png'
   ];
 
-  // Solo usamos 12 imágenes (4 cols x 3 por col) — las últimas 3 se omiten
-  // para no saturar. Si se quisieran las 15 se puede cambiar a 5 cols.
-  const SIZE    = 288;   // 320 * 0.9 = 288px (-10%)
-  const COLS    = 4;
-  const ROWS    = 3;     // 3 imágenes por columna
-  // Duración larga para que haya mucho espacio vacío entre apariciones
-  // El "hueco" entre dos imágenes de la misma columna =
-  //   dur/ROWS - tiempo_visible (~dur*0.85) → necesitamos dur grande
-  // Con dur=70s y 3 imágenes: cada una aparece cada 70/3≈23s, pero
-  // el recorrido visible dura ~60s → hay ~10s de hueco visible entre ellas.
-  // Aumentamos a dur=90s → hueco = 90/3 - visible ≈ más aire.
-  const COL_DUR = [85, 95, 80, 90]; // segundos por columna — distinto para desalinear filas
+  const SIZE = 288;
+  const COLS = 4;
+  const ROWS = 3;
+  // Duración idéntica para todas las imágenes de la misma columna
+  // Separación entre imágenes = dur / ROWS exacto → equidistante garantizado
+  // Duración larga = mucho espacio visible entre apariciones
+  const COL_DUR = [96, 108, 90, 102];
+  // Offset horizontal distinto por columna para que no alineen en horizontal
+  const COL_XOFF = [1, -2, 2.5, -1.5]; // vw
   const pContainer = document.getElementById('particles');
   const colWidth = 100 / COLS;
 
-  // Offset horizontal por columna para que no suban exactamente en el centro
-  // y se vean más naturales
-  const COL_OFFSET = [2, -3, 3, -2]; // vw de desplazamiento
-
-  for (let i = 0; i < COLS * ROWS; i++) {
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
+  for (let col = 0; col < COLS; col++) {
     const dur = COL_DUR[col];
+    const spacing = dur / ROWS; // segundos exactos entre cada imagen del mismo carril
+    const leftVw  = colWidth * col + colWidth / 2 + COL_XOFF[col];
 
-    // Separación entre imágenes de la misma columna = dur/ROWS
-    // Cada row arranca en un momento diferente del ciclo
-    // Añadimos un pequeño offset extra por fila para desalinear columnas entre sí
-    const rowOffset   = [0, 8, 16]; // segundos extra por fila — distintos para cada col
-    const delay = row * (dur / ROWS) + rowOffset[row];
+    for (let row = 0; row < ROWS; row++) {
+      // Delay negativo = ya llevan "delay" segundos avanzados al cargar la página
+      // Cada row está espaciado exactamente spacing segundos dentro del ciclo
+      // Pequeño offset por columna para que no todos los "row 0" arranquen igual
+      const colPhase = col * 7; // desfase de fase entre columnas
+      const delay = row * spacing + colPhase;
 
-    const leftVw = colWidth * col + colWidth / 2 + COL_OFFSET[col];
+      // z-index: la imagen que salió más recientemente (row mayor) queda encima
+      // Dentro del ciclo la más reciente tiene delay mayor → z-index mayor
+      const zIdx = row + 1;
 
-    const b = document.createElement('div');
-    b.className = 'bubble';
-    b.style.cssText = `
-      left: calc(${leftVw}vw - ${SIZE/2}px);
-      width: ${SIZE}px;
-      height: ${SIZE}px;
-      animation-duration: ${dur}s;
-      animation-delay: -${delay}s;
-    `;
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.style.cssText = `
+        left: calc(${leftVw}vw - ${SIZE/2}px);
+        width: ${SIZE}px;
+        height: ${SIZE}px;
+        animation-duration: ${dur}s;
+        animation-delay: -${delay}s;
+        z-index: ${zIdx};
+      `;
 
-    const img = document.createElement('img');
-    img.src = imgs[i % imgs.length];
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-    b.appendChild(img);
-    pContainer.appendChild(b);
+      const img = document.createElement('img');
+      img.src = imgs[(col * ROWS + row) % imgs.length];
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      b.appendChild(img);
+      pContainer.appendChild(b);
+    }
   }
 
   // Monito sorpresa
