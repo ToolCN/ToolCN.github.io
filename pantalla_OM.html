@@ -30,9 +30,9 @@
     .stat-lbl{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--dim);letter-spacing:.12em;margin-top:1px}
     .s-total .stat-num{color:var(--success)}.s-pend .stat-num{color:var(--warn)}.s-inic .stat-num{color:var(--accent)}.s-crit .stat-num{color:var(--danger)}
     #last-upd{margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--dim);align-self:center}
-    .screen{position:fixed;inset:0;padding-top:160px;display:none;z-index:10}
+    .screen{position:fixed;inset:0;display:none;z-index:10}
     .screen.active{display:flex;flex-direction:column}
-    #screen-tabla{overflow-y:auto;padding:16px 28px 20px}
+    #screen-tabla{overflow-y:auto;padding:160px 28px 20px}
     table{width:100%;border-collapse:separate;border-spacing:0 5px}
     thead th{font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;padding:5px 10px;border-bottom:1px solid var(--border);text-align:left}
     tbody tr{background:var(--panel);animation:rowIn .4s ease both}
@@ -59,7 +59,7 @@
     .tdimg img{width:40px;height:40px;border-radius:7px;object-fit:cover;border:1px solid var(--border)}
     .tdimg .ni{color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.65rem}
     .empty-state{text-align:center;padding:60px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.85rem;letter-spacing:.1em}
-    #screen-detalle{justify-content:center;align-items:center;padding:120px 48px 24px}
+    #screen-detalle{justify-content:center;align-items:center;padding:170px 48px 24px}
     .det-card{width:100%;max-width:1100px;background:var(--panel);border-radius:20px;border:1px solid var(--border);display:flex;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:cardIn .5s cubic-bezier(.34,1.3,.64,1) both;position:relative}
     @keyframes cardIn{from{opacity:0;transform:scale(.94) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
     .det-img{width:38%;min-height:420px;background:#0a0f1e;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--border);overflow:hidden}
@@ -80,7 +80,7 @@
     .det-tm{font-family:'Share Tech Mono',monospace;font-size:3rem;font-weight:700;text-align:center;padding:12px 0}
     .det-tmlbl{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.2em;text-align:center;margin-top:-12px}
     .det-counter{position:absolute;bottom:12px;right:0;left:0;text-align:center;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.15em}
-    #screen-alerta{justify-content:center;align-items:center;background:rgba(6,10,20,.97)}
+    #screen-alerta{justify-content:center;align-items:center;padding-top:160px;background:rgba(6,10,20,.97)}
     .al-wrap{text-align:center;max-width:960px;width:100%;padding:20px}
     .al-icon{font-size:6rem;margin-bottom:20px;animation:shake .4s ease infinite}
     @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg) scale(1.05)}75%{transform:rotate(8deg) scale(1.05)}}
