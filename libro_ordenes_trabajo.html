@@ -208,7 +208,7 @@ const PG = [
     user:"Este proceso permite reportar fallas, mantenimientos o trabajos de habilitacion de forma digital. Cada orden queda registrada en Google Sheets con un folio unico y se notifica automaticamente al grupo de Telegram del area correspondiente."
   },
   {
-    corner:"Paso 1 de 7",
+    corner:"Paso 1 de 6",
     badge:"Solicitante",badgeC:"#185FA5",badgeBg:"rgba(24,95,165,.1)",
     title:"Iniciar Sesion",
     actor:"Quien lo hace: Operador, tecnico o jefe de area",
@@ -218,10 +218,10 @@ const PG = [
       {c:"#8b2000",t:"Credenciales incorrectas → aparece mensaje de error"}
     ],
     user:"Ingresa tu usuario (en mayusculas) y contrasena. Si ves el aviso de contrasena debil, actualiza primero en Mi Usuario. Asegurate de tener conexion a internet activa antes de continuar.",
-    img:"https://i.imgur.com/koMt5iJ.png"
+    img:"https://i.imgur.com/cg6UEg4.png"
   },
   {
-    corner:"Paso 2 de 7",
+    corner:"Paso 2 de 6",
     badge:"Solicitante",badgeC:"#185FA5",badgeBg:"rgba(24,95,165,.1)",
     title:"Llenar el formulario de la orden",
     actor:"Quien lo hace: Operador, tecnico o jefe de area",
@@ -230,10 +230,11 @@ const PG = [
       {c:"#185FA5",t:"Todos los campos obligatorios llenos → puede enviar"},
       {c:"#8b2000",t:"Campos vacios → validacion bloquea el envio"}
     ],
-    user:"Elige el tipo de orden (OM, OT u OH), luego el area y la maquina. Selecciona el tipo de requerimiento y la prioridad (Baja, Media, Alta o Critica). Describe la falla con detalle. Puedes adjuntar una foto desde la camara o galeria de tu celular."
+    user:"📌 Elige el tipo de orden: (OM) para solicitar un trabajo de mantenimiento, (OT) para solicitar un trabajo de taller de mecanizado, u (OH) para solicitar fabricacion/reparacion de herramentales.<br>📌 Elige el area y la maquina donde se solicita el trabajo. Si se trata de algo general usa el area de SERVICIOS.<br>📌 Selecciona el tipo de requerimiento y la prioridad: (Baja) Atencion Programada, (Media) Atencion durante el dia, (Alta) Atencion prioritaria o (Critica) Atencion Inmediata.<br>📌 Describe textualmente la falla o el trabajo solicitado con detalle. Indica si la maquina/proceso esta en paro o en operacion.<br>🔷 Opcional: puedes adjuntar una foto desde la camara o galeria de tu celular.<br>⚠️ IMPORTANTE: Para que el trabajo se realice dale en GUARDAR Y ENVIAR, espera a que termine de cargar y se notificara por el grupo respectivo de Telegram para su seguimiento ⚒️.",
+    img:"https://i.imgur.com/oMYEKVO.png"
   },
   {
-    corner:"Paso 3 de 7",
+    corner:"Paso 3 de 6",
     badge:"Sistema / GAS",badgeC:"#0d5c5c",badgeBg:"rgba(13,92,92,.1)",
     title:"Sistema genera folio y guarda",
     actor:"Quien lo hace: GAS backend (automatico)",
@@ -242,34 +243,25 @@ const PG = [
       {c:"#0d5c5c",t:"Folio generado → orden visible en Telegram para el encargado"},
       {c:"#8b2000",t:"Error de conexion → se muestra mensaje de error al usuario"}
     ],
-    user:"Despues de tocar GUARDAR Y ENVIAR espera unos segundos. Veras la pantalla de exito con el numero de folio asignado, por ejemplo OM-0042. Guarda ese numero como referencia de tu solicitud."
+    user:"✳️ Despues de tocar GUARDAR Y ENVIAR espera unos segundos.<br>✳️ Veras la pantalla de exito con el numero de folio asignado.<br>✳️ Con esto tu solicitud ya fue registrada, posteriormente puedes presionar en generar otra orden o cerrar pestana.<br>🗒️ Nota: Tus solicitudes puedes revisarlas para ver el avance desde la primer vista de generacion de orden dando clic al boton de Mis Solicitudes.",
+    img:"https://i.imgur.com/6HPAGD4.png"
   },
   {
-    corner:"Paso 4 de 7",
+    corner:"Paso 4 de 6",
     badge:"Encargado de area",badgeC:"#BA7517",badgeBg:"rgba(186,117,23,.1)",
     title:"Encargado recibe y revisa la orden",
-    actor:"Quien lo hace: Encargado de area o supervisor",
-    estado:{t:"ABIERTA",c:"#0C447C",bg:"#E6F1FB"},
-    paths:[
-      {c:"#BA7517",t:"Entra a Gestion de Ordenes y ve el detalle completo"},
-      {c:"#0d5c5c",t:"Recibe la notificacion en Telegram con el ticket adjunto"}
-    ],
-    user:"Recibiras una notificacion en Telegram con los datos y foto de la orden. Entra al sistema en Gestion de Ordenes y filtra por estado ABIERTA para ver las ordenes pendientes. Las ordenes rechazadas aparecen al tope con alerta roja."
-  },
-  {
-    corner:"Paso 5 de 7",
-    badge:"Encargado de area",badgeC:"#BA7517",badgeBg:"rgba(186,117,23,.1)",
-    title:"Asignar tecnico y cambiar a Iniciado",
     actor:"Quien lo hace: Encargado de area o supervisor",
     estado:{t:"INICIADO",c:"#633806",bg:"#FAEEDA"},
     paths:[
       {c:"#BA7517",t:"Tecnico asignado + estado INICIADO → trabajo en progreso"},
       {c:"#8b2000",t:"Sin tecnico asignado → el sistema bloquea el guardado"}
     ],
-    user:"Abre el detalle de la orden. Toca Asignar tecnico y selecciona de la lista. Luego elige el estado INICIADO en los botones de estado. Aparecera el boton flotante GUARDAR. Tocalo para confirmar, el sistema notificara por Telegram automaticamente."
+    user:"🔶 Se notificara en el grupo correspondiente de Telegram con los datos y foto de la orden.<br>🔶 Entra al sistema en Gestion de Ordenes o bien da clic sobre el boton GESTIONAR ORDEN debajo del mensaje de Telegram para gestionar directamente.<br>🔶 A la izquierda se aprecia el boton de gestion directa sobre la orden, a la derecha el sistema de gestion de ordenes con el listado de todas las ordenes vivas. Para este segundo caso se debe seleccionar la orden para proceder con su gestion.<br>🔶 Se debe asignar un tecnico y dar por INICIADA la orden (si ya se procedera con el trabajo) o pasar a CANCELADA (si no se atendera la orden).<br>🗒️ Nota: Solo los encargados del area pueden acceder a esta funcionalidad.",
+    img2l:"https://i.imgur.com/BVFmR0J.png",
+    img2r:"https://i.imgur.com/T0SaVvv.png"
   },
   {
-    corner:"Paso 6 de 7",
+    corner:"Paso 5 de 7",
     badge:"Encargado de area",badgeC:"#BA7517",badgeBg:"rgba(186,117,23,.1)",
     title:"Registrar trabajo y marcar Terminada",
     actor:"Quien lo hace: Encargado de area o supervisor",
@@ -278,10 +270,11 @@ const PG = [
       {c:"#0d5c5c",t:"Estado TERMINADA guardado → notifica al solicitante"},
       {c:"#8b2000",t:"Sin descripcion del trabajo → el sistema bloquea el guardado"}
     ],
-    user:"Escribe en el campo Trabajo realizado que se hizo exactamente. Este es el reporte tecnico que vera el solicitante. Selecciona TERMINADA y toca GUARDAR. El solicitante recibira el ticket de cierre en Telegram para revisarlo y confirmarlo."
+    user:"🔰 Para Cerrar la orden solo se puede hacer mediante el link de Gestion Ordenes. Busca la orden que quieras gestionar del listado de ordenes vivas.<br>🔰 Escribe en el campo Trabajo realizado que se hizo exactamente para concluir lo solicitado.<br>🔰 Este es el reporte tecnico que vera el solicitante.<br>🔰 En caso de modificar el tecnico puedes hacerlo, luego selecciona TERMINADA y toca GUARDAR. Espera a que se ejecute el cambio y regreses a la vista del listado de ordenes.<br>✳️ El solicitante recibira el ticket de cierre en Telegram para revisarlo y confirmarlo.",
+    img:"https://i.imgur.com/jrtWJnf.png"
   },
   {
-    corner:"Paso 7 de 7",
+    corner:"Paso 6 de 6",
     badge:"Solicitante",badgeC:"#185FA5",badgeBg:"rgba(24,95,165,.1)",
     title:"Aceptar o rechazar el cierre",
     actor:"Quien lo hace: Solicitante desde Telegram",
@@ -290,7 +283,8 @@ const PG = [
       {c:"#1a7a00",t:"ACEPTA → Estado CERRADA. Ciclo completado exitosamente."},
       {c:"#8b2000",t:"RECHAZA → Estado REVISAR. Encargado debe revisar y reiniciar."}
     ],
-    user:"Recibiras en Telegram el ticket de cierre con los detalles del trabajo realizado. Si el trabajo quedo correcto toca ACEPTAR. Si algo no esta bien toca RECHAZAR. El encargado vera la alerta roja y debera corregir antes de intentar cerrar de nuevo."
+    user:"✳️ El solicitante del trabajo recibira en Telegram el ticket de cierre con los detalles del trabajo realizado.<br>✳️ Si el trabajo quedo correcto toca ACEPTAR y termina el ciclo.<br>✳️ Si algo no esta bien toca RECHAZAR y reinicia el ciclo con la misma orden (cambia el estado de la orden de CERRADA a REVISAR para que se valide).<br>✳️ El encargado vera la alerta roja y debera corregir antes de intentar cerrar de nuevo (repite el ciclo de gestion de la hoja anterior).",
+    img:"https://i.imgur.com/A6sDTUI.png"
   }
 ];
 
@@ -311,6 +305,7 @@ function pageHTML(d){
     <div class="sec-lbl">Para el usuario</div>
     <div class="sec-body">${d.user}</div>
     ${d.img?`<img src="${d.img}" alt="Ayuda visual" style="width:100%;border-radius:8px;margin-top:14px;border:1px solid #e0d8c8;">`:''}
+    ${d.img2l?`<div style="display:flex;gap:8px;margin-top:14px;"><img src="${d.img2l}" style="width:50%;border-radius:8px;border:1px solid #e0d8c8;object-fit:cover;"><img src="${d.img2r}" style="width:50%;border-radius:8px;border:1px solid #e0d8c8;object-fit:cover;"></div>`:''}
   `;
 }
 
