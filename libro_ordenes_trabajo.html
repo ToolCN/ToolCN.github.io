@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ordenes de Trabajo — ToolCN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+  width:100%;min-height:100dvh;
+  font-family:'Source Sans 3',sans-serif;
+  background:#f0ece4;
+  display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;
+}
+
+/* ════════ PORTADA ════════ */
+#cover{
+  width:min(88vw,340px);
+  aspect-ratio:2/3;
+  background:#8b2000;
+  border-radius:6px 18px 18px 6px;
+  box-shadow:-10px 10px 0 #5a1000,8px 14px 48px rgba(0,0,0,.65);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;padding:40px 32px;
+  cursor:pointer;position:relative;overflow:hidden;
+  margin-top:40px;
+  transition:transform .2s,box-shadow .2s;
+}
+#cover:active{transform:scale(.98)}
+#cover::before{
+  content:'';position:absolute;inset:16px;
+  border:1px solid rgba(200,146,42,.3);
+  border-radius:3px 13px 13px 3px;pointer-events:none;
+}
+#cover::after{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:28px;
+  background:linear-gradient(to right,#4a0e00,#7a1800);
+  border-radius:6px 0 0 6px;
+}
+.cv-logo{width:140px;filter:brightness(0) invert(1);opacity:.93;z-index:1}
+.cv-line{width:60px;height:1px;background:#c8922a;opacity:.7;z-index:1}
+.cv-title{
+  font-family:'Playfair Display',serif;
+  font-size:17px;font-weight:900;
+  color:#f5d89a;text-align:center;line-height:1.55;
+  letter-spacing:.04em;text-transform:uppercase;z-index:1;
+}
+.cv-sub{font-size:11px;color:rgba(245,216,154,.55);letter-spacing:.14em;text-transform:uppercase;z-index:1}
+.cv-hint{
+  position:absolute;bottom:22px;
+  font-size:11px;color:rgba(245,216,154,.5);
+  letter-spacing:.1em;text-transform:uppercase;z-index:1;
+  animation:blink 2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ════════ LIBRO ════════ */
+#book{display:none;flex-direction:column;align-items:center;width:100%;padding:16px 0 48px}
+
+/* Sizer invisible para medir altura */
+#sizer{
+  position:fixed;top:-9999px;left:0;
+  width:min(96vw,480px);
+  visibility:hidden;pointer-events:none;
+}
+
+#scene{
+  perspective:1200px;
+  width:min(96vw,480px);
+  position:relative;
+}
+
+/* ════════ PAGINA ════════ */
+.page{
+  width:100%;
+  background:#fdf6e3;
+  border-radius:6px 18px 18px 6px;
+  box-shadow:-5px 0 0 #c8b88a,6px 10px 32px rgba(0,0,0,.28);
+  padding:28px 26px 28px;
+  display:flex;flex-direction:column;
+  position:absolute;top:0;left:0;right:0;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  will-change:transform,opacity;
+}
+
+/* Flip adelante */
+@keyframes flOut {0%{transform:rotateY(0);opacity:1}50%{transform:rotateY(-90deg);opacity:0}100%{transform:rotateY(-90deg);opacity:0}}
+@keyframes flIn  {0%{transform:rotateY(90deg);opacity:0}50%{transform:rotateY(90deg);opacity:0}51%{transform:rotateY(0);opacity:1}100%{transform:rotateY(0);opacity:1}}
+/* Flip atras */
+@keyframes flOutB{0%{transform:rotateY(0);opacity:1}50%{transform:rotateY(90deg);opacity:0}100%{transform:rotateY(90deg);opacity:0}}
+@keyframes flInB {0%{transform:rotateY(-90deg);opacity:0}50%{transform:rotateY(-90deg);opacity:0}51%{transform:rotateY(0);opacity:1}100%{transform:rotateY(0);opacity:1}}
+
+.ef {animation:flOut  .42s ease-in-out forwards;transform-origin:left center}
+.nf {animation:flIn   .42s ease-in-out forwards;transform-origin:left center}
+.eb {animation:flOutB .42s ease-in-out forwards;transform-origin:right center}
+.nb2{animation:flInB  .42s ease-in-out forwards;transform-origin:right center}
+
+/* ════════ CONTENIDO PAGINA ════════ */
+.pg-corner{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#c8922a;margin-bottom:10px;opacity:.8}
+.pg-badge{
+  display:inline-flex;align-items:center;
+  padding:5px 14px;border-radius:20px;
+  font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  margin-bottom:14px;
+}
+.pg-title{
+  font-family:'Playfair Display',serif;
+  font-size:26px;font-weight:700;color:#1a1208;line-height:1.22;margin-bottom:6px;
+}
+.pg-actor{font-size:12px;color:#999;margin-bottom:14px;letter-spacing:.03em}
+.pg-rule{height:1px;background:linear-gradient(to right,#c8922a,transparent);margin-bottom:14px;opacity:.45}
+.pg-estado{
+  display:inline-flex;align-items:center;
+  padding:5px 14px;border-radius:12px;
+  font-size:12px;font-weight:600;margin-bottom:14px;
+}
+.paths-lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#c8922a;margin-bottom:8px;opacity:.8}
+.paths{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.path-item{
+  font-size:14px;color:#1a1208;
+  padding:8px 12px;border-radius:6px;border-left:4px solid;line-height:1.5;
+}
+.sec-lbl{
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:600;margin-bottom:6px;color:#185FA5;
+}
+.sec-body{font-size:15px;line-height:1.7;color:#3a3020}
+
+/* ════════ SWIPE HINT ════════ */
+#swipe-hint{
+  font-size:12px;color:#bbb;letter-spacing:.06em;
+  text-align:center;margin-top:14px;
+  transition:opacity 1.5s;
+}
+
+/* ════════ NAV ════════ */
+#nav{
+  display:none;align-items:center;gap:12px;
+  margin-top:20px;justify-content:center;
+  flex-wrap:wrap;width:100%;padding:0 16px;
+}
+#nav.show{display:flex}
+.nbtn{
+  padding:14px 28px;border-radius:10px;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:14px;font-weight:600;
+  letter-spacing:.05em;text-transform:uppercase;
+  cursor:pointer;border:none;transition:all .15s;
+  min-height:52px;min-width:120px;
+}
+.nbtn.prev{background:#f5ead0;color:#1a1208;border:1px solid #c8b88a}
+.nbtn.prev:active{background:#edddb0}
+.nbtn.next{background:#8b2000;color:#fdf3e0}
+.nbtn.next:active{background:#a02800}
+.nbtn:disabled{opacity:.3;cursor:default}
+.nbtn.cls{
+  background:none;border:1px solid #c8b88a;
+  color:#888;padding:14px 20px;font-size:13px;min-width:80px;
+}
+.nbtn.cls:active{border-color:#8b2000;color:#8b2000}
+#pg-ind{font-size:14px;color:#aaa;letter-spacing:.06em;min-width:56px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div id="cover" onclick="openBook()">
+  <img class="cv-logo"
+    src="https://www.toolcn.mx/cdn/shop/files/logo_ToolCN_shopify.png?v=1751677238"
+    alt="ToolCN" onerror="this.style.opacity=0">
+  <div class="cv-line"></div>
+  <div class="cv-title">Proceso de Generacion de Ordenes de Trabajo</div>
+  <div class="cv-sub">Sistema de Mantenimiento</div>
+  <div class="cv-hint">toca para abrir</div>
+</div>
+
+<!-- SIZER INVISIBLE -->
+<div id="sizer"></div>
+
+<!-- LIBRO -->
+<div id="book">
+  <div id="scene"></div>
+  <div id="swipe-hint">Desliza o usa los botones para navegar</div>
+  <div id="nav">
+    <button class="nbtn prev" id="btn-prev" onclick="flip(-1)">&#9664; Anterior</button>
+    <span id="pg-ind"></span>
+    <button class="nbtn next" id="btn-next" onclick="flip(1)">Siguiente &#9654;</button>
+    <button class="nbtn cls" onclick="closeBook()">&#10005; Cerrar</button>
+  </div>
+</div>
+
+<script>
+const PG = [
+  {
+    corner:"Introduccion",
+    badge:"Descripcion general",badgeC:"#0d5c5c",badgeBg:"rgba(13,92,92,.1)",
+    title:"Que es una Orden de Trabajo?",
+    actor:"Sistema de Mantenimiento — ToolCN",
+    estado:null,
+    paths:[
+      {c:"#8b2000",t:"El solicitante crea la solicitud de servicio"},
+      {c:"#0d5c5c",t:"El encargado gestiona y da seguimiento"},
+      {c:"#1a7a00",t:"El solicitante acepta o rechaza el cierre"}
+    ],
+    user:"Este proceso permite reportar fallas, mantenimientos o trabajos de habilitacion de forma digital. Cada orden queda registrada en Google Sheets con un folio unico y se notifica automaticamente al grupo de Telegram del area correspondiente."
+  },
+  {
+    corner:"Paso 1 de 7",
+    badge:"Solicitante",badgeC:"#185FA5",badgeBg:"rgba(24,95,165,.1)",
+    title:"Iniciar sesion en el sistema",
+    actor:"Quien lo hace: Operador, tecnico o jefe de area",
+    estado:null,
+    paths:[
+      {c:"#185FA5",t:"Credenciales correctas → accede al formulario de la orden"},
+      {c:"#8b2000",t:"Credenciales incorrectas → aparece mensaje de error"}
+    ],
+    user:"Ingresa tu usuario (en mayusculas) y contrasena. Si ves el aviso de contrasena debil, actualiza primero en Mi Usuario. Asegurate de tener conexion a internet activa antes de continuar."
+  },
+  {
+    corner:"Paso 2 de 7",
+    badge:"Solicitante",badgeC:"#185FA5",badgeBg:"rgba(24,95,165,.1)",
+    title:"Llenar el formulario de la orden",
+    actor:"Quien lo hace: Operador, tecnico o jefe de area",
+    estado:null,
+    paths:[
+      {c:"#185FA5",t:"Todos los campos obligatorios llenos → puede enviar"},
+      {c:"#8b2000",t:"Campos vacios → validacion bloquea el envio"}
+    ],
+    user:"Elige el tipo de orden (OM, OT u OH), luego el area y la maquina. Selecciona el tipo de requerimiento y la prioridad (Baja, Media, Alta o Critica). Describe la falla con detalle. Puedes adjuntar una foto desde la camara o galeria de tu celular."
+  },
+  {
+    corner:"Paso 3 de 7",
+    badge:"Sistema / GAS",badgeC:"#0d5c5c",badgeBg:"rgba(13,92,92,.1)",
+    title:"Sistema genera folio y guarda",
+    actor:"Quien lo hace: GAS backend (automatico)",
+    estado:{t:"ABIERTA",c:"#0C447C",bg:"#E6F1FB"},
+    paths:[
+      {c:"#0d5c5c",t:"Folio generado → orden visible en Telegram para el encargado"},
+      {c:"#8b2000",t:"Error de conexion → se muestra mensaje de error al usuario"}
+    ],
+    user:"Despues de tocar GUARDAR Y ENVIAR espera unos segundos. Veras la pantalla de exito con el numero de folio asignado, por ejemplo OM-0042. Guarda ese numero como referencia de tu solicitud."
+  },
+  {
+    corner:"Paso 4 de 7",
+    badge:"Encargado de area",badgeC:"#BA7517",badgeBg:"rgba(186,117,23,.1)",
+    title:"Encargado recibe y revisa la orden",
+    actor:"Quien lo hace: Encargado de area o supervisor",
+    estado:{t:"ABIERTA",c:"#0C447C",bg:"#E6F1FB"},
+    paths:[
+      {c:"#BA7517",t:"Entra a Gestion de Ordenes y ve el detalle completo"},
+      {c:"#0d5c5c",t:"Recibe la notificacion en Telegram con el ticket adjunto"}
+    ],
+    user:"Recibiras una notificacion en Telegram con los datos y foto de la orden. Entra al sistema en Gestion de Ordenes y filtra por estado ABIERTA para ver las ordenes pendientes. Las ordenes rechazadas aparecen al tope con alerta roja."
+  },
+  {
+    corner:"Paso 5 de 7",
+    badge:"Encargado de area",badgeC:"#BA7517",badgeBg:"rgba(186,117,23,.1)",
+    title:"Asignar tecnico y cambiar a Iniciado",
+    actor:"Quien lo hace: Encargado de area o supervisor",
+    estado:{t:"INICIADO",c:"#633806",bg:"#FAEEDA"},
+    paths:[
+      {c:"#BA7517",t:"Tecnico asignado + estado INICIADO → trabajo en progreso"},
+      {c:"#8b2000",t:"Sin tecnico asignado → el sistema bloquea el guardado"}
+    ],
+    user:"Abre el detalle de la orden. Toca Asignar tecnico y selecciona de la lista. Luego elige el estado INICIADO en los botones de estado. Aparecera el boton flotante GUARDAR. Tocalo para confirmar, el sistema notificara por Telegram automaticamente."
+  },
+  {
+    corner:"Paso 6 de 7",
+    badge:"Encargado de area",badgeC:"#BA7517",badgeBg:"rgba(186,117,23,.1)",
+    title:"Registrar trabajo y marcar Terminada",
+    actor:"Quien lo hace: Encargado de area o supervisor",
+    estado:{t:"TERMINADA",c:"#085041",bg:"#E1F5EE"},
+    paths:[
+      {c:"#0d5c5c",t:"Estado TERMINADA guardado → notifica al solicitante"},
+      {c:"#8b2000",t:"Sin descripcion del trabajo → el sistema bloquea el guardado"}
+    ],
+    user:"Escribe en el campo Trabajo realizado que se hizo exactamente. Este es el reporte tecnico que vera el solicitante. Selecciona TERMINADA y toca GUARDAR. El solicitante recibira el ticket de cierre en Telegram para revisarlo y confirmarlo."
+  },
+  {
+    corner:"Paso 7 de 7",
+    badge:"Solicitante",badgeC:"#185FA5",badgeBg:"rgba(24,95,165,.1)",
+    title:"Aceptar o rechazar el cierre",
+    actor:"Quien lo hace: Solicitante desde Telegram",
+    estado:{t:"TERMINADA → CERRADA o REVISAR",c:"#444",bg:"#eee"},
+    paths:[
+      {c:"#1a7a00",t:"ACEPTA → Estado CERRADA. Ciclo completado exitosamente."},
+      {c:"#8b2000",t:"RECHAZA → Estado REVISAR. Encargado debe revisar y reiniciar."}
+    ],
+    user:"Recibiras en Telegram el ticket de cierre con los detalles del trabajo realizado. Si el trabajo quedo correcto toca ACEPTAR. Si algo no esta bien toca RECHAZAR. El encargado vera la alerta roja y debera corregir antes de intentar cerrar de nuevo."
+  }
+];
+
+let cur=0, busy=false;
+const scene=document.getElementById('scene');
+const sizer=document.getElementById('sizer');
+
+function pageHTML(d){
+  return `
+    <div class="pg-corner">${d.corner}</div>
+    <span class="pg-badge" style="color:${d.badgeC};background:${d.badgeBg}">${d.badge}</span>
+    <div class="pg-title">${d.title}</div>
+    <div class="pg-actor">${d.actor}</div>
+    <div class="pg-rule"></div>
+    ${d.estado?`<div class="pg-estado" style="color:${d.estado.c};background:${d.estado.bg}">Estado: ${d.estado.t}</div>`:''}
+    <div class="paths-lbl">Caminos siguientes</div>
+    <div class="paths">${d.paths.map(p=>`<div class="path-item" style="border-color:${p.c};background:${p.c}14">${p.t}</div>`).join('')}</div>
+    <div class="sec-lbl">Para el usuario</div>
+    <div class="sec-body">${d.user}</div>
+  `;
+}
+
+function syncHeight(){
+  const pg=scene.querySelector('.page');
+  if(!pg) return;
+  sizer.innerHTML='<div class="page" style="position:relative;box-shadow:none;width:'+sizer.offsetWidth+'px">'+pg.innerHTML+'</div>';
+  const h=sizer.firstChild.offsetHeight;
+  scene.style.height=h+'px';
+  sizer.innerHTML='';
+}
+
+function updateNav(){
+  document.getElementById('pg-ind').textContent=(cur+1)+' / '+PG.length;
+  document.getElementById('btn-prev').disabled=cur===0;
+  const nb=document.getElementById('btn-next');
+  nb.disabled=cur===PG.length-1;
+  nb.textContent=cur===PG.length-1?'Fin':'Siguiente \u25BA';
+}
+
+function showPage(idx,dir){
+  const old=scene.querySelector('.page');
+  const nw=document.createElement('div');
+  nw.className='page';
+  nw.innerHTML=pageHTML(PG[idx]);
+  scene.appendChild(nw);
+
+  // mide la nueva pagina
+  sizer.innerHTML='<div class="page" style="position:relative;box-shadow:none;width:'+scene.offsetWidth+'px">'+nw.innerHTML+'</div>';
+  const h=sizer.firstChild.offsetHeight;
+  scene.style.height=h+'px';
+  sizer.innerHTML='';
+
+  if(dir!==0&&old){
+    old.classList.add(dir>0?'ef':'eb');
+    nw.classList.add(dir>0?'nf':'nb2');
+    setTimeout(()=>{old.remove();nw.classList.remove('ef','nf','eb','nb2');busy=false;},440);
+  } else {
+    if(old) old.remove();
+    busy=false;
+  }
+  cur=idx;
+  updateNav();
+}
+
+function flip(dir){
+  if(busy) return;
+  const n=cur+dir;
+  if(n<0||n>=PG.length) return;
+  busy=true;
+  showPage(n,dir);
+}
+
+/* ── SWIPE ── */
+let startX=0,startY=0,swiping=false,swipeTx=0;
+scene.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1) return;
+  startX=e.touches[0].clientX;
+  startY=e.touches[0].clientY;
+  swiping=true;swipeTx=0;
+},{passive:true});
+scene.addEventListener('touchmove',e=>{
+  if(!swiping) return;
+  swipeTx=e.touches[0].clientX-startX;
+  const ty=Math.abs(e.touches[0].clientY-startY);
+  if(ty>Math.abs(swipeTx)*1.5) swiping=false;
+},{passive:true});
+scene.addEventListener('touchend',()=>{
+  if(!swiping) return;
+  swiping=false;
+  if(Math.abs(swipeTx)<50) return;
+  flip(swipeTx<0?1:-1);
+});
+
+function openBook(){
+  document.getElementById('cover').style.display='none';
+  const bk=document.getElementById('book');
+  bk.style.display='flex';
+  cur=0;busy=false;
+  scene.innerHTML='';
+  showPage(0,0);
+  document.getElementById('nav').classList.add('show');
+  const h=document.getElementById('swipe-hint');
+  setTimeout(()=>{ h.style.opacity='0'; },3500);
+}
+
+function closeBook(){
+  document.getElementById('book').style.display='none';
+  document.getElementById('cover').style.display='flex';
+}
+
+window.addEventListener('resize',()=>{ if(scene.querySelector('.page')) syncHeight(); });
+</script>
+</body>
+</html>
