@@ -521,7 +521,7 @@
   }
 
 
-  // Burbujas de imágenes — círculos sin encime garantizado
+  // Burbujas de imágenes — 4 columnas, espaciado generoso, sin encime
   const imgs = [
     'https://i.imgur.com/P6NyVhs.jpeg',
     'https://i.imgur.com/wvDbdwl.jpeg',
@@ -540,27 +540,37 @@
     'https://i.imgur.com/0tCZ0Cx.png'
   ];
 
-  const SIZE = 320;      // px diámetro del círculo (doble de 160)
-  const COLS = 5;        // columnas de carril
-  const ROWS = 3;        // filas (3 imágenes por columna)
-  // Duración fija por columna: todas las imágenes de la misma columna
-  // usan la misma duración para que el ciclo sea predecible
-  const COL_DUR = [38, 42, 36, 44, 40]; // segundos por columna
+  // Solo usamos 12 imágenes (4 cols x 3 por col) — las últimas 3 se omiten
+  // para no saturar. Si se quisieran las 15 se puede cambiar a 5 cols.
+  const SIZE    = 288;   // 320 * 0.9 = 288px (-10%)
+  const COLS    = 4;
+  const ROWS    = 3;     // 3 imágenes por columna
+  // Duración larga para que haya mucho espacio vacío entre apariciones
+  // El "hueco" entre dos imágenes de la misma columna =
+  //   dur/ROWS - tiempo_visible (~dur*0.85) → necesitamos dur grande
+  // Con dur=70s y 3 imágenes: cada una aparece cada 70/3≈23s, pero
+  // el recorrido visible dura ~60s → hay ~10s de hueco visible entre ellas.
+  // Aumentamos a dur=90s → hueco = 90/3 - visible ≈ más aire.
+  const COL_DUR = [85, 95, 80, 90]; // segundos por columna — distinto para desalinear filas
   const pContainer = document.getElementById('particles');
   const colWidth = 100 / COLS;
 
-  imgs.forEach((src, i) => {
+  // Offset horizontal por columna para que no suban exactamente en el centro
+  // y se vean más naturales
+  const COL_OFFSET = [2, -3, 3, -2]; // vw de desplazamiento
+
+  for (let i = 0; i < COLS * ROWS; i++) {
     const col = i % COLS;
     const row = Math.floor(i / COLS);
     const dur = COL_DUR[col];
 
-    // Delay = row * (dur / ROWS)  →  cada imagen arranca exactamente
-    // 1/3 del ciclo después de la anterior en su misma columna
-    // Así siempre hay separación uniforme y nunca se juntan
-    const delay = row * (dur / ROWS);
+    // Separación entre imágenes de la misma columna = dur/ROWS
+    // Cada row arranca en un momento diferente del ciclo
+    // Añadimos un pequeño offset extra por fila para desalinear columnas entre sí
+    const rowOffset   = [0, 8, 16]; // segundos extra por fila — distintos para cada col
+    const delay = row * (dur / ROWS) + rowOffset[row];
 
-    // Posición horizontal: centro del carril, sin offset para mantener separación
-    const leftVw = colWidth * col + colWidth / 2;
+    const leftVw = colWidth * col + colWidth / 2 + COL_OFFSET[col];
 
     const b = document.createElement('div');
     b.className = 'bubble';
@@ -573,11 +583,11 @@
     `;
 
     const img = document.createElement('img');
-    img.src = src;
+    img.src = imgs[i % imgs.length];
     img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
     b.appendChild(img);
     pContainer.appendChild(b);
-  });
+  }
 
   // Monito sorpresa
   const monito = document.getElementById('monito');
