@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ToolCN — Portal de Aplicaciones</title>
 
-  <!-- PWA / Acceso directo -->
   <link rel="manifest" href='data:application/manifest+json,{"name":"ToolCN","short_name":"ToolCN","display":"standalone","background_color":"#0a0f1e","theme_color":"#00d4ff","icons":[{"src":"https://i.imgur.com/OgCXcvt.png","sizes":"512x512","type":"image/png"}]}'>
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,15 +18,14 @@
 
   <style>
     :root {
-      --bg:       #0a0f1e;
-      --panel:    #0d1428;
-      --border:   #1a2a4a;
-      --accent:   #00d4ff;
-      --accent2:  #ff6b35;
-      --text:     #c8d8f0;
-      --dim:      #5a7a9a;
-      --success:  #00ff9d;
-      --card-bg:  #0f1a30;
+      --bg:      #0a0f1e;
+      --border:  #1a2a4a;
+      --accent:  #00d4ff;
+      --accent2: #ff6b35;
+      --text:    #c8d8f0;
+      --dim:     #5a7a9a;
+      --success: #00ff9d;
+      --card-bg: #0f1a30;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,34 +38,49 @@
       overflow-x: hidden;
     }
 
-    /* ── FONDO ANIMADO ── */
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background:
         radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0,212,255,0.07) 0%, transparent 60%),
         radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
 
-    /* Grid de líneas de fondo */
     body::after {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background-image:
         linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
       background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+      animation: gridPulse 8s ease-in-out infinite;
+    }
+
+    @keyframes gridPulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+
+    .particle {
+      position: fixed;
+      border-radius: 50%;
       pointer-events: none;
       z-index: 0;
+      animation: floatUp linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(100vh); opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.2; }
+      100% { transform: translateY(-80px); opacity: 0; }
     }
 
     .wrap {
-      position: relative;
-      z-index: 1;
+      position: relative; z-index: 1;
       max-width: 1100px;
       margin: 0 auto;
       padding: 0 20px 60px;
@@ -78,51 +91,55 @@
       display: flex;
       align-items: center;
       gap: 20px;
-      padding: 36px 0 28px;
+      padding: 32px 0 24px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 48px;
-      animation: fadeDown 0.6s ease both;
+      margin-bottom: 52px;
+      animation: fadeDown 0.7s ease both;
     }
 
-    .logo-ring {
+    .logo-box {
       position: relative;
-      width: 72px;
-      height: 72px;
       flex-shrink: 0;
+      padding: 3px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), #0a0f1e, var(--accent2));
+      background-size: 300% 300%;
+      animation: gradShift 4s ease infinite;
     }
 
-    .logo-ring::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      border-top-color: var(--accent);
-      border-right-color: var(--accent);
-      animation: spin 3s linear infinite;
+    @keyframes gradShift {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
     }
 
-    .logo-ring img {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--border);
+    .logo-box img {
+      display: block;
+      height: 68px;
+      width: auto;
+      border-radius: 12px;
+      object-fit: contain;
+      background: #0a0f1e;
     }
 
     .header-text h1 {
       font-family: 'Rajdhani', sans-serif;
-      font-size: 2.4rem;
+      font-size: 2.6rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       color: #fff;
       text-transform: uppercase;
       line-height: 1;
+      animation: glitch 7s ease infinite;
     }
 
-    .header-text h1 span {
-      color: var(--accent);
+    @keyframes glitch {
+      0%,94%,100% { text-shadow: none; transform: none; }
+      95% { text-shadow: 3px 0 var(--accent2), -3px 0 var(--accent); transform: skewX(-2deg); }
+      96% { text-shadow: -3px 0 var(--accent2), 3px 0 var(--accent); transform: skewX(2deg); }
+      97% { text-shadow: none; transform: none; }
     }
+
+    .header-text h1 span { color: var(--accent); }
 
     .header-text p {
       font-family: 'Share Tech Mono', monospace;
@@ -133,69 +150,81 @@
       text-transform: uppercase;
     }
 
-    .status-dot {
+    .status-pill {
       margin-left: auto;
       display: flex;
       align-items: center;
       gap: 8px;
+      background: rgba(0,255,157,0.08);
+      border: 1px solid rgba(0,255,157,0.25);
+      padding: 7px 16px;
+      border-radius: 20px;
       font-family: 'Share Tech Mono', monospace;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--success);
       letter-spacing: 0.15em;
+      white-space: nowrap;
     }
 
-    .status-dot::before {
+    .status-pill::before {
       content: '';
-      width: 8px;
-      height: 8px;
+      width: 7px; height: 7px;
       border-radius: 50%;
       background: var(--success);
       box-shadow: 0 0 8px var(--success);
       animation: blink 2s ease infinite;
     }
 
-    /* ── SECCIÓN LABEL ── */
+    /* ── SECTION LABEL ── */
     .section-label {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.3em;
-      color: var(--dim);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #fff;
       text-transform: uppercase;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+    }
+
+    .label-bar {
+      width: 5px; height: 28px;
+      border-radius: 3px;
+      flex-shrink: 0;
     }
 
     .section-label::after {
       content: '';
       flex: 1;
       height: 1px;
-      background: var(--border);
+      background: linear-gradient(90deg, var(--border), transparent);
+      margin-left: 8px;
     }
 
-    /* ── GRID DE APPS ── */
+    /* ── GRID ── */
     .apps-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
       gap: 16px;
-      margin-bottom: 48px;
+      margin-bottom: 50px;
     }
 
     /* ── CARD ── */
     .app-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 22px;
+      border-radius: 14px;
+      padding: 22px 20px;
       cursor: pointer;
       text-decoration: none;
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 16px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
       animation: fadeUp 0.5s ease both;
     }
 
@@ -204,84 +233,101 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent-color, var(--accent)), transparent);
+      background: linear-gradient(90deg, transparent, var(--c, var(--accent)), transparent);
       opacity: 0;
-      transition: opacity 0.25s;
+      transition: opacity 0.3s;
     }
 
-    .app-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--accent-color, var(--accent));
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,212,255,0.08);
+    /* Shimmer sweep */
+    .app-card::after {
+      content: '';
+      position: absolute;
+      top: -100%; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, transparent, rgba(255,255,255,0.03), transparent);
+      transition: top 0.6s ease;
     }
 
+    .app-card:hover { transform: translateY(-5px) scale(1.015); }
     .app-card:hover::before { opacity: 1; }
+    .app-card:hover::after  { top: 160%; }
 
-    .app-card:nth-child(1) { animation-delay: 0.05s; }
-    .app-card:nth-child(2) { animation-delay: 0.10s; }
-    .app-card:nth-child(3) { animation-delay: 0.15s; }
-    .app-card:nth-child(4) { animation-delay: 0.20s; }
-    .app-card:nth-child(5) { animation-delay: 0.25s; }
-    .app-card:nth-child(6) { animation-delay: 0.30s; }
-    .app-card:nth-child(7) { animation-delay: 0.35s; }
-    .app-card:nth-child(8) { animation-delay: 0.40s; }
+    .cat-prod { --c: #00d4ff; }
+    .cat-mant { --c: #ff6b35; }
+    .cat-rrhh { --c: #a855f7; }
+    .cat-comp { --c: #22c55e; }
+    .cat-pend { --c: #64748b; opacity: 0.5; cursor: not-allowed; }
+
+    .app-card:hover { border-color: var(--c, var(--accent)); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px color-mix(in srgb, var(--c, var(--accent)) 20%, transparent); }
+
+    .app-card:nth-child(1){animation-delay:.05s}
+    .app-card:nth-child(2){animation-delay:.10s}
+    .app-card:nth-child(3){animation-delay:.15s}
+    .app-card:nth-child(4){animation-delay:.20s}
+    .app-card:nth-child(5){animation-delay:.25s}
 
     .app-icon {
-      width: 52px;
-      height: 52px;
+      width: 54px; height: 54px;
       border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem;
       flex-shrink: 0;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      transition: transform 0.25s;
+      border: 1px solid rgba(255,255,255,0.07);
+      transition: transform 0.3s ease;
     }
 
-    .app-card:hover .app-icon {
-      transform: scale(1.1) rotate(-3deg);
-    }
+    .app-card:hover .app-icon { transform: scale(1.18) rotate(-6deg); }
 
     .app-info { flex: 1; min-width: 0; }
 
     .app-name {
       font-family: 'Rajdhani', sans-serif;
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 600;
       color: #fff;
       letter-spacing: 0.05em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .app-desc {
       font-size: 0.75rem;
       color: var(--dim);
       margin-top: 3px;
-      letter-spacing: 0.05em;
     }
 
     .app-arrow {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       color: var(--dim);
-      transition: transform 0.25s, color 0.25s;
+      transition: transform 0.3s, color 0.3s;
       flex-shrink: 0;
     }
 
-    .app-card:hover .app-arrow {
-      transform: translateX(4px);
-      color: var(--accent-color, var(--accent));
+    .app-card:hover .app-arrow { transform: translateX(6px); color: var(--c, var(--accent)); }
+
+    /* ── MONITO ── */
+    #monito {
+      position: fixed;
+      width: 100px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
 
-    /* Colores por categoría */
-    .cat-prod  { --accent-color: #00d4ff; }
-    .cat-mant  { --accent-color: #ff6b35; }
-    .cat-rrhh  { --accent-color: #a855f7; }
-    .cat-comp  { --accent-color: #22c55e; }
-    .cat-pend  { --accent-color: #64748b; opacity: 0.6; cursor: not-allowed; }
+    #monito img {
+      width: 100%;
+      border-radius: 14px;
+      filter: drop-shadow(0 4px 20px rgba(0,212,255,0.5));
+    }
+
+    #monito.visible { opacity: 1; }
+
+    @keyframes bounce {
+      0%,100% { transform: translateY(0) rotate(-4deg) scale(1); }
+      50%      { transform: translateY(-14px) rotate(4deg) scale(1.05); }
+    }
+
+    #monito.visible img { animation: bounce 0.7s ease-in-out infinite; }
 
     /* ── FOOTER ── */
     footer {
@@ -301,171 +347,124 @@
       letter-spacing: 0.15em;
     }
 
-    /* ── ANIMACIONES ── */
     @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-16px); }
+      from { opacity: 0; transform: translateY(-20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(24px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.2; }
     }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 520px) {
-      .header-text h1 { font-size: 1.8rem; }
-      .status-dot { display: none; }
+    @media (max-width: 560px) {
+      .header-text h1 { font-size: 1.9rem; }
+      .status-pill { display: none; }
       .apps-grid { grid-template-columns: 1fr; }
+      .section-label { font-size: 1.2rem; }
     }
   </style>
 </head>
 <body>
+
+<div id="particles"></div>
+<div id="monito"><img src="https://i.imgur.com/7zY7EUQ.jpeg" alt="sorpresa"></div>
+
 <div class="wrap">
 
-  <!-- HEADER -->
   <header>
-    <div class="logo-ring">
-      <img src="https://i.imgur.com/OgCXcvt.png" alt="ToolCN Logo">
+    <div class="logo-box">
+      <img src="https://i.imgur.com/OgCXcvt.png" alt="ToolCN">
     </div>
     <div class="header-text">
       <h1>Tool<span>CN</span></h1>
       <p>Portal de Aplicaciones Industriales</p>
     </div>
-    <div class="status-dot">Sistemas en línea</div>
+    <div class="status-pill">Sistemas en línea</div>
   </header>
 
   <!-- PRODUCCIÓN -->
-  <div class="section-label">Producción &amp; Planeación</div>
+  <div class="section-label">
+    <div class="label-bar" style="background:#00d4ff;box-shadow:0 0 12px #00d4ff"></div>
+    🏭 Producción &amp; Planeación
+  </div>
   <div class="apps-grid">
-
-    <a class="app-card cat-prod"
-       href="https://script.google.com/macros/s/AKfycbyDxTSHPygL1Ba93kHFisiInmZZf6zHM63jOHfqPGv45bdbOJ1Av2lg-DigAGjH50Co1w/exec"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-prod" href="https://script.google.com/macros/s/AKfycbyDxTSHPygL1Ba93kHFisiInmZZf6zHM63jOHfqPGv45bdbOJ1Av2lg-DigAGjH50Co1w/exec" target="_blank" rel="noopener">
       <div class="app-icon">🏭</div>
-      <div class="app-info">
-        <div class="app-name">Producción</div>
-        <div class="app-desc">Control y planeación de producción</div>
-      </div>
+      <div class="app-info"><div class="app-name">Producción</div><div class="app-desc">Control y planeación de producción</div></div>
       <div class="app-arrow">→</div>
     </a>
-
-    <a class="app-card cat-comp"
-       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=existencia"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-comp" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=existencia" target="_blank" rel="noopener">
       <div class="app-icon">🧪</div>
-      <div class="app-info">
-        <div class="app-name">Materia Prima</div>
-        <div class="app-desc">Existencias e inventario</div>
-      </div>
+      <div class="app-info"><div class="app-name">Materia Prima</div><div class="app-desc">Existencias e inventario</div></div>
       <div class="app-arrow">→</div>
     </a>
-
-    <a class="app-card cat-comp"
-       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_embarques"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-comp" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_embarques" target="_blank" rel="noopener">
       <div class="app-icon">🚚</div>
-      <div class="app-info">
-        <div class="app-name">Embarques</div>
-        <div class="app-desc">Gestión de embarques y envíos</div>
-      </div>
+      <div class="app-info"><div class="app-name">Embarques</div><div class="app-desc">Gestión de embarques y envíos</div></div>
       <div class="app-arrow">→</div>
     </a>
-
   </div>
 
   <!-- COMPRAS -->
-  <div class="section-label">Compras &amp; Abastecimiento</div>
+  <div class="section-label">
+    <div class="label-bar" style="background:#22c55e;box-shadow:0 0 12px #22c55e"></div>
+    🛒 Compras &amp; Abastecimiento
+  </div>
   <div class="apps-grid">
-
-    <a class="app-card cat-comp"
-       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-comp" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras" target="_blank" rel="noopener">
       <div class="app-icon">🛒</div>
-      <div class="app-info">
-        <div class="app-name">Compras</div>
-        <div class="app-desc">Gestión de compras y proveedores</div>
-      </div>
+      <div class="app-info"><div class="app-name">Compras</div><div class="app-desc">Gestión de compras y proveedores</div></div>
       <div class="app-arrow">→</div>
     </a>
-
     <a class="app-card cat-pend">
       <div class="app-icon">📋</div>
-      <div class="app-info">
-        <div class="app-name">Generar Requisición</div>
-        <div class="app-desc">URL pendiente de configurar</div>
-      </div>
+      <div class="app-info"><div class="app-name">Generar Requisición</div><div class="app-desc">URL pendiente de configurar</div></div>
       <div class="app-arrow">⏳</div>
     </a>
-
   </div>
 
   <!-- MANTENIMIENTO -->
-  <div class="section-label">Mantenimiento</div>
+  <div class="section-label">
+    <div class="label-bar" style="background:#ff6b35;box-shadow:0 0 12px #ff6b35"></div>
+    🔧 Mantenimiento
+  </div>
   <div class="apps-grid">
-
-    <a class="app-card cat-mant"
-       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_app"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-mant" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_app" target="_blank" rel="noopener">
       <div class="app-icon">🔧</div>
-      <div class="app-info">
-        <div class="app-name">Mantenimiento</div>
-        <div class="app-desc">Sistema principal CMMS</div>
-      </div>
+      <div class="app-info"><div class="app-name">Mantenimiento</div><div class="app-desc">Sistema principal CMMS</div></div>
       <div class="app-arrow">→</div>
     </a>
-
-    <a class="app-card cat-mant"
-       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=mantenimiento"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-mant" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=mantenimiento" target="_blank" rel="noopener">
       <div class="app-icon">📝</div>
-      <div class="app-info">
-        <div class="app-name">Generar Orden</div>
-        <div class="app-desc">Crear nueva orden de trabajo</div>
-      </div>
+      <div class="app-info"><div class="app-name">Generar Orden</div><div class="app-desc">Crear nueva orden de trabajo</div></div>
       <div class="app-arrow">→</div>
     </a>
-
-    <a class="app-card cat-mant"
-       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=gestionordenes"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-mant" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=gestionordenes" target="_blank" rel="noopener">
       <div class="app-icon">📊</div>
-      <div class="app-info">
-        <div class="app-name">Gestionar Órdenes</div>
-        <div class="app-desc">Ver y administrar órdenes activas</div>
-      </div>
+      <div class="app-info"><div class="app-name">Gestionar Órdenes</div><div class="app-desc">Ver y administrar órdenes activas</div></div>
       <div class="app-arrow">→</div>
     </a>
-
   </div>
 
   <!-- RRHH -->
-  <div class="section-label">Recursos Humanos</div>
+  <div class="section-label">
+    <div class="label-bar" style="background:#a855f7;box-shadow:0 0 12px #a855f7"></div>
+    👥 Recursos Humanos
+  </div>
   <div class="apps-grid">
-
-    <a class="app-card cat-rrhh"
-       href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras"
-       target="_blank" rel="noopener">
+    <a class="app-card cat-rrhh" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras" target="_blank" rel="noopener">
       <div class="app-icon">👥</div>
-      <div class="app-info">
-        <div class="app-name">Recursos Humanos</div>
-        <div class="app-desc">Gestión de personal</div>
-      </div>
+      <div class="app-info"><div class="app-name">Recursos Humanos</div><div class="app-desc">Gestión de personal</div></div>
       <div class="app-arrow">→</div>
     </a>
-
   </div>
 
-  <!-- FOOTER -->
   <footer>
     <span>© 2026 ToolCN — Sistemas Industriales</span>
     <span id="clock">--:--:--</span>
@@ -474,19 +473,54 @@
 </div>
 
 <script>
-  // Reloj en tiempo real
+  // Reloj
   function tick() {
-    const now = new Date();
     document.getElementById('clock').textContent =
-      now.toLocaleTimeString('es-MX', { hour12: false });
+      new Date().toLocaleTimeString('es-MX', { hour12: false });
   }
-  tick();
-  setInterval(tick, 1000);
+  tick(); setInterval(tick, 1000);
 
-  // Bloquear cards pendientes
-  document.querySelectorAll('.cat-pend').forEach(card => {
-    card.addEventListener('click', e => e.preventDefault());
-  });
+  // Bloquear pendientes
+  document.querySelectorAll('.cat-pend').forEach(c =>
+    c.addEventListener('click', e => e.preventDefault())
+  );
+
+  // Partículas flotantes
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      width: ${2 + Math.random() * 3}px;
+      height: ${2 + Math.random() * 3}px;
+      animation-duration: ${9 + Math.random() * 12}s;
+      animation-delay: ${Math.random() * 12}s;
+      background: ${Math.random() > 0.5 ? '#00d4ff' : '#ff6b35'};
+    `;
+    document.getElementById('particles').appendChild(p);
+  }
+
+  // Monito sorpresa
+  const monito = document.getElementById('monito');
+
+  function showMonito() {
+    const lado = ['left','right','bottom'][Math.floor(Math.random() * 3)];
+    if (lado === 'left') {
+      monito.style.cssText = `left:12px; bottom:${10+Math.random()*50}vh; right:auto; top:auto;`;
+    } else if (lado === 'right') {
+      monito.style.cssText = `right:12px; bottom:${10+Math.random()*50}vh; left:auto; top:auto;`;
+    } else {
+      monito.style.cssText = `bottom:12px; left:${5+Math.random()*75}vw; right:auto; top:auto;`;
+    }
+    monito.classList.add('visible');
+    setTimeout(() => monito.classList.remove('visible'), 2800);
+  }
+
+  function loop() {
+    setTimeout(() => { showMonito(); loop(); }, 12000 + Math.random() * 14000);
+  }
+
+  setTimeout(() => { showMonito(); loop(); }, 9000);
 </script>
 </body>
 </html>
