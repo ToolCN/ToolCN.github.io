@@ -79,7 +79,6 @@
       100% { transform: translateY(-80px); opacity: 0; }
     }
 
-    /* ── BURBUJAS DE IMÁGENES ── */
     .bubble {
       position: fixed;
       border-radius: 50%;
@@ -98,7 +97,6 @@
       100% { transform: translateY(-360px); opacity: 0; }
     }
 
-
     .wrap {
       position: relative; z-index: 1;
       max-width: 1100px;
@@ -106,7 +104,6 @@
       padding: 0 20px 60px;
     }
 
-    /* ── HEADER ── */
     header {
       display: flex;
       align-items: center;
@@ -151,7 +148,6 @@
       line-height: 1;
     }
 
-    /* Animación de salida: vibra, se corrompe y desaparece */
     @keyframes glitchOut {
       0%   { filter: blur(0px)  brightness(1);   transform: translateX(0)   skewX(0deg);   opacity: 1; }
       10%  { filter: blur(1px)  brightness(1.4); transform: translateX(-4px) skewX(-3deg); opacity: 1; }
@@ -165,7 +161,6 @@
       100% { filter: blur(24px) brightness(0);   transform: scale(1.05);                  opacity: 0; }
     }
 
-    /* Animación de entrada: emerge desde el caos */
     @keyframes glitchIn {
       0%   { filter: blur(24px) brightness(0);   transform: scale(0.95) skewX(0deg);  opacity: 0; }
       15%  { filter: blur(16px) brightness(0.5); transform: scale(1)    skewX(4deg);  opacity: 0.2; }
@@ -179,7 +174,6 @@
       100% { filter: blur(0px)  brightness(1);   transform: translateX(0) skewX(0deg);     opacity: 1; }
     }
 
-    /* Logo animaciones */
     @keyframes logoOut {
       0%   { filter: blur(0px)  brightness(1) saturate(1);  transform: scale(1)    rotate(0deg);   opacity: 1; }
       25%  { filter: blur(2px)  brightness(1.5) saturate(2); transform: scale(1.05) rotate(-2deg); opacity: 0.8; }
@@ -233,7 +227,6 @@
       animation: blink 2s ease infinite;
     }
 
-    /* ── SECTION LABEL ── */
     .section-label {
       font-family: 'Rajdhani', sans-serif;
       font-size: 1.65rem;
@@ -261,7 +254,6 @@
       margin-left: 8px;
     }
 
-    /* ── GRID ── */
     .apps-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
@@ -269,7 +261,6 @@
       margin-bottom: 50px;
     }
 
-    /* ── CARD ── */
     .app-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -296,7 +287,6 @@
       transition: opacity 0.3s;
     }
 
-    /* Shimmer sweep */
     .app-card::after {
       content: '';
       position: absolute;
@@ -310,11 +300,12 @@
     .app-card:hover::before { opacity: 1; }
     .app-card:hover::after  { top: 160%; }
 
-    .cat-prod { --c: #00d4ff; }
-    .cat-mant { --c: #ff6b35; }
-    .cat-rrhh { --c: #a855f7; }
-    .cat-comp { --c: #22c55e; }
-    .cat-pend { --c: #64748b; opacity: 0.5; cursor: not-allowed; }
+    .cat-report{ --c: #f59e0b; }
+    .cat-prod  { --c: #00d4ff; }
+    .cat-mant  { --c: #ff6b35; }
+    .cat-rrhh  { --c: #a855f7; }
+    .cat-comp  { --c: #22c55e; }
+    .cat-pend  { --c: #64748b; opacity: 0.5; cursor: not-allowed; }
 
     .app-card:hover { border-color: var(--c, var(--accent)); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px color-mix(in srgb, var(--c, var(--accent)) 20%, transparent); }
 
@@ -362,7 +353,6 @@
 
     .app-card:hover .app-arrow { transform: translateX(6px); color: var(--c, var(--accent)); }
 
-    /* ── MONITO ── */
     #monito {
       position: fixed;
       width: 100px;
@@ -387,7 +377,6 @@
 
     #monito.visible img { animation: bounce 0.7s ease-in-out infinite; }
 
-    /* ── FOOTER ── */
     footer {
       border-top: 1px solid var(--border);
       padding-top: 24px;
@@ -445,6 +434,19 @@
     </div>
     <div class="status-pill">Sistemas en línea</div>
   </header>
+
+  <!-- REPORTES -->
+  <div class="section-label">
+    <div class="label-bar" style="background:#f59e0b;box-shadow:0 0 12px #f59e0b"></div>
+    📊 Reportes
+  </div>
+  <div class="apps-grid">
+    <a class="app-card cat-report" href="https://toolcn.github.io/pantalla_OM.html" target="_blank" rel="noopener">
+      <div class="app-icon">📋</div>
+      <div class="app-info"><div class="app-name">Pantalla OM</div><div class="app-desc">Reporte de órdenes de mantenimiento</div></div>
+      <div class="app-arrow">→</div>
+    </a>
+  </div>
 
   <!-- PRODUCCIÓN -->
   <div class="section-label">
@@ -516,7 +518,7 @@
     👥 Recursos Humanos
   </div>
   <div class="apps-grid">
-    <a class="app-card cat-rrhh" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras" target="_blank" rel="noopener">
+    <a class="app-card cat-rrhh" href="https://script.google.com/macros/s/AKfycbwVRAgJccVKU6TgYD3NN2KZjX1zwxwIYUuG9FiVTmJRPoW4SkIThAPbH5w408oBb73l/exec" target="_blank" rel="noopener">
       <div class="app-icon">👥</div>
       <div class="app-info"><div class="app-name">Recursos Humanos</div><div class="app-desc">Gestión de personal</div></div>
       <div class="app-arrow">→</div>
@@ -531,39 +533,31 @@
 </div>
 
 <script>
-  // Reloj
   function tick() {
     document.getElementById('clock').textContent =
       new Date().toLocaleTimeString('es-MX', { hour12: false });
   }
   tick(); setInterval(tick, 1000);
 
-  // Alternancia ToolCN <-> Clavos Nacionales CN
   const titleEl = document.getElementById('titleText');
   const logoImg = document.getElementById('logoImg');
   const stateA  = { html: 'Tool<span class="ac">CN</span>',               logo: 'https://i.imgur.com/OgCXcvt.png'   };
   const stateB  = { html: 'Clavos Nacionales <span class="ac">CN</span>', logo: 'https://i.imgur.com/YeWmNff.jpeg'  };
   let current = 'A';
-  const OUT_DUR = 900;  // ms duración animación salida
-  const IN_DUR  = 1000; // ms duración animación entrada
+  const OUT_DUR = 900;
+  const IN_DUR  = 1000;
 
   function switchTitle() {
     const next = current === 'A' ? stateB : stateA;
-
-    // Salida con glitch dramático
     titleEl.style.animation = 'none';
     logoImg.style.animation  = 'none';
-    void titleEl.offsetWidth; // forzar reflow
+    void titleEl.offsetWidth;
     titleEl.style.animation = `glitchOut ${OUT_DUR}ms ease forwards`;
     logoImg.style.animation  = `logoOut ${OUT_DUR}ms ease forwards`;
-
     setTimeout(() => {
-      // Cambiar contenido
       titleEl.innerHTML = next.html;
       logoImg.src       = next.logo;
       current = current === 'A' ? 'B' : 'A';
-
-      // Entrada con glitch
       titleEl.style.animation = 'none';
       logoImg.style.animation  = 'none';
       void titleEl.offsetWidth;
@@ -572,29 +566,22 @@
     }, OUT_DUR + 80);
   }
 
-  // Al cargar: 3 iteraciones rápidas (cada 5s) para validar, luego cada 60s
   let iteration = 0;
-  const MAX_FAST = 3;   // iteraciones rápidas
+  const MAX_FAST = 3;
   const FAST_MS  = 5000;
   const SLOW_MS  = 60000;
 
   function scheduleNext() {
     iteration++;
     const delay = iteration <= MAX_FAST ? FAST_MS : SLOW_MS;
-    setTimeout(() => {
-      switchTitle();
-      scheduleNext();
-    }, delay);
+    setTimeout(() => { switchTitle(); scheduleNext(); }, delay);
   }
-
   scheduleNext();
 
-  // Bloquear pendientes
   document.querySelectorAll('.cat-pend').forEach(c =>
     c.addEventListener('click', e => e.preventDefault())
   );
 
-  // Partículas flotantes
   for (let i = 0; i < 20; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
@@ -609,65 +596,42 @@
     document.getElementById('particles').appendChild(p);
   }
 
-
-  // Burbujas — 4 cols, equidistantes, la más reciente encima
   const imgs = [
-    'https://i.imgur.com/P6NyVhs.jpeg',
-    'https://i.imgur.com/wvDbdwl.jpeg',
-    'https://i.imgur.com/km3R2N7.jpeg',
-    'https://i.imgur.com/9W2fbG7.jpeg',
-    'https://i.imgur.com/By3iqqq.png',
-    'https://i.imgur.com/dpeaVaY.png',
-    'https://i.imgur.com/Sj9S2BP.png',
-    'https://i.imgur.com/jmPqbrH.png',
-    'https://i.imgur.com/pmeSadp.png',
-    'https://i.imgur.com/esPtyu4.png',
-    'https://i.imgur.com/M8ldNqR.png',
-    'https://i.imgur.com/XpSdH8a.png',
-    'https://i.imgur.com/MHMzybp.jpeg',
-    'https://i.imgur.com/UrEynW7.png',
+    'https://i.imgur.com/P6NyVhs.jpeg','https://i.imgur.com/wvDbdwl.jpeg',
+    'https://i.imgur.com/km3R2N7.jpeg','https://i.imgur.com/9W2fbG7.jpeg',
+    'https://i.imgur.com/By3iqqq.png', 'https://i.imgur.com/dpeaVaY.png',
+    'https://i.imgur.com/Sj9S2BP.png', 'https://i.imgur.com/jmPqbrH.png',
+    'https://i.imgur.com/pmeSadp.png', 'https://i.imgur.com/esPtyu4.png',
+    'https://i.imgur.com/M8ldNqR.png', 'https://i.imgur.com/XpSdH8a.png',
+    'https://i.imgur.com/MHMzybp.jpeg','https://i.imgur.com/UrEynW7.png',
     'https://i.imgur.com/0tCZ0Cx.png'
   ];
 
   const SIZE = 288;
   const COLS = 4;
   const ROWS = 3;
-  // Duración idéntica para todas las imágenes de la misma columna
-  // Separación entre imágenes = dur / ROWS exacto → equidistante garantizado
-  // Duración larga = mucho espacio visible entre apariciones
-  const COL_DUR = [96, 108, 90, 102];
-  // Offset horizontal distinto por columna para que no alineen en horizontal
-  const COL_XOFF = [1, -2, 2.5, -1.5]; // vw
+  const COL_DUR  = [96, 108, 90, 102];
+  const COL_XOFF = [1, -2, 2.5, -1.5];
   const pContainer = document.getElementById('particles');
   const colWidth = 100 / COLS;
 
   for (let col = 0; col < COLS; col++) {
     const dur = COL_DUR[col];
-    const spacing = dur / ROWS; // segundos exactos entre cada imagen del mismo carril
+    const spacing = dur / ROWS;
     const leftVw  = colWidth * col + colWidth / 2 + COL_XOFF[col];
-
     for (let row = 0; row < ROWS; row++) {
-      // Delay negativo = ya llevan "delay" segundos avanzados al cargar la página
-      // Cada row está espaciado exactamente spacing segundos dentro del ciclo
-      // Pequeño offset por columna para que no todos los "row 0" arranquen igual
-      const colPhase = col * 7; // desfase de fase entre columnas
+      const colPhase = col * 7;
       const delay = row * spacing + colPhase;
-
-      // z-index: la imagen que salió más recientemente (row mayor) queda encima
-      // Dentro del ciclo la más reciente tiene delay mayor → z-index mayor
       const zIdx = row + 1;
-
       const b = document.createElement('div');
       b.className = 'bubble';
       b.style.cssText = `
         left: calc(${leftVw}vw - ${SIZE/2}px);
-        width: ${SIZE}px;
-        height: ${SIZE}px;
+        width: ${SIZE}px; height: ${SIZE}px;
         animation-duration: ${dur}s;
         animation-delay: -${delay}s;
         z-index: ${zIdx};
       `;
-
       const img = document.createElement('img');
       img.src = imgs[(col * ROWS + row) % imgs.length];
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
@@ -676,9 +640,7 @@
     }
   }
 
-  // Monito sorpresa
   const monito = document.getElementById('monito');
-
   function showMonito() {
     const lado = ['left','right','bottom'][Math.floor(Math.random() * 3)];
     if (lado === 'left') {
@@ -691,11 +653,9 @@
     monito.classList.add('visible');
     setTimeout(() => monito.classList.remove('visible'), 2800);
   }
-
   function loop() {
     setTimeout(() => { showMonito(); loop(); }, 12000 + Math.random() * 14000);
   }
-
   setTimeout(() => { showMonito(); loop(); }, 9000);
 </script>
 </body>
