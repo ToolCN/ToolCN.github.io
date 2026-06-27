@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a2744">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mat. Prima">
+  <title>Materia Prima — ToolCN</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1729;color:#e8eaf0;min-height:100vh;overscroll-behavior:none}
+
+    /* HEADER */
+    .header{background:#1a2744;padding:14px 16px 10px;position:sticky;top:0;z-index:100;border-bottom:1px solid #2a3a5c}
+    .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .logo{display:flex;align-items:center;gap:8px}
+    .logo-icon{width:34px;height:34px;background:#2563eb;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;letter-spacing:-1px}
+    .logo-text{font-size:15px;font-weight:600}
+    .logo-sub{font-size:10px;color:#6b7fa3;margin-top:1px}
+    .btn-sync{background:transparent;border:1px solid #2a3a5c;color:#6b7fa3;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+    .btn-sync:active{background:#2a3a5c}
+    .btn-sync.cargando{color:#2563eb;border-color:#2563eb}
+    .filtros{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+    .filtros::-webkit-scrollbar{display:none}
+    .chip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;border:1px solid #2a3a5c;background:transparent;color:#6b7fa3;cursor:pointer;flex-shrink:0}
+    .chip.active{background:#2563eb;border-color:#2563eb;color:#fff}
+
+    /* CONFIG BANNER */
+    .banner-config{background:#1e1b4b;border:1px solid #3730a3;border-radius:10px;margin:12px 16px 0;padding:12px 14px;display:flex;align-items:flex-start;gap:10px}
+    .banner-config.oculto{display:none}
+    .banner-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+    .banner-txt{font-size:12px;color:#a5b4fc;line-height:1.5}
+    .banner-txt b{color:#e0e7ff;display:block;margin-bottom:2px}
+    .btn-config{margin-top:6px;background:#4338ca;border:none;color:#e0e7ff;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer}
+
+    /* STATS */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 16px}
+    .stat{background:#1a2744;border-radius:10px;padding:9px 6px;text-align:center;border:1px solid #2a3a5c}
+    .stat-num{font-size:20px;font-weight:700;line-height:1}
+    .stat-lbl{font-size:9px;color:#6b7fa3;margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+    .stat.total .stat-num{color:#e8eaf0}
+    .stat.pendiente .stat-num{color:#f59e0b}
+    .stat.liberado .stat-num{color:#10b981}
+    .stat.rechazado .stat-num{color:#ef4444}
+
+    /* LISTA */
+    .lista{padding:0 16px 100px;display:flex;flex-direction:column;gap:8px}
+    .card{background:#1a2744;border-radius:12px;border:1px solid #2a3a5c;overflow:hidden;cursor:pointer;transition:border-color .15s}
+    .card:active{border-color:#4a5a7a}
+    .card-header{display:flex;align-items:center;gap:9px;padding:11px 13px 7px}
+    .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .dot.pendiente{background:#f59e0b}
+    .dot.liberado{background:#10b981}
+    .dot.rechazado{background:#ef4444}
+    .dot.inspeccion{background:#6366f1}
+    .card-titulo{font-size:13px;font-weight:600;flex:1;letter-spacing:.3px}
+    .badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
+    .badge.pendiente{background:#422006;color:#f59e0b}
+    .badge.liberado{background:#052e16;color:#10b981}
+    .badge.rechazado{background:#450a0a;color:#ef4444}
+    .badge.inspeccion{background:#1e1b4b;color:#818cf8}
+    .card-body{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding:0 13px 9px}
+    .fld{font-size:11px}
+    .fld-k{color:#4a5a7a}
+    .fld-v{color:#c8d0e0;font-weight:500}
+    .card-footer{display:flex;border-top:1px solid #2a3a5c}
+    .btn-act{flex:1;padding:9px;border:none;background:transparent;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+    .btn-act:active{background:#0f1e3a}
+    .btn-act+.btn-act{border-left:1px solid #2a3a5c}
+    .btn-act.lib{color:#10b981}
+    .btn-act.rech{color:#ef4444}
+
+    /* OVERLAY */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end}
+    .overlay.v{display:flex}
+    .modal{background:#1a2744;border-radius:20px 20px 0 0;padding:18px 18px 40px;width:100%;max-height:88vh;overflow-y:auto}
+    .handle{width:36px;height:4px;background:#2a3a5c;border-radius:2px;margin:0 auto 14px}
+    .modal-tit{font-size:16px;font-weight:700;margin-bottom:14px}
+    .drow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #2a3a5c;font-size:13px}
+    .drow:last-of-type{border-bottom:none}
+    .dk{color:#6b7fa3}
+    .dv{color:#e8eaf0;font-weight:500;text-align:right}
+    .barra-acc{display:flex;gap:8px;margin-top:14px}
+    .btn-lib{flex:1;padding:12px;border:none;border-radius:10px;background:#065f46;color:#10b981;font-size:14px;font-weight:700;cursor:pointer}
+    .btn-rech{flex:1;padding:12px;border:none;border-radius:10px;background:#450a0a;color:#ef4444;font-size:14px;font-weight:700;cursor:pointer}
+    .btn-lib:active,.btn-rech:active{opacity:.8}
+
+    /* MODAL CONFIG */
+    .campo-form{margin-bottom:13px}
+    .campo-form label{font-size:12px;color:#6b7fa3;display:block;margin-bottom:4px}
+    .campo-form input{width:100%;background:#0f1729;border:1px solid #2a3a5c;border-radius:8px;color:#e8eaf0;padding:10px 12px;font-size:13px}
+    .campo-form input:focus{outline:none;border-color:#2563eb}
+    .campo-form .hint{font-size:11px;color:#4a5a7a;margin-top:4px;line-height:1.4}
+    .modal-btns{display:flex;gap:8px;margin-top:16px}
+    .btn-cancel{flex:1;padding:11px;border:1px solid #2a3a5c;border-radius:9px;background:transparent;color:#6b7fa3;font-size:13px;font-weight:600;cursor:pointer}
+    .btn-save{flex:2;padding:11px;border:none;border-radius:9px;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#10b981;color:#fff;padding:9px 20px;border-radius:24px;font-size:13px;font-weight:600;transition:transform .3s;z-index:300;white-space:nowrap}
+    .toast.v{transform:translateX(-50%) translateY(0)}
+    .toast.err{background:#ef4444}
+
+    /* ESTADOS */
+    .estado-cargando,.estado-error,.estado-vacio{text-align:center;padding:40px 20px;color:#4a5a7a}
+    .estado-icon{font-size:36px;margin-bottom:8px}
+    .estado-txt{font-size:14px;line-height:1.5}
+    .spin{display:inline-block;animation:spin 1s linear infinite;font-size:28px;margin-bottom:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">MP</div>
+      <div>
+        <div class="logo-text">Materia Prima</div>
+        <div class="logo-sub">TOOLCN — PLANTA QRO</div>
+      </div>
+    </div>
+    <button class="btn-sync" id="btnSync" onclick="cargarDatos()">&#8635; Sincronizar</button>
+  </div>
+  <div class="filtros">
+    <button class="chip active" onclick="filtrar('todos',this)">Todos</button>
+    <button class="chip" onclick="filtrar('pendiente',this)">Pendientes</button>
+    <button class="chip" onclick="filtrar('inspeccion',this)">En inspecci&oacute;n</button>
+    <button class="chip" onclick="filtrar('liberado',this)">Liberados</button>
+    <button class="chip" onclick="filtrar('rechazado',this)">Rechazados</button>
+  </div>
+</div>
+
+<!-- Banner de configuración (se oculta cuando hay URL guardada) -->
+<div class="banner-config" id="bannerConfig">
+  <div class="banner-icon">⚙️</div>
+  <div>
+    <div class="banner-txt">
+      <b>Configura la conexión a Google Sheets</b>
+      Esta app necesita la URL de tu Web App de GAS para obtener datos reales.
+    </div>
+    <button class="btn-config" onclick="abrirConfig()">Configurar URL</button>
+  </div>
+</div>
+
+<div class="stats" id="stats">
+  <div class="stat total"><div class="stat-num">—</div><div class="stat-lbl">Total</div></div>
+  <div class="stat pendiente"><div class="stat-num">—</div><div class="stat-lbl">Pendiente</div></div>
+  <div class="stat liberado"><div class="stat-num">—</div><div class="stat-lbl">Liberado</div></div>
+  <div class="stat rechazado"><div class="stat-num">—</div><div class="stat-lbl">Rechazado</div></div>
+</div>
+
+<div class="lista" id="lista">
+  <div class="estado-cargando">
+    <div class="estado-icon">📋</div>
+    <div class="estado-txt">Configura la URL de GAS<br>para ver los datos reales</div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="overlay" id="ovDetalle" onclick="cerrarDetalle()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div id="detalleContenido"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div class="overlay" id="ovConfig" onclick="cerrarConfig()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div class="modal-tit">⚙️ Configuración</div>
+    <div class="campo-form">
+      <label>URL del Web App de GAS</label>
+      <input type="url" id="inpUrl" placeholder="https://script.google.com/macros/s/...">
+      <div class="hint">
+        Esta URL la obtienes en GAS: <b>Implementar → Nueva implementación → Web App</b>.<br>
+        Cópiala y pégala aquí. Se guarda solo en este dispositivo.
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarConfig()">Cancelar</button>
+      <button class="btn-save" onclick="guardarConfig()">Guardar y sincronizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const LS_URL = 'toolcn_mp_url';
+let DATOS = [];
+let filtroActual = 'todos';
+const ETIQUETAS = {
+  pendiente: 'Pendiente',
+  inspeccion: 'En inspección',
+  liberado: 'Liberado',
+  rechazado: 'Rechazado'
+};
+
+(function init() {
+  const url = localStorage.getItem(LS_URL);
+  if (url) {
+    document.getElementById('bannerConfig').classList.add('oculto');
+    cargarDatos();
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+})();
+
+async function cargarDatos() {
+  const url = localStorage.getItem(LS_URL);
+  if (!url) { abrirConfig(); return; }
+  const btn = document.getElementById('btnSync');
+  btn.classList.add('cargando');
+  btn.textContent = '⟳ Cargando...';
+  mostrarCargando();
+  try {
+    const resp = await fetch(url + '?accion=getMateriaPrima', { cache: 'no-store' });
+    if (!resp.ok) throw new Error('Error HTTP ' + resp.status);
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error || 'Respuesta inesperada del servidor');
+    DATOS = json.datos;
+    renderStats();
+    renderLista();
+    mostrarToast('Datos actualizados ✓');
+  } catch (err) {
+    mostrarError(err.message);
+    mostrarToast('Error al conectar con GAS', 'err');
+  } finally {
+    btn.classList.remove('cargando');
+    btn.innerHTML = '&#8635; Sincronizar';
+  }
+}
+
+function renderStats() {
+  const t = DATOS.length;
+  const p = DATOS.filter(d => d.estatus === 'pendiente').length;
+  const l = DATOS.filter(d => d.estatus === 'liberado').length;
+  const r = DATOS.filter(d => d.estatus === 'rechazado').length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat total"><div class="stat-num">${t}</div><div class="stat-lbl">Total</div></div>
+    <div class="stat pendiente"><div class="stat-num">${p}</div><div class="stat-lbl">Pendiente</div></div>
+    <div class="stat liberado"><div class="stat-num">${l}</div><div class="stat-lbl">Liberado</div></div>
+    <div class="stat rechazado"><div class="stat-num">${r}</div><div class="stat-lbl">Rechazado</div></div>
+  `;
+}
+
+function renderLista() {
+  const lista = document.getElementById('lista');
+  const datos = filtroActual === 'todos' ? DATOS : DATOS.filter(d => d.estatus === filtroActual);
+  if (!datos.length) {
+    lista.innerHTML = `<div class="estado-vacio"><div class="estado-icon">📭</div><div class="estado-txt">Sin registros en esta categoría</div></div>`;
+    return;
+  }
+  lista.innerHTML = datos.map((d, i) => {
+    const idx = DATOS.indexOf(d);
+    const acciones = (d.estatus === 'pendiente' || d.estatus === 'inspeccion') ? `
+      <div class="card-footer">
+        <button class="btn-act lib" onclick="event.stopPropagation();cambiarEstatus(${idx},'liberado')">✓ Liberar</button>
+        <button class="btn-act rech" onclick="event.stopPropagation();cambiarEstatus(${idx},'rechazado')">✗ Rechazar</button>
+      </div>` : '';
+    return `
+      <div class="card" onclick="verDetalle(${idx})">
+        <div class="card-header">
+          <div class="dot ${d.estatus}"></div>
+          <div class="card-titulo">${d.colada || '—'}</div>
+          <span class="badge ${d.estatus}">${ETIQUETAS[d.estatus] || d.estatus}</span>
+        </div>
+        <div class="card-body">
+          <div class="fld"><span class="fld-k">Proveedor: </span><span class="fld-v">${d.proveedor || '—'}</span></div>
+          <div class="fld"><span class="fld-k">Diám.: </span><span class="fld-v">${d.diametro ? d.diametro + ' mm' : '—'}</span></div>
+          <div class="fld"><span class="fld-k">Peso: </span><span class="fld-v">${d.peso ? Number(d.peso).toLocaleString() + ' kg' : '—'}</span></div>
+          <div class="fld"><span class="fld-k">Fecha: </span><span class="fld-v">${d.fecha || '—'}</span></div>
+        </div>
+        ${acciones}
+      </div>`;
+  }).join('');
+}
+
+function filtrar(f, btn) {
+  filtroActual = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderLista();
+}
+
+function verDetalle(idx) {
+  const d = DATOS[idx];
+  const acciones = (d.estatus === 'pendiente' || d.estatus === 'inspeccion') ? `
+    <div class="barra-acc">
+      <button class="btn-lib" onclick="cambiarEstatus(${idx},'liberado')">✓ Liberar</button>
+      <button class="btn-rech" onclick="cambiarEstatus(${idx},'rechazado')">✗ Rechazar</button>
+    </div>` : '';
+  document.getElementById('detalleContenido').innerHTML = `
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+      <div class="dot ${d.estatus}" style="width:11px;height:11px"></div>
+      <div class="modal-tit" style="margin-bottom:0">${d.colada || '—'}</div>
+      <span class="badge ${d.estatus}">${ETIQUETAS[d.estatus] || d.estatus}</span>
+    </div>
+    <div class="drow"><span class="dk">Proveedor</span><span class="dv">${d.proveedor || '—'}</span></div>
+    <div class="drow"><span class="dk">Diámetro</span><span class="dv">${d.diametro ? d.diametro + ' mm' : '—'}</span></div>
+    <div class="drow"><span class="dk">Peso</span><span class="dv">${d.peso ? Number(d.peso).toLocaleString() + ' kg' : '—'}</span></div>
+    <div class="drow"><span class="dk">Certificado</span><span class="dv">${d.certificado || '—'}</span></div>
+    <div class="drow"><span class="dk">Fecha entrada</span><span class="dv">${d.fecha || '—'}</span></div>
+    <div class="drow"><span class="dk">Inspector</span><span class="dv">${d.inspector || 'Sin asignar'}</span></div>
+    ${acciones}
+  `;
+  document.getElementById('ovDetalle').classList.add('v');
+}
+
+function cerrarDetalle() {
+  document.getElementById('ovDetalle').classList.remove('v');
+}
+
+async function cambiarEstatus(idx, nuevoEstatus) {
+  const d = DATOS[idx];
+  const url = localStorage.getItem(LS_URL);
+  if (!url) { mostrarToast('Configura la URL primero', 'err'); return; }
+  cerrarDetalle();
+  mostrarToast(nuevoEstatus === 'liberado' ? 'Liberando...' : 'Rechazando...');
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: 'setEstatus', colada: d.colada, estatus: nuevoEstatus })
+    });
+    const json = await resp.json();
+    if (!json.ok) throw new Error(json.error || 'Error del servidor');
+    DATOS[idx].estatus = nuevoEstatus;
+    renderStats();
+    renderLista();
+    mostrarToast(nuevoEstatus === 'liberado' ? 'Material liberado ✓' : 'Material rechazado ✗',
+                 nuevoEstatus === 'rechazado' ? 'err' : '');
+  } catch (err) {
+    mostrarToast('Error: ' + err.message, 'err');
+  }
+}
+
+function abrirConfig() {
+  const url = localStorage.getItem(LS_URL) || '';
+  document.getElementById('inpUrl').value = url;
+  document.getElementById('ovConfig').classList.add('v');
+}
+function cerrarConfig() {
+  document.getElementById('ovConfig').classList.remove('v');
+}
+function guardarConfig() {
+  const url = document.getElementById('inpUrl').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    mostrarToast('URL inválida. Debe empezar con https://script.google.com', 'err');
+    return;
+  }
+  localStorage.setItem(LS_URL, url);
+  document.getElementById('bannerConfig').classList.add('oculto');
+  cerrarConfig();
+  cargarDatos();
+}
+
+function mostrarCargando() {
+  document.getElementById('lista').innerHTML = `
+    <div class="estado-cargando">
+      <div class="spin">⟳</div>
+      <div class="estado-txt">Conectando con Google Sheets...</div>
+    </div>`;
+}
+function mostrarError(msg) {
+  document.getElementById('lista').innerHTML = `
+    <div class="estado-error">
+      <div class="estado-icon">⚠️</div>
+      <div class="estado-txt">${msg}<br><br>
+        <button onclick="abrirConfig()" style="background:#2563eb;border:none;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer">
+          Revisar configuración
+        </button>
+      </div>
+    </div>`;
+}
+
+let toastTimer;
+function mostrarToast(msg, tipo) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (tipo === 'err' ? ' err' : '') + ' v';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('v'), 2800);
+}
+</script>
+</body>
+</html>
