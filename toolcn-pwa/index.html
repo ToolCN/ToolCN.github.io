@@ -191,16 +191,25 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ─── CONFIGURACIÓN ────────────────────────────────────────────────────────────
+// La URL del GAS se guarda en localStorage del dispositivo
+// Estructura esperada del JSON que debe devolver GAS:
+// { "ok": true, "datos": [ { "colada","proveedor","diametro","peso","estatus","fecha","certificado","inspector" }, ... ] }
+// ─────────────────────────────────────────────────────────────────────────────
+
 const LS_URL = 'toolcn_mp_url';
+
 let DATOS = [];
 let filtroActual = 'todos';
+
 const ETIQUETAS = {
   pendiente: 'Pendiente',
-  inspeccion: 'En inspección',
+  inspeccion: 'En inspecci\u00f3n',
   liberado: 'Liberado',
   rechazado: 'Rechazado'
 };
 
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 (function init() {
   const url = localStorage.getItem(LS_URL);
   if (url) {
@@ -212,31 +221,53 @@ const ETIQUETAS = {
   }
 })();
 
-async function cargarDatos() {
+// ─── CARGA DE DATOS DESDE GAS ─────────────────────────────────────────────────
+function cargarDatos() {
   const url = localStorage.getItem(LS_URL);
   if (!url) { abrirConfig(); return; }
+
   const btn = document.getElementById('btnSync');
   btn.classList.add('cargando');
   btn.textContent = '⟳ Cargando...';
   mostrarCargando();
-  try {
-    const resp = await fetch(url + '?accion=getMateriaPrima', { cache: 'no-store' });
-    if (!resp.ok) throw new Error('Error HTTP ' + resp.status);
-    const json = await resp.json();
-    if (!json.ok) throw new Error(json.error || 'Respuesta inesperada del servidor');
+
+  // Usamos JSONP para evitar el problema de CORS con GAS
+  const cbName = 'cb_mp_' + Date.now();
+  const script = document.createElement('script');
+
+  // Timeout por si GAS no responde
+  const timer = setTimeout(function() {
+    delete window[cbName];
+    script.remove();
+    btn.classList.remove('cargando');
+    btn.innerHTML = '&#8635; Sincronizar';
+    mostrarError('Tiempo de espera agotado. Verifica la URL de GAS.');
+    mostrarToast('Error de conexión', 'err');
+  }, 15000);
+
+  window[cbName] = function(json) {
+    clearTimeout(timer);
+    delete window[cbName];
+    script.remove();
+    btn.classList.remove('cargando');
+    btn.innerHTML = '&#8635; Sincronizar';
+
+    if (!json.ok) {
+      mostrarError(json.error || 'Respuesta inesperada del servidor');
+      mostrarToast('Error del servidor', 'err');
+      return;
+    }
     DATOS = json.datos;
     renderStats();
     renderLista();
     mostrarToast('Datos actualizados ✓');
-  } catch (err) {
-    mostrarError(err.message);
-    mostrarToast('Error al conectar con GAS', 'err');
-  } finally {
-    btn.classList.remove('cargando');
-    btn.innerHTML = '&#8635; Sincronizar';
-  }
+  };
+
+  script.src = url + '?v=api&accion=getMateriaPrima&callback=' + cbName;
+  document.head.appendChild(script);
 }
 
+// ─── RENDER ───────────────────────────────────────────────────────────────────
 function renderStats() {
   const t = DATOS.length;
   const p = DATOS.filter(d => d.estatus === 'pendiente').length;
@@ -253,10 +284,12 @@ function renderStats() {
 function renderLista() {
   const lista = document.getElementById('lista');
   const datos = filtroActual === 'todos' ? DATOS : DATOS.filter(d => d.estatus === filtroActual);
+
   if (!datos.length) {
     lista.innerHTML = `<div class="estado-vacio"><div class="estado-icon">📭</div><div class="estado-txt">Sin registros en esta categoría</div></div>`;
     return;
   }
+
   lista.innerHTML = datos.map((d, i) => {
     const idx = DATOS.indexOf(d);
     const acciones = (d.estatus === 'pendiente' || d.estatus === 'inspeccion') ? `
@@ -289,6 +322,7 @@ function filtrar(f, btn) {
   renderLista();
 }
 
+// ─── DETALLE ──────────────────────────────────────────────────────────────────
 function verDetalle(idx) {
   const d = DATOS[idx];
   const acciones = (d.estatus === 'pendiente' || d.estatus === 'inspeccion') ? `
@@ -296,6 +330,7 @@ function verDetalle(idx) {
       <button class="btn-lib" onclick="cambiarEstatus(${idx},'liberado')">✓ Liberar</button>
       <button class="btn-rech" onclick="cambiarEstatus(${idx},'rechazado')">✗ Rechazar</button>
     </div>` : '';
+
   document.getElementById('detalleContenido').innerHTML = `
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
       <div class="dot ${d.estatus}" style="width:11px;height:11px"></div>
@@ -317,12 +352,15 @@ function cerrarDetalle() {
   document.getElementById('ovDetalle').classList.remove('v');
 }
 
+// ─── CAMBIO DE ESTATUS (envía a GAS) ─────────────────────────────────────────
 async function cambiarEstatus(idx, nuevoEstatus) {
   const d = DATOS[idx];
   const url = localStorage.getItem(LS_URL);
   if (!url) { mostrarToast('Configura la URL primero', 'err'); return; }
+
   cerrarDetalle();
   mostrarToast(nuevoEstatus === 'liberado' ? 'Liberando...' : 'Rechazando...');
+
   try {
     const resp = await fetch(url, {
       method: 'POST',
@@ -331,6 +369,8 @@ async function cambiarEstatus(idx, nuevoEstatus) {
     });
     const json = await resp.json();
     if (!json.ok) throw new Error(json.error || 'Error del servidor');
+
+    // Actualiza local
     DATOS[idx].estatus = nuevoEstatus;
     renderStats();
     renderLista();
@@ -341,6 +381,7 @@ async function cambiarEstatus(idx, nuevoEstatus) {
   }
 }
 
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
 function abrirConfig() {
   const url = localStorage.getItem(LS_URL) || '';
   document.getElementById('inpUrl').value = url;
@@ -361,6 +402,7 @@ function guardarConfig() {
   cargarDatos();
 }
 
+// ─── ESTADOS VISUALES ────────────────────────────────────────────────────────
 function mostrarCargando() {
   document.getElementById('lista').innerHTML = `
     <div class="estado-cargando">
@@ -380,6 +422,7 @@ function mostrarError(msg) {
     </div>`;
 }
 
+// ─── TOAST ───────────────────────────────────────────────────────────────────
 let toastTimer;
 function mostrarToast(msg, tipo) {
   const t = document.getElementById('toast');
