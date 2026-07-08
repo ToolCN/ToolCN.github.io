@@ -711,9 +711,9 @@
     setTimeout(() => monito.classList.remove('visible'), 2800);
   }
   function loop() {
-    setTimeout(() => { showMonito(); loop(); }, 12000 + Math.random() * 14000);
+    setTimeout(() => { showMonito(); loop(); }, 50000 + Math.random() * 20000);
   }
-  setTimeout(() => { showMonito(); loop(); }, 9000);
+  setTimeout(() => { showMonito(); loop(); }, 60000);
 </script>
 </body>
 </html>
