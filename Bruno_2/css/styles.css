@@ -1,0 +1,1018 @@
+/* ================================================================
+   styles.css — Estilos de Bruno_2
+   ----------------------------------------------------------------
+   Paleta de colores:
+     Fondo principal: #0a0a1a  (azul noche muy oscuro)
+     Fondo secundario: #0d1b2a (azul marino oscuro)
+     Dorado:  #FFD700 / #B8860B
+     Azul eléctrico: #00B4FF / #0066AA
+     Verde neón: #39FF14  (misiones completadas)
+     Rojo:    #FF4444     (cosas bloqueadas)
+     Texto:   #E8E8E8
+
+   Diseñado para TABLET HORIZONTAL.
+   Todos los elementos táctiles tienen mínimo 52px de altura/anchura.
+   No hay efectos que funcionen solo con hover.
+   ================================================================ */
+
+
+/* ----------------------------------------------------------------
+   VARIABLES GLOBALES (CSS Custom Properties)
+   ---------------------------------------------------------------- */
+:root {
+  --c-fondo:          #0a0a1a;
+  --c-fondo-2:        #0d1b2a;
+  --c-dorado:         #FFD700;
+  --c-dorado-dark:    #B8860B;
+  --c-azul:           #00B4FF;
+  --c-azul-dark:      #0066AA;
+  --c-verde:          #39FF14;
+  --c-rojo:           #FF4444;
+  --c-texto:          #E8E8E8;
+  --c-texto-dim:      rgba(232, 232, 232, 0.5);
+
+  --f-titulo:         'Orbitron', 'Trebuchet MS', 'Arial Black', sans-serif;
+  --f-cuerpo:         'Trebuchet MS', Arial, sans-serif;
+
+  --radio:            12px;
+  --transition:       0.3s ease;
+  --sombra-dorada:    0 0 20px rgba(255, 215, 0, 0.35);
+  --sombra-azul:      0 0 20px rgba(0, 180, 255, 0.35);
+}
+
+
+/* ----------------------------------------------------------------
+   RESET Y BASE
+   ---------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;            /* No hay scroll en la app */
+  background: var(--c-fondo);
+  color: var(--c-texto);
+  font-family: var(--f-cuerpo);
+  /* Desactivar gestos de sistema que interfieren con el swipe en las ruedas */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+
+/* ----------------------------------------------------------------
+   PANTALLAS
+   ---------------------------------------------------------------- */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen.hidden,
+.overlay-screen.hidden,
+.modal.hidden,
+.transition-overlay.hidden,
+.light-overlay,
+.lock-open-flash,
+.contact-pulse {
+  /* "hidden" se usa para ocultar/mostrar con JS → se sobreescribe cuando no hidden */
+}
+
+.hidden { display: none !important; }
+
+
+/* ================================================================
+   PANTALLA 1: CANDADOS
+   ================================================================ */
+
+#screen-locks {
+  background:
+    radial-gradient(ellipse at 50% 0%, #0d2a4a 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 100%, #1a0d2a 0%, transparent 60%),
+    var(--c-fondo);
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+/* Textura de cuadrícula en el fondo (decorativa) */
+.locks-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,215,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,215,0,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.title-main {
+  font-family: var(--f-titulo);
+  font-size: clamp(1.4rem, 4vw, 2.4rem);
+  color: var(--c-dorado);
+  text-shadow: var(--sombra-dorada);
+  letter-spacing: 5px;
+  text-align: center;
+  z-index: 1;
+}
+
+.subtitle {
+  font-size: clamp(0.75rem, 1.8vw, 1rem);
+  color: var(--c-texto-dim);
+  letter-spacing: 2px;
+  text-align: center;
+  z-index: 1;
+}
+
+
+/* ----------------------------------------------------------------
+   CADENAS Y CANDADOS
+   ---------------------------------------------------------------- */
+.chains-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(24px, 6vw, 80px);
+  z-index: 1;
+}
+
+/* Una unidad = cadena + candado colgando */
+.chain-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Representación visual de la cadena */
+.chain-links {
+  width: 20px;
+  height: 72px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--c-dorado-dark)  0px,   6px,
+    #5a4500               6px,  10px,
+    var(--c-dorado-dark)  10px, 16px,
+    transparent           16px, 20px
+  );
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(184, 134, 11, 0.4);
+  margin-bottom: -3px;
+  position: relative;
+  z-index: 0;
+}
+
+/* Cuando el candado se abre, la cadena "cae" */
+.chain-unit.unlocked .chain-links {
+  animation: chainFall 0.7s 0.4s ease-in forwards;
+}
+
+@keyframes chainFall {
+  to { transform: translateY(50px); opacity: 0; }
+}
+
+/* ---- EL CANDADO ---- */
+.lock {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Arco del candado (shackle = la parte en U) */
+.lock-shackle {
+  width: 44px;
+  height: 30px;
+  border: 5px solid var(--c-dorado-dark);
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  margin-bottom: -3px;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.5s ease, border-color 0.4s;
+  box-shadow: 0 -4px 12px rgba(184, 134, 11, 0.3);
+  transform-origin: left bottom;
+}
+
+/* Cuerpo del candado (contiene las ruedas) */
+.lock-body {
+  background: linear-gradient(160deg, #2a2a3a 0%, #16161e 60%, #2a2a3a 100%);
+  border: 2px solid var(--c-dorado-dark);
+  border-radius: 10px;
+  padding: 14px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: border-color 0.4s, box-shadow 0.4s;
+  position: relative;
+  z-index: 1;
+}
+
+/* Estado ABIERTO del candado */
+.lock.opening .lock-shackle {
+  animation: shackleOpen 0.8s ease forwards;
+}
+
+@keyframes shackleOpen {
+  0%   { transform: rotate(0deg)   translateY(0px);   border-color: var(--c-dorado-dark); }
+  50%  { transform: rotate(-50deg) translateY(-12px);  border-color: var(--c-dorado); }
+  100% { transform: rotate(-65deg) translateY(-22px);  border-color: var(--c-verde); }
+}
+
+.lock.opened .lock-body {
+  border-color: var(--c-verde);
+  box-shadow: 0 0 30px rgba(57, 255, 20, 0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.lock.opened .lock-shackle {
+  border-color: var(--c-verde);
+  transform: rotate(-65deg) translateY(-22px);
+}
+
+/* Badge "✓" que aparece cuando el candado se abre */
+.lock-badge {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--c-verde);
+  color: #000;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.4s 0.6s;
+  box-shadow: 0 0 10px rgba(57,255,20,0.5);
+  pointer-events: none;
+}
+
+.lock.opened .lock-badge {
+  opacity: 1;
+}
+
+/* ---- RUEDAS NUMÉRICAS ---- */
+.wheels-container {
+  display: flex;
+  gap: 5px;
+}
+
+.wheel-wrapper {
+  width: 52px;
+  height: 64px;        /* ← IMPORTANTE: debe coincidir con DIGIT_HEIGHT en locks.js */
+  overflow: hidden;
+  background: #0a0a12;
+  border: 1.5px solid rgba(255, 215, 0, 0.25);
+  border-radius: 6px;
+  position: relative;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.6);
+  /* Habilitar touch solo en dirección vertical */
+  touch-action: pan-y;
+}
+
+/* Gradientes arriba y abajo para crear efecto de profundidad en la rueda */
+.wheel-wrapper::before,
+.wheel-wrapper::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 22px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.wheel-wrapper::before {
+  top: 0;
+  background: linear-gradient(to bottom, #0a0a12 10%, transparent);
+}
+
+.wheel-wrapper::after {
+  bottom: 0;
+  background: linear-gradient(to top, #0a0a12 10%, transparent);
+}
+
+/* Línea de resaltado en el dígito activo */
+.wheel-wrapper .highlight-line {
+  position: absolute;
+  top: 50%;
+  left: 4px; right: 4px;
+  height: 1px;
+  background: rgba(255, 215, 0, 0.2);
+  z-index: 1;
+  pointer-events: none;
+  transform: translateY(-32px);
+}
+
+/* El strip que se mueve con el gesto */
+.wheel {
+  width: 100%;
+  will-change: transform; /* Optimización para animaciones fluidas */
+}
+
+.wheel-digit {
+  width: 52px;
+  height: 64px;          /* ← debe coincidir con DIGIT_HEIGHT en locks.js */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.9rem;
+  font-weight: 700;
+  font-family: var(--f-titulo);
+  color: var(--c-dorado);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+/* ---- DESTELLO DE LUZ EN EL CANDADO ---- */
+.lock-open-flash {
+  position: absolute;
+  inset: -30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 200, 0.95) 0%,
+    rgba(255, 215, 0, 0.5)   35%,
+    transparent               70%
+  );
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+}
+
+.lock-open-flash.active {
+  animation: localFlash 1.6s ease-out forwards;
+}
+
+@keyframes localFlash {
+  0%   { opacity: 0;   transform: scale(0.3); }
+  15%  { opacity: 1;   transform: scale(1.2); }
+  100% { opacity: 0;   transform: scale(2.5); }
+}
+
+/* ---- OVERLAY DE LUZ GLOBAL ---- */
+.light-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+}
+
+.light-overlay.active {
+  animation: globalFlash 1.6s ease-out forwards;
+}
+
+@keyframes globalFlash {
+  0%   { background: transparent; opacity: 0; }
+  20%  { background: radial-gradient(ellipse at center, rgba(255,255,200,0.8) 0%, transparent 70%); opacity: 1; }
+  100% { opacity: 0; }
+}
+
+
+/* ================================================================
+   TRANSICIÓN AL MAPA (zoom hacia la luz)
+   ================================================================ */
+
+.transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: transparent;
+}
+
+.transition-overlay.animating {
+  animation: zoomLight 1.4s ease-in-out forwards;
+}
+
+@keyframes zoomLight {
+  0%   { background: transparent; }
+  40%  { background: radial-gradient(circle at center, white 0%, rgba(255,255,200,0.8) 40%, transparent 80%); }
+  70%  { background: white; }
+  100% { background: transparent; }
+}
+
+
+/* ================================================================
+   PANTALLA 2: MAPA
+   ================================================================ */
+
+#screen-map {
+  /* TODO: reemplazar este degradado CSS con la imagen real del mapa:
+     background-image: url('../assets/images/mapa.jpg');
+     background-size: cover;
+     background-position: center; */
+  background:
+    radial-gradient(ellipse at 25% 45%, rgba(0, 80, 0, 0.4)   0%, transparent 40%),
+    radial-gradient(ellipse at 70% 30%, rgba(0, 40, 90, 0.4)  0%, transparent 40%),
+    radial-gradient(ellipse at 55% 70%, rgba(80, 40, 0, 0.3)  0%, transparent 35%),
+    radial-gradient(ellipse at 10% 80%, rgba(0, 60, 60, 0.3)  0%, transparent 30%),
+    #050f08;
+  overflow: hidden;
+}
+
+/* Niebla decorativa en los bordes del mapa */
+#screen-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right,  rgba(0,0,0,0.5) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.5) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.map-title {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--f-titulo);
+  font-size: clamp(1rem, 3vw, 1.6rem);
+  color: var(--c-dorado);
+  text-shadow: var(--sombra-dorada), 0 2px 8px rgba(0,0,0,0.8);
+  letter-spacing: 4px;
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.map-container {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* ---- PINES DE MISIÓN ---- */
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: default;
+  z-index: 10;
+}
+
+.pin-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  border: 3px solid transparent;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  transition: transform 0.15s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.pin-label {
+  font-size: 0.68rem;
+  font-weight: bold;
+  text-align: center;
+  max-width: 88px;
+  line-height: 1.25;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8);
+  letter-spacing: 0.5px;
+}
+
+/* Estado: BLOQUEADO */
+.pin-bloqueado .pin-icon {
+  background: rgba(30, 30, 40, 0.85);
+  border-color: rgba(255, 255, 255, 0.15);
+  opacity: 0.55;
+}
+
+.pin-bloqueado .pin-label {
+  color: var(--c-texto-dim);
+}
+
+/* Estado: DISPONIBLE (interactivo) */
+.pin-disponible {
+  cursor: pointer;
+}
+
+.pin-disponible .pin-icon {
+  background: rgba(0, 60, 140, 0.85);
+  border-color: var(--c-azul);
+  box-shadow: 0 0 22px rgba(0, 180, 255, 0.5), 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.pin-disponible:active .pin-icon {
+  transform: scale(0.88);
+}
+
+.pin-disponible .pin-label {
+  color: #b0d8ff;
+}
+
+/* Anillo pulsante en pines disponibles */
+.pin-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid var(--c-azul);
+  animation: pinPulse 1.8s ease-out infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes pinPulse {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+}
+
+/* Estado: COMPLETADO */
+.pin-completado .pin-icon {
+  background: rgba(0, 70, 20, 0.85);
+  border-color: var(--c-verde);
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.35), 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.pin-completado .pin-label {
+  color: #80ff80;
+}
+
+/* ---- MODAL DE MISIÓN ---- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: linear-gradient(140deg, #0d1b2a, #1a1a2e);
+  border: 2px solid var(--c-dorado);
+  border-radius: 20px;
+  padding: 36px 32px 28px;
+  max-width: 460px;
+  width: 88%;
+  text-align: center;
+  box-shadow: var(--sombra-dorada), 0 20px 60px rgba(0,0,0,0.6);
+  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalIn {
+  from { transform: scale(0.75); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.modal-content h3 {
+  font-family: var(--f-titulo);
+  color: var(--c-dorado);
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  margin-bottom: 14px;
+}
+
+.modal-content p {
+  color: var(--c-texto);
+  line-height: 1.65;
+  margin-bottom: 28px;
+  font-size: 0.95rem;
+}
+
+
+/* ================================================================
+   BOTÓN FLOTANTE DE CONTACTO (siempre visible)
+   ================================================================ */
+
+.contact-fab {
+  position: fixed;
+  bottom: 26px;
+  right: 26px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #145214, #1f8c1f);
+  border: 3px solid rgba(57, 255, 20, 0.45);
+  box-shadow: 0 5px 22px rgba(57, 255, 20, 0.28), 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  position: fixed; /* repetido intencionalmente para especificidad */
+}
+
+.contact-fab:active {
+  transform: scale(0.88);
+}
+
+/* Anillo pulsante del botón de contacto */
+.contact-pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(57, 255, 20, 0.45);
+  animation: contactPulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes contactPulse {
+  0%   { transform: scale(1);   opacity: 0.65; }
+  100% { transform: scale(1.65); opacity: 0; }
+}
+
+
+/* ================================================================
+   OVERLAY SCREENS (Llamada + Chat)
+   ================================================================ */
+
+.overlay-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Avatar circular placeholder */
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: linear-gradient(135deg, #1a2a3a, #0a1520);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: var(--f-titulo);
+}
+
+.avatar-placeholder.small {
+  font-size: 1.4rem;
+}
+
+
+/* ================================================================
+   PANTALLA DE LLAMADA
+   ================================================================ */
+
+.call-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 40px 32px;
+}
+
+.caller-avatar {
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--c-azul);
+  box-shadow: var(--sombra-azul);
+  /* TODO: cuando tengas la imagen del personaje, agrega aquí:
+     background-image: url('../assets/images/personaje.jpg');
+     background-size: cover;
+     background-position: center; */
+}
+
+.caller-name {
+  font-family: var(--f-titulo);
+  font-size: 1.7rem;
+  color: var(--c-texto);
+  letter-spacing: 2px;
+}
+
+.call-status {
+  color: var(--c-texto-dim);
+  font-size: 0.95rem;
+  letter-spacing: 2px;
+}
+
+/* Anillos de "teléfono sonando" */
+.call-rings {
+  position: relative;
+  width: 134px;
+  height: 134px;
+  margin: -12px 0;
+}
+
+.call-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 180, 255, 0.4);
+  animation: callRing 2s ease-out infinite;
+}
+.call-ring.ring-2 { animation-delay: 0.65s; }
+.call-ring.ring-3 { animation-delay: 1.3s; }
+
+@keyframes callRing {
+  0%   { transform: scale(0.5); opacity: 0.75; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Botones contestar / colgar */
+.call-buttons {
+  display: flex;
+  gap: 64px;
+  margin-top: 6px;
+}
+
+.call-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.call-btn:active { transform: scale(0.88); }
+
+.call-btn.answer {
+  background: linear-gradient(135deg, #145214, #1f8c1f);
+  box-shadow: 0 4px 16px rgba(57, 255, 20, 0.3);
+}
+
+.call-btn.hangup {
+  background: linear-gradient(135deg, #7a1212, #b52020);
+  box-shadow: 0 4px 16px rgba(255, 68, 68, 0.3);
+}
+
+
+/* ================================================================
+   PANTALLA DE CHAT
+   ================================================================ */
+
+.chat-container {
+  width: 90%;
+  max-width: 500px;
+  height: 78vh;
+  max-height: 580px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(0,0,0,0.6);
+  animation: chatIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes chatIn {
+  from { transform: scale(0.85) translateY(20px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+/* Cabecera del chat */
+.chat-header {
+  background: #1a1f2e;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.chat-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--c-azul);
+  /* TODO: cuando tengas imagen del personaje:
+     background-image: url('../assets/images/personaje.jpg');
+     background-size: cover; */
+}
+
+.chat-header-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-name {
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--c-texto);
+}
+
+.chat-online {
+  font-size: 0.72rem;
+  color: var(--c-verde);
+  letter-spacing: 1px;
+}
+
+.chat-close-btn {
+  background: none;
+  border: none;
+  color: var(--c-texto-dim);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.chat-close-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Área de mensajes */
+.chat-messages {
+  flex: 1;
+  background: #080d14;
+  /* TODO: si quieres un fondo estilo WhatsApp con pattern:
+     background-image: url('../assets/images/chat-bg.png');
+     background-size: 300px; */
+  padding: 14px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-behavior: smooth;
+}
+
+/* Burbujas de mensaje */
+.chat-bubble {
+  max-width: 78%;
+  padding: 10px 14px;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  border-radius: 16px;
+  /* Estado inicial invisible para la animación de entrada */
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* La clase .visible activa la animación de entrada */
+.chat-bubble.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mensajes del personaje (vienen de la izquierda) */
+.chat-bubble.incoming {
+  background: #1f2a3a;
+  color: var(--c-texto);
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Mensajes de Bruno (futuros, van a la derecha) */
+.chat-bubble.outgoing {
+  background: #1a4a2a;
+  color: var(--c-texto);
+  border-bottom-right-radius: 4px;
+  align-self: flex-end;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Indicador de "escribiendo..." */
+.chat-typing {
+  height: 40px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chat-typing.visible {
+  opacity: 1;
+}
+
+.chat-typing span {
+  width: 9px;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.chat-typing span:nth-child(2) { animation-delay: 0.18s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes typingBounce {
+  0%, 55%, 100% { transform: translateY(0);   opacity: 0.35; }
+  27%            { transform: translateY(-7px); opacity: 1; }
+}
+
+
+/* ================================================================
+   BOTÓN PRIMARIO REUTILIZABLE
+   ================================================================ */
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--c-dorado-dark), var(--c-dorado));
+  color: #000;
+  border: none;
+  border-radius: var(--radio);
+  padding: 14px 32px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: var(--f-cuerpo);
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  min-height: 52px;      /* Mínimo táctil cómodo */
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
+}
+
+
+/* ================================================================
+   SCROLLBAR del chat (solo en navegadores webkit)
+   ================================================================ */
+
+.chat-messages::-webkit-scrollbar       { width: 4px; }
+.chat-messages::-webkit-scrollbar-track { background: transparent; }
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+
+
+/* ================================================================
+   ORIENTACIÓN PORTRAIT (fallback para si se gira la tablet)
+   ================================================================ */
+
+@media (orientation: portrait) {
+  .chains-container {
+    gap: clamp(12px, 4vw, 36px);
+  }
+  .chain-links {
+    height: 48px;
+  }
+  .title-main {
+    font-size: clamp(1.1rem, 5vw, 1.8rem);
+    letter-spacing: 3px;
+  }
+  .wheel-digit {
+    font-size: 1.5rem;
+  }
+  .wheel-wrapper {
+    width: 44px;
+  }
+  .wheel-digit {
+    width: 44px;
+  }
+}
+
+/* ================================================================
+   PANTALLAS PEQUEÑAS
+   ================================================================ */
+
+@media (max-width: 420px) {
+  .chains-container { gap: 14px; }
+  .wheel-wrapper { width: 40px; }
+  .wheel-digit   { width: 40px; font-size: 1.3rem; }
+  .lock-shackle  { width: 36px; }
+}
