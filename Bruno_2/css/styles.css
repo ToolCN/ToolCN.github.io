@@ -1,93 +1,82 @@
 /* ================================================================
    styles.css — Estilos de Bruno_2
    ----------------------------------------------------------------
-   Paleta de colores:
-     Fondo principal: #0a0a1a  (azul noche muy oscuro)
-     Fondo secundario: #0d1b2a (azul marino oscuro)
-     Dorado:  #FFD700 / #B8860B
+   Paleta:
+     Fondo:          #0a0a1a / #0d1b2a
+     Dorado:         #FFD700 / #B8860B
      Azul eléctrico: #00B4FF / #0066AA
-     Verde neón: #39FF14  (misiones completadas)
-     Rojo:    #FF4444     (cosas bloqueadas)
-     Texto:   #E8E8E8
+     Verde neón:     #39FF14  (completado / abierto)
+     Rojo:           #FF4444  (bloqueado / peligro)
+     Texto:          #E8E8E8
 
-   Diseñado para TABLET HORIZONTAL.
-   Todos los elementos táctiles tienen mínimo 52px de altura/anchura.
-   No hay efectos que funcionen solo con hover.
+   Layout pensado para tablet HORIZONTAL.
+   Todos los elementos táctiles tienen mínimo 52 × 52 px.
    ================================================================ */
 
-
 /* ----------------------------------------------------------------
-   VARIABLES GLOBALES (CSS Custom Properties)
+   VARIABLES
    ---------------------------------------------------------------- */
 :root {
-  --c-fondo:          #0a0a1a;
-  --c-fondo-2:        #0d1b2a;
-  --c-dorado:         #FFD700;
-  --c-dorado-dark:    #B8860B;
-  --c-azul:           #00B4FF;
-  --c-azul-dark:      #0066AA;
-  --c-verde:          #39FF14;
-  --c-rojo:           #FF4444;
-  --c-texto:          #E8E8E8;
-  --c-texto-dim:      rgba(232, 232, 232, 0.5);
+  --c-fondo:        #0a0a1a;
+  --c-fondo-2:      #0d1b2a;
+  --c-dorado:       #FFD700;
+  --c-dorado-dark:  #B8860B;
+  --c-azul:         #00B4FF;
+  --c-azul-dark:    #0066AA;
+  --c-verde:        #39FF14;
+  --c-rojo:         #FF4444;
+  --c-texto:        #E8E8E8;
+  --c-texto-dim:    rgba(232,232,232,0.5);
 
-  --f-titulo:         'Orbitron', 'Trebuchet MS', 'Arial Black', sans-serif;
-  --f-cuerpo:         'Trebuchet MS', Arial, sans-serif;
+  --f-titulo:  'Orbitron', 'Trebuchet MS', 'Arial Black', sans-serif;
+  --f-cuerpo:  'Trebuchet MS', Arial, sans-serif;
 
-  --radio:            12px;
-  --transition:       0.3s ease;
-  --sombra-dorada:    0 0 20px rgba(255, 215, 0, 0.35);
-  --sombra-azul:      0 0 20px rgba(0, 180, 255, 0.35);
+  --radio:     12px;
+
+  /* ---- medidas del layout de candados ---- */
+  --shackle-w:         110px;   /* anchura exterior del arco */
+  --shackle-h:         120px;   /* altura total del arco (50px arc + 70px posts) */
+  --shackle-border:    6px;
+  --chain-top:         90px;    /* distancia desde el top de .locks-row al top de la cadena */
+  --chain-h:           28px;
+  --lock-body-w:       228px;
+  --lock-body-pad:     20px 14px;
+  --wheel-w:           68px;
+  --wheel-h:           64px;    /* DEBE coincidir con DIGIT_HEIGHT en locks.js */
+  --wheel-gap:         5px;
 }
 
 
 /* ----------------------------------------------------------------
    RESET Y BASE
    ---------------------------------------------------------------- */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;            /* No hay scroll en la app */
+  width: 100%; height: 100%;
+  overflow: hidden;
   background: var(--c-fondo);
   color: var(--c-texto);
   font-family: var(--f-cuerpo);
-  /* Desactivar gestos de sistema que interfieren con el swipe en las ruedas */
   touch-action: none;
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
+.hidden { display: none !important; }
+
 
 /* ----------------------------------------------------------------
    PANTALLAS
    ---------------------------------------------------------------- */
 .screen {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-
-.screen.hidden,
-.overlay-screen.hidden,
-.modal.hidden,
-.transition-overlay.hidden,
-.light-overlay,
-.lock-open-flash,
-.contact-pulse {
-  /* "hidden" se usa para ocultar/mostrar con JS → se sobreescribe cuando no hidden */
-}
-
-.hidden { display: none !important; }
 
 
 /* ================================================================
@@ -96,21 +85,20 @@ html, body {
 
 #screen-locks {
   background:
-    radial-gradient(ellipse at 50% 0%, #0d2a4a 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 100%, #1a0d2a 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 0%,   #0d2a4a 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, #1a0d2a 0%, transparent 55%),
     var(--c-fondo);
   gap: 12px;
   padding: 16px 24px;
 }
 
-/* Textura de cuadrícula en el fondo (decorativa) */
+/* Textura de cuadrícula de fondo (sutil, decorativa) */
 .locks-bg {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(255,215,0,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,215,0,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
+    linear-gradient(rgba(255,215,0,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,215,0,0.035) 1px, transparent 1px);
+  background-size: 52px 52px;
   pointer-events: none;
 }
 
@@ -118,7 +106,7 @@ html, body {
   font-family: var(--f-titulo);
   font-size: clamp(1.4rem, 4vw, 2.4rem);
   color: var(--c-dorado);
-  text-shadow: var(--sombra-dorada);
+  text-shadow: 0 0 22px rgba(255,215,0,0.4);
   letter-spacing: 5px;
   text-align: center;
   z-index: 1;
@@ -133,220 +121,255 @@ html, body {
 }
 
 
-/* ----------------------------------------------------------------
-   CADENAS Y CANDADOS
-   ---------------------------------------------------------------- */
-.chains-container {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(24px, 6vw, 80px);
+/* ================================================================
+   ESCENA DE LA CADENA
+   ================================================================
+
+   LAYOUT VERTICAL (en .chain-scene):
+
+     y = 0                ┌── top de .locks-row ──────────────────┐
+     y = 0 → 55px         │  arcos de los shackles (semicírculo)   │
+     y = 55px → 90px      │  posts del shackle (entre arc y chain) │
+     y = 90px → 118px     ╠══ CADENA HORIZONTAL (chain-bar) ═══════╣
+     y = 118px → 120px    │  posts debajo de la cadena (2px)       │
+     y = 120px →          │  cuerpo de los candados (lock-body)     │
+                          └────────────────────────────────────────┘
+
+   z-index:
+     .locks-row → z-index: 1  (los locks van detrás de la cadena)
+     .chain-bar → z-index: 2  (la cadena tapa los posts del shackle)
+
+   Así la cadena aparece "ensartada" dentro de la apertura del shackle.
+   ================================================================ */
+
+.chain-scene {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  /* altura calculada: 120px (shackle) + ~210px (body) + 30px (padding-top) + 20px margen */
+  height: 390px;
   z-index: 1;
 }
 
-/* Una unidad = cadena + candado colgando */
-.chain-unit {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+/* ---- CADENA HORIZONTAL ---- */
+/* Posicionada con absolute sobre .chain-scene, z-index 2 → tapa los posts del shackle */
+.chain-bar {
+  position: absolute;
+  top: calc(30px + 90px);   /* padding-top de .locks-row (30px) + distancia al chain (90px) */
+  left: 0; right: 0;
+  height: var(--chain-h);   /* 28px */
+  z-index: 2;
 
-/* Representación visual de la cadena */
-.chain-links {
-  width: 20px;
-  height: 72px;
-  background: repeating-linear-gradient(
-    180deg,
-    var(--c-dorado-dark)  0px,   6px,
-    #5a4500               6px,  10px,
-    var(--c-dorado-dark)  10px, 16px,
-    transparent           16px, 20px
+  /* Patrón visual de eslabones de cadena */
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--c-dorado-dark)  0px,   3px,
+      var(--c-dorado)       3px,  20px,
+      var(--c-dorado-dark) 20px,  24px,
+      #8B6914              24px,  28px,
+      var(--c-dorado-dark) 28px,  32px,
+      var(--c-dorado)      32px,  48px,
+      var(--c-dorado-dark) 48px,  52px
+    );
+  border-top:    3px solid var(--c-dorado);
+  border-bottom: 3px solid #5a4500;
+  box-shadow:
+    0 0 18px rgba(184,134,11,0.5),
+    0 4px 10px rgba(0,0,0,0.5);
+
+  /* Fade en los extremos izquierdo y derecho (la cadena sale de pantalla) */
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
   );
-  border-radius: 3px;
-  box-shadow: 0 0 8px rgba(184, 134, 11, 0.4);
-  margin-bottom: -3px;
-  position: relative;
-  z-index: 0;
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    black 6%,
+    black 94%,
+    transparent 100%
+  );
 }
 
-/* Cuando el candado se abre, la cadena "cae" */
-.chain-unit.unlocked .chain-links {
-  animation: chainFall 0.7s 0.4s ease-in forwards;
+/* Animación de la cadena cayendo cuando los 2 candados están abiertos */
+.chain-bar.chain-falling {
+  animation: chainFall 0.9s ease-in forwards;
 }
 
 @keyframes chainFall {
-  to { transform: translateY(50px); opacity: 0; }
+  0%   { transform: translateY(0);    opacity: 1; }
+  100% { transform: translateY(80px); opacity: 0; }
 }
 
-/* ---- EL CANDADO ---- */
+/* ---- FILA DE LOS DOS CANDADOS ---- */
+.locks-row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(80px, 14vw, 200px);
+  padding-top: 30px;   /* espacio arriba para que el arco del shackle tenga aire */
+  z-index: 1;          /* detrás de la cadena (z-index 2) */
+}
+
+
+/* ================================================================
+   EL CANDADO (lock)
+   ================================================================ */
+
 .lock {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-/* Arco del candado (shackle = la parte en U) */
-.lock-shackle {
-  width: 44px;
-  height: 30px;
-  border: 5px solid var(--c-dorado-dark);
-  border-bottom: none;
-  border-radius: 22px 22px 0 0;
-  margin-bottom: -3px;
   position: relative;
-  z-index: 2;
-  transition: transform 0.5s ease, border-color 0.4s;
-  box-shadow: 0 -4px 12px rgba(184, 134, 11, 0.3);
-  transform-origin: left bottom;
 }
 
-/* Cuerpo del candado (contiene las ruedas) */
+/* ---- ARCO DEL CANDADO (shackle: la U que rodea la cadena) ---- */
+.lock-shackle {
+  width:  var(--shackle-w);    /* 110px */
+  height: var(--shackle-h);    /* 120px */
+  border:        var(--shackle-border) solid var(--c-dorado-dark);
+  border-bottom: none;
+  border-radius: 55px 55px 0 0;  /* semicírculo completo en la parte superior */
+  position: relative;
+  /* transform-origin abajo-izquierda → al abrirse gira hacia la izquierda */
+  transform-origin: bottom left;
+  transition: border-color 0.4s;
+  box-shadow: 0 -6px 16px rgba(184,134,11,0.25);
+  /* El shackle está en z-index 1 (locks-row), la cadena en z-index 2.
+     En la zona donde se solapan, la cadena tapa los posts → parece que
+     la cadena pasa A TRAVÉS del shackle.                              */
+}
+
+/* ---- APERTURA DEL CANDADO ---- */
+.lock.opening .lock-shackle {
+  animation: shackleOpen 0.9s ease forwards;
+}
+
+@keyframes shackleOpen {
+  0%   { transform: rotate(0deg)   translateY(0px);   border-color: var(--c-dorado-dark); }
+  45%  { transform: rotate(-52deg) translateY(-14px);  border-color: var(--c-dorado); }
+  100% { transform: rotate(-68deg) translateY(-28px);  border-color: var(--c-verde); }
+}
+
+/* Estado ABIERTO: shackle queda abierto y el cuerpo se vuelve verde */
+.lock.opened .lock-shackle {
+  border-color: var(--c-verde);
+  transform: rotate(-68deg) translateY(-28px);
+  box-shadow: 0 0 14px rgba(57,255,20,0.4);
+}
+
+/* ---- CUERPO DEL CANDADO ---- */
 .lock-body {
-  background: linear-gradient(160deg, #2a2a3a 0%, #16161e 60%, #2a2a3a 100%);
+  width:  var(--lock-body-w);  /* 228px */
+  padding: var(--lock-body-pad);
+  background: linear-gradient(160deg, #2a2a3e 0%, #14141e 55%, #2a2a3e 100%);
   border: 2px solid var(--c-dorado-dark);
-  border-radius: 10px;
-  padding: 14px 10px 10px;
+  border-radius: 0 0 14px 14px;  /* bordes redondeados solo abajo */
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   box-shadow:
-    0 6px 24px rgba(0,0,0,0.6),
-    inset 0 1px 0 rgba(255,255,255,0.08);
+    0 8px 28px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.07);
   transition: border-color 0.4s, box-shadow 0.4s;
-  position: relative;
-  z-index: 1;
-}
-
-/* Estado ABIERTO del candado */
-.lock.opening .lock-shackle {
-  animation: shackleOpen 0.8s ease forwards;
-}
-
-@keyframes shackleOpen {
-  0%   { transform: rotate(0deg)   translateY(0px);   border-color: var(--c-dorado-dark); }
-  50%  { transform: rotate(-50deg) translateY(-12px);  border-color: var(--c-dorado); }
-  100% { transform: rotate(-65deg) translateY(-22px);  border-color: var(--c-verde); }
 }
 
 .lock.opened .lock-body {
   border-color: var(--c-verde);
-  box-shadow: 0 0 30px rgba(57, 255, 20, 0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow: 0 0 30px rgba(57,255,20,0.25), 0 8px 20px rgba(0,0,0,0.5);
 }
 
-.lock.opened .lock-shackle {
-  border-color: var(--c-verde);
-  transform: rotate(-65deg) translateY(-22px);
-}
-
-/* Badge "✓" que aparece cuando el candado se abre */
-.lock-badge {
-  position: absolute;
-  bottom: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--c-verde);
-  color: #000;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  font-weight: bold;
-  opacity: 0;
-  transition: opacity 0.4s 0.6s;
-  box-shadow: 0 0 10px rgba(57,255,20,0.5);
-  pointer-events: none;
-}
-
-.lock.opened .lock-badge {
-  opacity: 1;
-}
 
 /* ---- RUEDAS NUMÉRICAS ---- */
 .wheels-container {
   display: flex;
-  gap: 5px;
+  gap: var(--wheel-gap);
 }
 
 .wheel-wrapper {
-  width: 52px;
-  height: 64px;        /* ← IMPORTANTE: debe coincidir con DIGIT_HEIGHT en locks.js */
+  width:  var(--wheel-w);   /* 68px */
+  height: var(--wheel-h);   /* 64px → coincide con DIGIT_HEIGHT en locks.js */
   overflow: hidden;
-  background: #0a0a12;
-  border: 1.5px solid rgba(255, 215, 0, 0.25);
-  border-radius: 6px;
+  background: #08080f;
+  border: 1.5px solid rgba(255,215,0,0.22);
+  border-radius: 7px;
   position: relative;
-  box-shadow: inset 0 3px 8px rgba(0,0,0,0.6);
-  /* Habilitar touch solo en dirección vertical */
+  box-shadow: inset 0 3px 10px rgba(0,0,0,0.6);
   touch-action: pan-y;
 }
 
-/* Gradientes arriba y abajo para crear efecto de profundidad en la rueda */
+/* Gradientes de profundidad arriba y abajo */
 .wheel-wrapper::before,
 .wheel-wrapper::after {
   content: '';
   position: absolute;
   left: 0; right: 0;
-  height: 22px;
+  height: 20px;
   z-index: 2;
   pointer-events: none;
 }
+.wheel-wrapper::before { top: 0;    background: linear-gradient(to bottom, #08080f 20%, transparent); }
+.wheel-wrapper::after  { bottom: 0; background: linear-gradient(to top,   #08080f 20%, transparent); }
 
-.wheel-wrapper::before {
-  top: 0;
-  background: linear-gradient(to bottom, #0a0a12 10%, transparent);
-}
-
-.wheel-wrapper::after {
-  bottom: 0;
-  background: linear-gradient(to top, #0a0a12 10%, transparent);
-}
-
-/* Línea de resaltado en el dígito activo */
-.wheel-wrapper .highlight-line {
-  position: absolute;
-  top: 50%;
-  left: 4px; right: 4px;
-  height: 1px;
-  background: rgba(255, 215, 0, 0.2);
-  z-index: 1;
-  pointer-events: none;
-  transform: translateY(-32px);
-}
-
-/* El strip que se mueve con el gesto */
-.wheel {
-  width: 100%;
-  will-change: transform; /* Optimización para animaciones fluidas */
-}
+/* Strip que se desplaza con el gesto */
+.wheel { width: 100%; will-change: transform; }
 
 .wheel-digit {
-  width: 52px;
-  height: 64px;          /* ← debe coincidir con DIGIT_HEIGHT en locks.js */
+  width:  var(--wheel-w);   /* 68px */
+  height: var(--wheel-h);   /* 64px */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.9rem;
+  font-size: 2.2rem;
   font-weight: 700;
   font-family: var(--f-titulo);
   color: var(--c-dorado);
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 14px rgba(255,215,0,0.55);
 }
 
-/* ---- DESTELLO DE LUZ EN EL CANDADO ---- */
+
+/* ---- BADGE ✓ (aparece al abrir) ---- */
+.lock-badge {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--c-verde);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.4s 0.5s;
+  box-shadow: 0 0 14px rgba(57,255,20,0.55);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.lock.opened .lock-badge { opacity: 1; }
+
+
+/* ---- DESTELLO LOCAL AL ABRIR ---- */
 .lock-open-flash {
   position: absolute;
   inset: -30px;
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(255, 255, 200, 0.95) 0%,
-    rgba(255, 215, 0, 0.5)   35%,
-    transparent               70%
+    rgba(255,255,200,0.95) 0%,
+    rgba(255,215,0,0.5)   35%,
+    transparent            70%
   );
   pointer-events: none;
   z-index: 20;
@@ -358,15 +381,15 @@ html, body {
 }
 
 @keyframes localFlash {
-  0%   { opacity: 0;   transform: scale(0.3); }
-  15%  { opacity: 1;   transform: scale(1.2); }
-  100% { opacity: 0;   transform: scale(2.5); }
+  0%   { opacity: 0;  transform: scale(0.3); }
+  15%  { opacity: 1;  transform: scale(1.3); }
+  100% { opacity: 0;  transform: scale(2.6); }
 }
+
 
 /* ---- OVERLAY DE LUZ GLOBAL ---- */
 .light-overlay {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   pointer-events: none;
   z-index: 50;
   opacity: 0;
@@ -378,18 +401,17 @@ html, body {
 
 @keyframes globalFlash {
   0%   { background: transparent; opacity: 0; }
-  20%  { background: radial-gradient(ellipse at center, rgba(255,255,200,0.8) 0%, transparent 70%); opacity: 1; }
+  20%  { background: radial-gradient(ellipse at center, rgba(255,255,200,0.85) 0%, transparent 70%); opacity: 1; }
   100% { opacity: 0; }
 }
 
 
 /* ================================================================
-   TRANSICIÓN AL MAPA (zoom hacia la luz)
+   TRANSICIÓN AL MAPA
    ================================================================ */
 
 .transition-overlay {
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   z-index: 100;
   pointer-events: none;
   background: transparent;
@@ -412,158 +434,99 @@ html, body {
    ================================================================ */
 
 #screen-map {
-  /* TODO: reemplazar este degradado CSS con la imagen real del mapa:
+  /* TODO: añadir imagen real:
      background-image: url('../assets/images/mapa.jpg');
-     background-size: cover;
-     background-position: center; */
+     background-size: cover; background-position: center; */
   background:
-    radial-gradient(ellipse at 25% 45%, rgba(0, 80, 0, 0.4)   0%, transparent 40%),
-    radial-gradient(ellipse at 70% 30%, rgba(0, 40, 90, 0.4)  0%, transparent 40%),
-    radial-gradient(ellipse at 55% 70%, rgba(80, 40, 0, 0.3)  0%, transparent 35%),
-    radial-gradient(ellipse at 10% 80%, rgba(0, 60, 60, 0.3)  0%, transparent 30%),
+    radial-gradient(ellipse at 22% 45%, rgba(0,80,0,0.4)   0%, transparent 40%),
+    radial-gradient(ellipse at 72% 28%, rgba(0,40,90,0.4)  0%, transparent 38%),
+    radial-gradient(ellipse at 58% 72%, rgba(80,40,0,0.3)  0%, transparent 33%),
+    radial-gradient(ellipse at 8%  80%, rgba(0,60,60,0.3)  0%, transparent 28%),
     #050f08;
   overflow: hidden;
 }
 
-/* Niebla decorativa en los bordes del mapa */
 #screen-map::before {
   content: '';
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background:
-    linear-gradient(to right,  rgba(0,0,0,0.5) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.5) 100%),
-    linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.4) 100%);
-  pointer-events: none;
-  z-index: 1;
+    linear-gradient(to right,  rgba(0,0,0,0.5) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.5) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 10%, transparent 90%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none; z-index: 1;
 }
 
 .map-title {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
   font-family: var(--f-titulo);
   font-size: clamp(1rem, 3vw, 1.6rem);
   color: var(--c-dorado);
-  text-shadow: var(--sombra-dorada), 0 2px 8px rgba(0,0,0,0.8);
+  text-shadow: 0 0 16px rgba(255,215,0,0.5), 0 2px 8px rgba(0,0,0,0.8);
   letter-spacing: 4px;
   white-space: nowrap;
   z-index: 5;
 }
 
-.map-container {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
+.map-container { position: absolute; inset: 0; z-index: 2; }
 
-/* ---- PINES DE MISIÓN ---- */
+/* Pines de misión */
 .map-pin {
   position: absolute;
   transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  cursor: default;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
   z-index: 10;
 }
 
 .pin-icon {
-  width: 60px;
-  height: 60px;
+  width: 60px; height: 60px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   font-size: 1.7rem;
   border: 3px solid transparent;
   box-shadow: 0 4px 16px rgba(0,0,0,0.5);
   transition: transform 0.15s ease;
-  position: relative;
-  z-index: 2;
+  position: relative; z-index: 2;
 }
 
 .pin-label {
-  font-size: 0.68rem;
-  font-weight: bold;
-  text-align: center;
-  max-width: 88px;
+  font-size: 0.68rem; font-weight: bold;
+  text-align: center; max-width: 88px;
   line-height: 1.25;
   text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8);
-  letter-spacing: 0.5px;
 }
 
-/* Estado: BLOQUEADO */
-.pin-bloqueado .pin-icon {
-  background: rgba(30, 30, 40, 0.85);
-  border-color: rgba(255, 255, 255, 0.15);
-  opacity: 0.55;
-}
+/* Estado: bloqueado */
+.pin-bloqueado .pin-icon  { background: rgba(30,30,40,0.85); border-color: rgba(255,255,255,0.15); opacity: 0.5; }
+.pin-bloqueado .pin-label { color: var(--c-texto-dim); }
+.pin-bloqueado            { cursor: default; }
 
-.pin-bloqueado .pin-label {
-  color: var(--c-texto-dim);
-}
+/* Estado: disponible */
+.pin-disponible           { cursor: pointer; }
+.pin-disponible .pin-icon { background: rgba(0,60,140,0.85); border-color: var(--c-azul); box-shadow: 0 0 22px rgba(0,180,255,0.5), 0 4px 12px rgba(0,0,0,0.5); }
+.pin-disponible:active .pin-icon { transform: scale(0.88); }
+.pin-disponible .pin-label { color: #b0d8ff; }
 
-/* Estado: DISPONIBLE (interactivo) */
-.pin-disponible {
-  cursor: pointer;
-}
-
-.pin-disponible .pin-icon {
-  background: rgba(0, 60, 140, 0.85);
-  border-color: var(--c-azul);
-  box-shadow: 0 0 22px rgba(0, 180, 255, 0.5), 0 4px 12px rgba(0,0,0,0.5);
-}
-
-.pin-disponible:active .pin-icon {
-  transform: scale(0.88);
-}
-
-.pin-disponible .pin-label {
-  color: #b0d8ff;
-}
-
-/* Anillo pulsante en pines disponibles */
 .pin-pulse {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 3px solid var(--c-azul);
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 60px; height: 60px;
+  border-radius: 50%; border: 3px solid var(--c-azul);
   animation: pinPulse 1.8s ease-out infinite;
-  z-index: 1;
-  pointer-events: none;
+  z-index: 1; pointer-events: none;
 }
 
 @keyframes pinPulse {
-  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.7; }
-  100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+  0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
+  100% { transform: translate(-50%,-50%) scale(2.4); opacity: 0;   }
 }
 
-/* Estado: COMPLETADO */
-.pin-completado .pin-icon {
-  background: rgba(0, 70, 20, 0.85);
-  border-color: var(--c-verde);
-  box-shadow: 0 0 18px rgba(57, 255, 20, 0.35), 0 4px 12px rgba(0,0,0,0.5);
-}
+/* Estado: completado */
+.pin-completado .pin-icon  { background: rgba(0,70,20,0.85); border-color: var(--c-verde); box-shadow: 0 0 18px rgba(57,255,20,0.35), 0 4px 12px rgba(0,0,0,0.5); }
+.pin-completado .pin-label { color: #80ff80; }
 
-.pin-completado .pin-label {
-  color: #80ff80;
-}
-
-/* ---- MODAL DE MISIÓN ---- */
+/* Modal de misión */
 .modal {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: rgba(0, 0, 0, 0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.72);
+  display: flex; align-items: center; justify-content: center;
   backdrop-filter: blur(5px);
 }
 
@@ -572,11 +535,10 @@ html, body {
   border: 2px solid var(--c-dorado);
   border-radius: 20px;
   padding: 36px 32px 28px;
-  max-width: 460px;
-  width: 88%;
+  max-width: 460px; width: 88%;
   text-align: center;
-  box-shadow: var(--sombra-dorada), 0 20px 60px rgba(0,0,0,0.6);
-  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 30px rgba(255,215,0,0.18), 0 20px 60px rgba(0,0,0,0.6);
+  animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
 
 @keyframes modalIn {
@@ -585,63 +547,108 @@ html, body {
 }
 
 .modal-content h3 {
-  font-family: var(--f-titulo);
-  color: var(--c-dorado);
-  font-size: 1.2rem;
-  letter-spacing: 2px;
-  margin-bottom: 14px;
+  font-family: var(--f-titulo); color: var(--c-dorado);
+  font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 14px;
 }
 
 .modal-content p {
-  color: var(--c-texto);
-  line-height: 1.65;
-  margin-bottom: 28px;
-  font-size: 0.95rem;
+  color: var(--c-texto); line-height: 1.65; margin-bottom: 28px; font-size: 0.95rem;
 }
 
 
 /* ================================================================
-   BOTÓN FLOTANTE DE CONTACTO (siempre visible)
+   BOTÓN FLOTANTE DE CONTACTO
    ================================================================ */
 
 .contact-fab {
-  position: fixed;
-  bottom: 26px;
-  right: 26px;
-  width: 72px;
-  height: 72px;
+  position: fixed; bottom: 26px; right: 26px;
+  width: 72px; height: 72px;
   border-radius: 50%;
   background: linear-gradient(135deg, #145214, #1f8c1f);
-  border: 3px solid rgba(57, 255, 20, 0.45);
-  box-shadow: 0 5px 22px rgba(57, 255, 20, 0.28), 0 2px 8px rgba(0,0,0,0.4);
-  cursor: pointer;
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 3px solid rgba(57,255,20,0.45);
+  box-shadow: 0 5px 22px rgba(57,255,20,0.28), 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
   font-size: 2rem;
   transition: transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  position: fixed; /* repetido intencionalmente para especificidad */
 }
 
-.contact-fab:active {
-  transform: scale(0.88);
-}
+.contact-fab:active { transform: scale(0.88); }
 
-/* Anillo pulsante del botón de contacto */
 .contact-pulse {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 2px solid rgba(57, 255, 20, 0.45);
+  position: absolute; inset: -6px;
+  border-radius: 50%; border: 2px solid rgba(57,255,20,0.45);
   animation: contactPulse 2.2s ease-out infinite;
   pointer-events: none;
 }
 
 @keyframes contactPulse {
-  0%   { transform: scale(1);   opacity: 0.65; }
+  0%   { transform: scale(1);    opacity: 0.65; }
   100% { transform: scale(1.65); opacity: 0; }
+}
+
+
+/* ================================================================
+   BOTÓN DE REINICIO
+   Casi invisible: fondo muy oscuro (negro), icono apenas visible.
+   Al tocarlo aparece el modal de confirmación.
+   ================================================================ */
+
+.reset-btn {
+  position: fixed;
+  top: 8px; right: 8px;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.85);    /* fondo negro, casi invisible */
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.12);    /* ícono muy tenue */
+  font-size: 1rem;
+  cursor: pointer;
+  z-index: 500;                     /* encima de todo */
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s, background 0.2s;
+}
+
+/* Al mantener presionado se vuelve más visible para dar feedback táctil */
+.reset-btn:active {
+  color: rgba(255,255,255,0.5);
+  background: rgba(0,0,0,0.95);
+}
+
+
+/* ---- MODAL DE CONFIRMACIÓN DE REINICIO ---- */
+.confirm-modal {
+  position: fixed; inset: 0;
+  z-index: 600;
+  background: rgba(0,0,0,0.8);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+}
+
+.confirm-box {
+  background: linear-gradient(140deg, #0d1b2a, #1a1a2e);
+  border: 2px solid var(--c-rojo);
+  border-radius: 18px;
+  padding: 32px 28px 24px;
+  max-width: 380px; width: 86%;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(255,68,68,0.15), 0 20px 50px rgba(0,0,0,0.7);
+  animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.confirm-text {
+  color: var(--c-texto);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
 }
 
 
@@ -650,34 +657,24 @@ html, body {
    ================================================================ */
 
 .overlay-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.88);
+  position: fixed; inset: 0; z-index: 400;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.88);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* Avatar circular placeholder */
 .avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
   font-size: 3rem;
   background: linear-gradient(135deg, #1a2a3a, #0a1520);
   border-radius: 50%;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255,255,255,0.25);
   font-family: var(--f-titulo);
 }
 
-.avatar-placeholder.small {
-  font-size: 1.4rem;
-}
+.avatar-placeholder.small { font-size: 1.4rem; }
 
 
 /* ================================================================
@@ -685,52 +682,36 @@ html, body {
    ================================================================ */
 
 .call-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  padding: 40px 32px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 18px; padding: 40px 32px;
 }
 
 .caller-avatar {
-  width: 124px;
-  height: 124px;
-  border-radius: 50%;
-  overflow: hidden;
+  width: 124px; height: 124px;
+  border-radius: 50%; overflow: hidden;
   border: 3px solid var(--c-azul);
-  box-shadow: var(--sombra-azul);
-  /* TODO: cuando tengas la imagen del personaje, agrega aquí:
+  box-shadow: 0 0 28px rgba(0,180,255,0.4);
+  /* TODO: cuando tengas imagen del personaje:
      background-image: url('../assets/images/personaje.jpg');
-     background-size: cover;
-     background-position: center; */
+     background-size: cover; background-position: center; */
 }
 
 .caller-name {
-  font-family: var(--f-titulo);
-  font-size: 1.7rem;
-  color: var(--c-texto);
-  letter-spacing: 2px;
+  font-family: var(--f-titulo); font-size: 1.7rem;
+  color: var(--c-texto); letter-spacing: 2px;
 }
 
 .call-status {
-  color: var(--c-texto-dim);
-  font-size: 0.95rem;
-  letter-spacing: 2px;
+  color: var(--c-texto-dim); font-size: 0.95rem; letter-spacing: 2px;
 }
 
-/* Anillos de "teléfono sonando" */
 .call-rings {
-  position: relative;
-  width: 134px;
-  height: 134px;
-  margin: -12px 0;
+  position: relative; width: 134px; height: 134px; margin: -12px 0;
 }
 
 .call-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 180, 255, 0.4);
+  position: absolute; inset: 0;
+  border-radius: 50%; border: 2px solid rgba(0,180,255,0.4);
   animation: callRing 2s ease-out infinite;
 }
 .call-ring.ring-2 { animation-delay: 0.65s; }
@@ -741,198 +722,89 @@ html, body {
   100% { transform: scale(2.2); opacity: 0; }
 }
 
-/* Botones contestar / colgar */
-.call-buttons {
-  display: flex;
-  gap: 64px;
-  margin-top: 6px;
-}
+.call-buttons { display: flex; gap: 64px; margin-top: 6px; }
 
 .call-btn {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 72px; height: 72px; border-radius: 50%; border: none;
+  font-size: 2rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
   transition: transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .call-btn:active { transform: scale(0.88); }
-
-.call-btn.answer {
-  background: linear-gradient(135deg, #145214, #1f8c1f);
-  box-shadow: 0 4px 16px rgba(57, 255, 20, 0.3);
-}
-
-.call-btn.hangup {
-  background: linear-gradient(135deg, #7a1212, #b52020);
-  box-shadow: 0 4px 16px rgba(255, 68, 68, 0.3);
-}
+.call-btn.answer { background: linear-gradient(135deg,#145214,#1f8c1f); box-shadow: 0 4px 16px rgba(57,255,20,0.3); }
+.call-btn.hangup { background: linear-gradient(135deg,#7a1212,#b52020); box-shadow: 0 4px 16px rgba(255,68,68,0.3); }
 
 
 /* ================================================================
-   PANTALLA DE CHAT
+   CHAT ESTILO WHATSAPP
    ================================================================ */
 
 .chat-container {
-  width: 90%;
-  max-width: 500px;
-  height: 78vh;
-  max-height: 580px;
-  display: flex;
-  flex-direction: column;
-  border-radius: 20px;
-  overflow: hidden;
+  width: 90%; max-width: 500px; height: 78vh; max-height: 580px;
+  display: flex; flex-direction: column;
+  border-radius: 20px; overflow: hidden;
   box-shadow: 0 0 50px rgba(0,0,0,0.6);
-  animation: chatIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-@keyframes chatIn {
-  from { transform: scale(0.85) translateY(20px); opacity: 0; }
-  to   { transform: scale(1)    translateY(0);    opacity: 1; }
-}
-
-/* Cabecera del chat */
 .chat-header {
-  background: #1a1f2e;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1a1f2e; padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   flex-shrink: 0;
 }
 
 .chat-avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
+  width: 46px; height: 46px;
+  border-radius: 50%; overflow: hidden; flex-shrink: 0;
   border: 2px solid var(--c-azul);
-  /* TODO: cuando tengas imagen del personaje:
-     background-image: url('../assets/images/personaje.jpg');
-     background-size: cover; */
+  /* TODO: reemplazar con imagen del personaje */
 }
 
-.chat-header-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.chat-name {
-  font-weight: bold;
-  font-size: 1rem;
-  color: var(--c-texto);
-}
-
-.chat-online {
-  font-size: 0.72rem;
-  color: var(--c-verde);
-  letter-spacing: 1px;
-}
+.chat-header-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.chat-name  { font-weight: bold; font-size: 1rem; color: var(--c-texto); }
+.chat-online { font-size: 0.72rem; color: var(--c-verde); letter-spacing: 1px; }
 
 .chat-close-btn {
-  background: none;
-  border: none;
-  color: var(--c-texto-dim);
-  font-size: 1.3rem;
-  cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 8px;
-  -webkit-tap-highlight-color: transparent;
+  background: none; border: none;
+  color: var(--c-texto-dim); font-size: 1.3rem;
+  cursor: pointer; padding: 6px 10px; border-radius: 8px;
+  -webkit-tap-highlight-color: transparent; flex-shrink: 0;
   transition: background 0.2s;
-  flex-shrink: 0;
 }
+.chat-close-btn:active { background: rgba(255,255,255,0.1); }
 
-.chat-close-btn:active {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Área de mensajes */
 .chat-messages {
-  flex: 1;
-  background: #080d14;
-  /* TODO: si quieres un fondo estilo WhatsApp con pattern:
-     background-image: url('../assets/images/chat-bg.png');
-     background-size: 300px; */
+  flex: 1; background: #080d14;
   padding: 14px 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column; gap: 8px;
   scroll-behavior: smooth;
 }
 
-/* Burbujas de mensaje */
 .chat-bubble {
-  max-width: 78%;
-  padding: 10px 14px;
-  line-height: 1.5;
-  font-size: 0.95rem;
+  max-width: 78%; padding: 10px 14px;
+  line-height: 1.5; font-size: 0.95rem;
   border-radius: 16px;
-  /* Estado inicial invisible para la animación de entrada */
-  opacity: 0;
-  transform: translateY(12px);
+  opacity: 0; transform: translateY(12px);
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
+.chat-bubble.visible      { opacity: 1; transform: translateY(0); }
+.chat-bubble.incoming     { background: #1f2937; color: var(--c-texto); border-bottom-left-radius:  4px; align-self: flex-start; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.chat-bubble.outgoing     { background: #1a4a2a; color: var(--c-texto); border-bottom-right-radius: 4px; align-self: flex-end;  box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 
-/* La clase .visible activa la animación de entrada */
-.chat-bubble.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Mensajes del personaje (vienen de la izquierda) */
-.chat-bubble.incoming {
-  background: #1f2a3a;
-  color: var(--c-texto);
-  border-bottom-left-radius: 4px;
-  align-self: flex-start;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-/* Mensajes de Bruno (futuros, van a la derecha) */
-.chat-bubble.outgoing {
-  background: #1a4a2a;
-  color: var(--c-texto);
-  border-bottom-right-radius: 4px;
-  align-self: flex-end;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-/* Indicador de "escribiendo..." */
 .chat-typing {
-  height: 40px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  height: 40px; padding: 0 16px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 5px;
+  opacity: 0; transition: opacity 0.3s ease;
 }
-
-.chat-typing.visible {
-  opacity: 1;
-}
-
+.chat-typing.visible { opacity: 1; }
 .chat-typing span {
-  width: 9px;
-  height: 9px;
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 50%;
-  animation: typingBounce 1.4s ease-in-out infinite;
+  width: 9px; height: 9px; background: rgba(255,255,255,0.35);
+  border-radius: 50%; animation: typingBounce 1.4s ease-in-out infinite;
 }
-
 .chat-typing span:nth-child(2) { animation-delay: 0.18s; }
 .chat-typing span:nth-child(3) { animation-delay: 0.36s; }
 
@@ -943,76 +815,79 @@ html, body {
 
 
 /* ================================================================
-   BOTÓN PRIMARIO REUTILIZABLE
+   BOTONES REUTILIZABLES
    ================================================================ */
 
+/* Botón principal dorado */
 .btn-primary {
   background: linear-gradient(135deg, var(--c-dorado-dark), var(--c-dorado));
-  color: #000;
-  border: none;
-  border-radius: var(--radio);
-  padding: 14px 32px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  font-family: var(--f-cuerpo);
-  letter-spacing: 1.5px;
-  cursor: pointer;
-  min-height: 52px;      /* Mínimo táctil cómodo */
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  color: #000; border: none; border-radius: var(--radio);
+  padding: 14px 32px; font-size: 0.95rem;
+  font-weight: 700; font-family: var(--f-cuerpo);
+  letter-spacing: 1.5px; cursor: pointer; min-height: 52px;
+  transition: transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
+.btn-primary:active { transform: scale(0.95); }
 
-.btn-primary:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
+/* Botón peligroso (reiniciar) */
+.btn-danger {
+  background: linear-gradient(135deg, #7a1212, #b52020);
+  color: #fff; border: none; border-radius: var(--radio);
+  padding: 13px 24px; font-size: 0.9rem;
+  font-weight: 700; font-family: var(--f-cuerpo);
+  cursor: pointer; min-height: 52px; min-width: 130px;
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3px 12px rgba(255,68,68,0.25);
 }
+.btn-danger:active { transform: scale(0.95); }
+
+/* Botón secundario neutro (cancelar) */
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: var(--c-texto-dim);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--radio);
+  padding: 13px 24px; font-size: 0.9rem;
+  font-family: var(--f-cuerpo);
+  cursor: pointer; min-height: 52px; min-width: 110px;
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-secondary:active { background: rgba(255,255,255,0.14); }
 
 
 /* ================================================================
-   SCROLLBAR del chat (solo en navegadores webkit)
+   SCROLLBAR del chat (webkit)
    ================================================================ */
 
 .chat-messages::-webkit-scrollbar       { width: 4px; }
 .chat-messages::-webkit-scrollbar-track { background: transparent; }
-.chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 4px;
-}
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
 
 
 /* ================================================================
-   ORIENTACIÓN PORTRAIT (fallback para si se gira la tablet)
+   RESPONSIVE: portrait / pantallas pequeñas
    ================================================================ */
 
 @media (orientation: portrait) {
-  .chains-container {
-    gap: clamp(12px, 4vw, 36px);
+  .locks-row { gap: clamp(20px, 5vw, 60px); }
+  .chain-scene { height: 420px; }
+  :root {
+    --lock-body-w: 190px;
+    --wheel-w: 56px;
+    --shackle-w: 90px;
   }
-  .chain-links {
-    height: 48px;
-  }
-  .title-main {
-    font-size: clamp(1.1rem, 5vw, 1.8rem);
-    letter-spacing: 3px;
-  }
-  .wheel-digit {
-    font-size: 1.5rem;
-  }
-  .wheel-wrapper {
-    width: 44px;
-  }
-  .wheel-digit {
-    width: 44px;
-  }
+  .wheel-digit { font-size: 1.8rem; }
 }
 
-/* ================================================================
-   PANTALLAS PEQUEÑAS
-   ================================================================ */
-
-@media (max-width: 420px) {
-  .chains-container { gap: 14px; }
-  .wheel-wrapper { width: 40px; }
-  .wheel-digit   { width: 40px; font-size: 1.3rem; }
-  .lock-shackle  { width: 36px; }
+@media (max-width: 480px) {
+  :root {
+    --lock-body-w: 170px;
+    --wheel-w: 50px;
+    --shackle-w: 80px;
+  }
+  .wheel-digit { font-size: 1.6rem; }
+  .locks-row { gap: 14px; }
 }

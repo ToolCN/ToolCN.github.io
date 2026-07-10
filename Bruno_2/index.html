@@ -2,48 +2,45 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <!-- Viewport optimizado para tablet horizontal, sin zoom manual -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-  <!-- Título de la app -->
   <title>Misión Bruno 2</title>
-
-  <!-- Para que se pueda agregar a la pantalla de inicio en iPad/iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0a0a1a">
-
-  <!-- Fuente de Google Fonts: Orbitron da el look de ciencia ficción/misterio -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-
-  <!-- Todos los estilos en un solo archivo CSS -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
   <!-- =========================================================
        PANTALLA 1: CANDADOS
-       Muestra 3 cadenas con sus candados de combinación.
+       Dos candados grandes asegurando una cadena horizontal.
        ========================================================= -->
   <div id="screen-locks" class="screen hidden">
-
-    <!-- Fondo con textura de cuadrícula decorativa (creado en CSS) -->
     <div class="locks-bg" aria-hidden="true"></div>
 
     <h1 class="title-main">MISIÓN CLASIFICADA</h1>
-    <p class="subtitle">Abre los 3 candados para acceder</p>
+    <p class="subtitle">Descifra los dos códigos para liberar la cadena</p>
 
-    <!-- Contenedor de las 3 cadenas. Los candados cuelgan de ellas. -->
-    <div class="chains-container">
+    <!-- ESCENA DE LA CADENA: la cadena corre horizontalmente
+         y los dos candados están enganchados a ella por sus arcos.     -->
+    <div class="chain-scene">
 
-      <!-- ---- CANDADO 0 ---- -->
-      <!-- data-combo="X,Y,Z" → combinación correcta (ver locks.js para cambiarla) -->
-      <div class="chain-unit" id="chain-0">
-        <div class="chain-links" aria-hidden="true"></div>
+      <!-- La cadena horizontal que los candados están asegurando.
+           Posicionada de forma absoluta en la escena.                  -->
+      <div class="chain-bar" id="chain-bar" aria-hidden="true"></div>
+
+      <!-- Fila de los dos candados (colocados debajo de la cadena) -->
+      <div class="locks-row">
+
+        <!-- ===== CANDADO 0 (izquierda) =====
+             TODO: cambiar data-combo con el código real de la historia
+             Formato: "digito1,digito2,digito3"                         -->
         <div class="lock" id="lock-0" data-combo="1,2,3">
+          <!-- Arco del candado (la parte en U que pasa a través de la cadena) -->
           <div class="lock-shackle" aria-hidden="true"></div>
+          <!-- Cuerpo del candado con las ruedas numéricas -->
           <div class="lock-body">
-            <!-- 3 ruedas numéricas del candado -->
             <div class="wheels-container">
               <div class="wheel-wrapper">
                 <div class="wheel" data-lock="0" data-wheel="0"></div>
@@ -56,15 +53,14 @@
               </div>
             </div>
           </div>
-          <!-- Destello de luz que aparece al abrir el candado -->
+          <!-- Destello de luz al abrir este candado -->
           <div class="lock-open-flash" aria-hidden="true"></div>
-          <div class="lock-badge">✓</div>
-        </div>
-      </div>
+          <!-- Símbolo ✓ que aparece cuando el candado está abierto -->
+          <div class="lock-badge" aria-hidden="true">✓</div>
+        </div><!-- /lock-0 -->
 
-      <!-- ---- CANDADO 1 ---- -->
-      <div class="chain-unit" id="chain-1">
-        <div class="chain-links" aria-hidden="true"></div>
+        <!-- ===== CANDADO 1 (derecha) =====
+             TODO: cambiar data-combo con el código real               -->
         <div class="lock" id="lock-1" data-combo="4,5,6">
           <div class="lock-shackle" aria-hidden="true"></div>
           <div class="lock-body">
@@ -81,43 +77,20 @@
             </div>
           </div>
           <div class="lock-open-flash" aria-hidden="true"></div>
-          <div class="lock-badge">✓</div>
-        </div>
-      </div>
+          <div class="lock-badge" aria-hidden="true">✓</div>
+        </div><!-- /lock-1 -->
 
-      <!-- ---- CANDADO 2 ---- -->
-      <div class="chain-unit" id="chain-2">
-        <div class="chain-links" aria-hidden="true"></div>
-        <div class="lock" id="lock-2" data-combo="7,8,9">
-          <div class="lock-shackle" aria-hidden="true"></div>
-          <div class="lock-body">
-            <div class="wheels-container">
-              <div class="wheel-wrapper">
-                <div class="wheel" data-lock="2" data-wheel="0"></div>
-              </div>
-              <div class="wheel-wrapper">
-                <div class="wheel" data-lock="2" data-wheel="1"></div>
-              </div>
-              <div class="wheel-wrapper">
-                <div class="wheel" data-lock="2" data-wheel="2"></div>
-              </div>
-            </div>
-          </div>
-          <div class="lock-open-flash" aria-hidden="true"></div>
-          <div class="lock-badge">✓</div>
-        </div>
-      </div>
+      </div><!-- /locks-row -->
+    </div><!-- /chain-scene -->
 
-    </div><!-- /chains-container -->
-
-    <!-- Overlay de destello de luz global (cubre toda la pantalla al abrir un candado) -->
+    <!-- Overlay de luz global que aparece al abrir un candado -->
     <div id="lock-light-overlay" class="light-overlay" aria-hidden="true"></div>
 
   </div><!-- /screen-locks -->
 
 
   <!-- =========================================================
-       TRANSICIÓN: Zoom hacia la luz entre pantalla 1 y 2
+       TRANSICIÓN: Zoom-luz entre pantalla de candados y mapa
        ========================================================= -->
   <div id="transition-overlay" class="transition-overlay hidden" aria-hidden="true"></div>
 
@@ -126,13 +99,12 @@
        PANTALLA 2: MAPA DE MISIONES
        ========================================================= -->
   <div id="screen-map" class="screen hidden">
-
     <h2 class="map-title">MAPA DE MISIONES</h2>
 
-    <!-- El mapa: TODO: reemplazar el fondo CSS con una imagen real:
-         style="background-image: url('assets/images/mapa.jpg')"        -->
+    <!-- Fondo del mapa. TODO: reemplazar el fondo CSS con la imagen real:
+         añadir en CSS → background-image: url('assets/images/mapa.jpg') -->
     <div class="map-container" id="map-container">
-      <!-- Los pines de misión se generan dinámicamente desde map.js -->
+      <!-- Los pines se generan dinámicamente en map.js -->
     </div>
 
     <!-- Modal que aparece al tocar un pin disponible -->
@@ -143,20 +115,35 @@
         <button id="modal-close" class="btn-primary">Cerrar</button>
       </div>
     </div>
-
   </div><!-- /screen-map -->
 
 
   <!-- =========================================================
-       BOTÓN FLOTANTE DE CONTACTO
-       Siempre visible. Abre llamada o chat según el modo.
+       BOTÓN FLOTANTE DE CONTACTO (siempre visible en pantalla)
        ========================================================= -->
   <button id="contact-btn" class="contact-fab" aria-label="Contactar al agente">
-    <!-- TODO: reemplazar con la imagen del personaje cuando esté definido.
-         Por ahora se usa un ícono de señal de radio como placeholder. -->
+    <!-- TODO: reemplazar con imagen del personaje cuando esté definido -->
     <span class="contact-icon" aria-hidden="true">📡</span>
     <span class="contact-pulse" aria-hidden="true"></span>
   </button>
+
+
+  <!-- =========================================================
+       BOTÓN DE REINICIO (pequeño, esquina superior derecha,
+       fondo oscuro para que sea casi invisible)
+       ========================================================= -->
+  <button id="reset-btn" class="reset-btn" aria-label="Reiniciar progreso" title="Opciones">⚙</button>
+
+  <!-- Modal de confirmación de reinicio -->
+  <div id="confirm-modal" class="confirm-modal hidden" role="dialog" aria-modal="true">
+    <div class="confirm-box">
+      <p class="confirm-text">¿Borrar todo el progreso y empezar desde cero?</p>
+      <div class="confirm-buttons">
+        <button id="confirm-yes" class="btn-danger">Sí, reiniciar</button>
+        <button id="confirm-no"  class="btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
 
   <!-- =========================================================
@@ -164,34 +151,25 @@
        ========================================================= -->
   <div id="screen-call" class="overlay-screen hidden" role="dialog" aria-modal="true">
     <div class="call-container">
-
-      <!-- Avatar / foto del personaje -->
       <div class="caller-avatar">
-        <!-- TODO: reemplazar con imagen real del personaje:
-             <img src="assets/images/personaje.jpg" alt="Agente X">
-             Por ahora se muestra una silueta de interrogación. -->
+        <!-- TODO: reemplazar con imagen del personaje:
+             <img src="assets/images/personaje.jpg" alt="Agente X"> -->
         <div class="avatar-placeholder">?</div>
       </div>
-
       <!-- TODO: reemplazar "Agente X" con el nombre real del personaje -->
       <h2 class="caller-name">Agente X</h2>
       <p class="call-status" id="call-status-text">Llamada entrante...</p>
-
-      <!-- Anillos de animación de "teléfono sonando" -->
       <div class="call-rings" aria-hidden="true">
         <div class="call-ring ring-1"></div>
         <div class="call-ring ring-2"></div>
         <div class="call-ring ring-3"></div>
       </div>
-
-      <!-- Botones de contestar y colgar -->
       <div class="call-buttons">
         <button id="btn-answer" class="call-btn answer" aria-label="Contestar">📞</button>
-        <button id="btn-hangup" class="call-btn hangup" aria-label="Colgar">📵</button>
+        <button id="btn-hangup" class="call-btn hangup"  aria-label="Colgar">📵</button>
       </div>
-
     </div>
-  </div><!-- /screen-call -->
+  </div>
 
 
   <!-- =========================================================
@@ -199,60 +177,41 @@
        ========================================================= -->
   <div id="screen-chat" class="overlay-screen hidden" role="dialog" aria-modal="true">
     <div class="chat-container">
-
-      <!-- Cabecera del chat -->
       <div class="chat-header">
         <div class="chat-avatar">
-          <!-- TODO: reemplazar con imagen real del personaje -->
+          <!-- TODO: reemplazar con imagen del personaje -->
           <div class="avatar-placeholder small">?</div>
         </div>
-        <!-- TODO: reemplazar con el nombre real del personaje -->
         <div class="chat-header-info">
+          <!-- TODO: reemplazar con el nombre real del personaje -->
           <span class="chat-name">Agente X</span>
           <span class="chat-online">en línea</span>
         </div>
         <button id="chat-close" class="chat-close-btn" aria-label="Cerrar chat">✕</button>
       </div>
-
-      <!-- Área de mensajes con burbujas -->
-      <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
-        <!-- Los mensajes se insertan dinámicamente desde contact.js -->
-      </div>
-
-      <!-- Indicador de "escribiendo..." (tres puntos animados) -->
+      <div class="chat-messages" id="chat-messages" role="log" aria-live="polite"></div>
       <div class="chat-typing" id="chat-typing" aria-label="El agente está escribiendo">
         <span></span><span></span><span></span>
       </div>
-
     </div>
-  </div><!-- /screen-chat -->
+  </div>
 
 
   <!-- =========================================================
-       ELEMENTOS DE AUDIO
-       Todos los archivos son placeholder — reemplazar las rutas
-       con los archivos de audio reales.
+       ELEMENTOS DE AUDIO — Reemplazar rutas con archivos reales
+       Ver Bruno_2/assets/audio/AQUI_VAN_LOS_AUDIOS.md
        ========================================================= -->
-
-  <!-- TODO: reemplazar 'assets/audio/musica-fondo.mp3' con la música de fondo real.
-             Estilo: suspenso/misterio, bucle suave. -->
-  <audio id="audio-bg"      src="assets/audio/musica-fondo.mp3"  loop    preload="none"></audio>
-
-  <!-- TODO: reemplazar con un sonido de "click" mecánico corto (tipo reloj/combinación). -->
-  <audio id="audio-click"   src="assets/audio/click.mp3"                 preload="none"></audio>
-
-  <!-- TODO: reemplazar con sonido de "candado abriéndose" (clic metálico + resorte). -->
-  <audio id="audio-unlock"  src="assets/audio/unlock.mp3"                preload="none"></audio>
-
-  <!-- TODO: reemplazar con el tono de "llamada entrante" en bucle. -->
-  <audio id="audio-ringtone" src="assets/audio/ringtone.mp3"     loop    preload="none"></audio>
+  <!-- TODO: reemplazar con música de fondo real (estilo misterio, loop) -->
+  <audio id="audio-bg"       src="assets/audio/musica-fondo.mp3" loop    preload="none"></audio>
+  <!-- TODO: reemplazar con sonido de "click" mecánico corto -->
+  <audio id="audio-click"    src="assets/audio/click.mp3"                preload="none"></audio>
+  <!-- TODO: reemplazar con sonido de candado abriéndose -->
+  <audio id="audio-unlock"   src="assets/audio/unlock.mp3"               preload="none"></audio>
+  <!-- TODO: reemplazar con tono de llamada entrante (loop) -->
+  <audio id="audio-ringtone" src="assets/audio/ringtone.mp3"    loop     preload="none"></audio>
 
 
-  <!-- =========================================================
-       SCRIPTS — El orden importa:
-       main.js primero (define funciones globales de estado),
-       luego los módulos que dependen de él.
-       ========================================================= -->
+  <!-- Scripts — main.js primero (define el estado global) -->
   <script src="js/main.js"></script>
   <script src="js/locks.js"></script>
   <script src="js/map.js"></script>

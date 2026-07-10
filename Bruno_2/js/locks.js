@@ -18,9 +18,9 @@
 //       Cada array tiene 3 números, uno por rueda.
 //       Ejemplo: [3, 7, 1] significa que hay que poner 3-7-1.
 const COMBINACIONES = [
-  [1, 2, 3],   // Candado 0 (cadena izquierda)   → código: 1-2-3
-  [4, 5, 6],   // Candado 1 (cadena central)      → código: 4-5-6
-  [7, 8, 9],   // Candado 2 (cadena derecha)       → código: 7-8-9
+  [1, 2, 3],   // Candado 0 (izquierda)  → código: 1-2-3
+  [4, 5, 6],   // Candado 1 (derecha)    → código: 4-5-6
+  // TODO: Reemplazar con los códigos reales de la historia
 ];
 
 // Altura en píxeles de cada dígito en la rueda.
@@ -230,10 +230,9 @@ function checkCombo(lockIdx) {
 function animarApertura(lockIdx) {
   reproducirSonido('audio-unlock');
 
-  const lockEl  = document.getElementById(`lock-${lockIdx}`);
-  const chainEl = document.getElementById(`chain-${lockIdx}`);
+  const lockEl = document.getElementById(`lock-${lockIdx}`);
 
-  // Clase CSS que activa la animación del shackle (arco del candado)
+  // Clase CSS que activa la animación del shackle (arco que se abre)
   lockEl.classList.add('opening');
 
   // Destello de luz local (centrado en el candado)
@@ -251,9 +250,14 @@ function animarApertura(lockIdx) {
 
     markLockOpen(lockIdx, true); // true = guardar en localStorage
 
-    // ¿Se abrieron los 3 candados? → ir al mapa
+    // ¿Se abrieron los 2 candados? → animar caída de cadena, luego ir al mapa
     if (progreso.candadosAbiertos.every(Boolean)) {
-      setTimeout(() => transicionAlMapa(), 800);
+      // La cadena "cae" como si ya no estuviera asegurada
+      const chainBar = document.getElementById('chain-bar');
+      if (chainBar) chainBar.classList.add('chain-falling');
+
+      // Ir al mapa después de que termine la animación de caída
+      setTimeout(() => transicionAlMapa(), 900);
     }
   }, 1600);
 }
@@ -261,19 +265,17 @@ function animarApertura(lockIdx) {
 /**
  * markLockOpen(lockIdx, save)
  * Actualiza el estado del candado (visual + localStorage).
- * @param {number}  lockIdx - Índice del candado
+ * @param {number}  lockIdx - Índice del candado (0 o 1)
  * @param {boolean} save    - Si true, guarda en localStorage
  */
 function markLockOpen(lockIdx, save) {
   progreso.candadosAbiertos[lockIdx] = true;
   if (save) guardarProgreso(progreso);
 
-  const lockEl  = document.getElementById(`lock-${lockIdx}`);
-  const chainEl = document.getElementById(`chain-${lockIdx}`);
+  const lockEl = document.getElementById(`lock-${lockIdx}`);
 
-  // Clases CSS que cambian la apariencia a "abierto"
+  // Clase CSS que cambia la apariencia a "abierto" (verde, badge ✓)
   lockEl.classList.add('opened');
-  chainEl.classList.add('unlocked');
 
   // Desactivar las ruedas para que no se muevan una vez abierto
   lockEl.querySelectorAll('.wheel').forEach(w => {

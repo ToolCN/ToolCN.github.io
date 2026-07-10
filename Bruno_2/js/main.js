@@ -23,7 +23,7 @@ const STORAGE_KEY = 'bruno2_progreso';
 
 // Estado inicial: lo que hay la PRIMERA VEZ que Bruno abre la app.
 const ESTADO_INICIAL = {
-  candadosAbiertos:     [false, false, false],          // 3 candados
+  candadosAbiertos:     [false, false],                 // 2 candados
   misionesCompletadas:  [false, false, false, false, false], // 5 misiones
   capitulo:             1,      // capítulo actual de la historia (1, 2, 3…)
   pantallaActual:       'locks' // 'locks' o 'map'
@@ -212,7 +212,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') {
       document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden'));
       document.getElementById('mission-modal')?.classList.add('hidden');
+      document.getElementById('confirm-modal')?.classList.add('hidden');
     }
   });
+
+  // ----------------------------------------------------------------
+  // BOTÓN DE REINICIO (casi invisible, esquina superior derecha)
+  // Al tocarlo aparece un modal de confirmación antes de borrar todo.
+  // ----------------------------------------------------------------
+  const resetBtn     = document.getElementById('reset-btn');
+  const confirmModal = document.getElementById('confirm-modal');
+  const confirmYes   = document.getElementById('confirm-yes');
+  const confirmNo    = document.getElementById('confirm-no');
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      confirmModal.classList.remove('hidden');
+    });
+    resetBtn.addEventListener('touchend', e => {
+      e.preventDefault();
+      confirmModal.classList.remove('hidden');
+    });
+  }
+
+  if (confirmYes) {
+    confirmYes.addEventListener('click', () => {
+      reiniciarProgreso(); // borra localStorage y recarga la página
+    });
+  }
+
+  if (confirmNo) {
+    confirmNo.addEventListener('click', () => {
+      confirmModal.classList.add('hidden');
+    });
+  }
+
+  // Cerrar el confirm-modal tocando fuera del cuadro
+  if (confirmModal) {
+    confirmModal.addEventListener('click', e => {
+      if (e.target === confirmModal) confirmModal.classList.add('hidden');
+    });
+  }
 
 });
