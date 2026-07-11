@@ -165,12 +165,30 @@ function marcarSospechosoRevisado(sospechosoId) {
   const total = progreso.sospechososRevisados.filter(Boolean).length;
 
   if (total >= 9 && !progreso.casoResuelto) {
-    // Esperar 15 segundos y luego disparar la llamada final de Foxy
-    setTimeout(() => {
-      if (typeof iniciarLlamadaFinal === 'function') {
-        iniciarLlamadaFinal();
-      }
-    }, 15000);
+    // Foxy llama solo, en un tiempo aleatorio (entre 20 y 45 segundos)
+    // después de vencer al noveno sospechoso.
+    const espera = numAleatorio(20000, 45000);
+    setTimeout(intentarLlamadaFinal, espera);
+  }
+}
+
+/**
+ * intentarLlamadaFinal()
+ * Se asegura de NO interrumpir si Bruno está en ese momento llamando
+ * a Foxy para pedir una pista (screen-call abierta) — en ese caso
+ * espera un poco y vuelve a intentar, en vez de chocar las dos llamadas.
+ */
+function intentarLlamadaFinal() {
+  const overlayLlamada = document.getElementById('screen-call');
+  const hayLlamadaEnCurso = overlayLlamada && !overlayLlamada.classList.contains('hidden');
+
+  if (hayLlamadaEnCurso) {
+    setTimeout(intentarLlamadaFinal, 2000);
+    return;
+  }
+
+  if (typeof iniciarLlamadaFinal === 'function') {
+    iniciarLlamadaFinal();
   }
 }
 
