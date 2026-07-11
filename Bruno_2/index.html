@@ -82,7 +82,7 @@
           <div class="chain-strand chain-left"></div>
           <div class="chain-strand chain-right"></div>
         </div>
-        <div class="lock" id="lock-0" data-combo="1,2,3">
+        <div class="lock" id="lock-0" data-combo="2,8,5">
           <div class="lock-shackle" aria-hidden="true"></div>
           <div class="lock-body">
             <!-- 3 ruedas numéricas del candado -->
@@ -110,7 +110,7 @@
           <div class="chain-strand chain-left"></div>
           <div class="chain-strand chain-right"></div>
         </div>
-        <div class="lock" id="lock-1" data-combo="4,5,6">
+        <div class="lock" id="lock-1" data-combo="1,6,2">
           <div class="lock-shackle" aria-hidden="true"></div>
           <div class="lock-body">
             <div class="wheels-container">
@@ -214,7 +214,7 @@
        BOTÓN FLOTANTE DE CONTACTO
        Siempre visible. Abre llamada o chat según el modo.
        ========================================================= -->
-  <button id="contact-btn" class="contact-fab" aria-label="Contactar al agente">
+  <button id="contact-btn" class="contact-fab hidden" aria-label="Contactar a Foxy">
     <!-- TODO: reemplazar con la imagen del personaje cuando esté definido.
          Por ahora se usa un ícono de señal de radio como placeholder. -->
     <span class="contact-icon" aria-hidden="true">📡</span>
@@ -232,13 +232,14 @@
            Intenta cargar la imagen real; si no existe todavía
            (o no la has subido), se oculta sola y se ve el "?". -->
       <div class="caller-avatar">
-        <img class="avatar-img" src="assets/images/personaje.jpg" alt="Agente X"
+        <img class="avatar-img" src="assets/images/personaje.jpg" alt="Foxy"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         <div class="avatar-placeholder" style="display:none;">?</div>
       </div>
 
-      <!-- TODO: reemplazar "Agente X" con el nombre real del personaje -->
-      <h2 class="caller-name">Agente X</h2>
+      <!-- Nombre del personaje (si cambia de identidad más adelante en la
+           historia, edítalo aquí y en contact.js → NOMBRE_PERSONAJE) -->
+      <h2 class="caller-name">Foxy</h2>
       <p class="call-status" id="call-status-text">Llamada entrante...</p>
 
       <!-- Anillos de animación de "teléfono sonando" -->
@@ -267,13 +268,13 @@
       <!-- Cabecera del chat -->
       <div class="chat-header">
         <div class="chat-avatar">
-          <img class="avatar-img" src="assets/images/personaje.jpg" alt="Agente X"
+          <img class="avatar-img" src="assets/images/personaje.jpg" alt="Foxy"
                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="avatar-placeholder small" style="display:none;">?</div>
         </div>
         <!-- TODO: reemplazar con el nombre real del personaje -->
         <div class="chat-header-info">
-          <span class="chat-name">Agente X</span>
+          <span class="chat-name">Foxy</span>
           <span class="chat-online">en línea</span>
         </div>
         <button id="chat-close" class="chat-close-btn" aria-label="Cerrar chat">✕</button>
