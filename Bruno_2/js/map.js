@@ -18,15 +18,15 @@
 // nombre  → se muestra en la tarjeta y en la guarida
 // juego   → qué minijuego le corresponde (ver js/minijuegos.js)
 const SOSPECHOSOS = [
-  { id: 0, slug: 'reylobo',       nombre: 'Rey Lobo',                juego: 'luna'      },
-  { id: 1, slug: 'charronegro',   nombre: 'Charro Negro',            juego: 'feria'     },
-  { id: 2, slug: 'empresario',    nombre: 'El Empresario',           juego: 'estrellas' },
-  { id: 3, slug: 'springtrap',    nombre: 'Springtrap',              juego: 'linterna'  },
-  { id: 4, slug: 'plankton',      nombre: 'Plankton',                juego: 'memoria'   },
-  { id: 5, slug: 'lobo',          nombre: 'El Lobo',                 juego: 'laser'     },
-  { id: 6, slug: 'villanodragon', nombre: 'Villano Dragón',          juego: 'oro'       },
-  { id: 7, slug: 'prototipo',     nombre: 'El Prototipo',            juego: 'laberinto' },
-  { id: 8, slug: 'blue',          nombre: 'Blue',                    juego: 'escondite' },
+  { id: 0, slug: 'reylobo',       nombre: 'Rey Lobo',                juego: 'luna'        },
+  { id: 1, slug: 'charronegro',   nombre: 'Charro Negro',            juego: 'loteria'     },
+  { id: 2, slug: 'empresario',    nombre: 'El Empresario',           juego: 'matematicas' },
+  { id: 3, slug: 'springtrap',    nombre: 'Springtrap',              juego: 'linterna'    },
+  { id: 4, slug: 'plankton',      nombre: 'Plankton',                juego: 'memoria'     },
+  { id: 5, slug: 'lobo',          nombre: 'El Lobo',                 juego: 'laser'       },
+  { id: 6, slug: 'villanodragon', nombre: 'Villano Dragón',          juego: 'oro'         },
+  { id: 7, slug: 'prototipo',     nombre: 'El Prototipo',            juego: 'laberinto'   },
+  { id: 8, slug: 'blue',          nombre: 'Blue',                    juego: 'escondite'   },
 ];
 
 // Exponer globalmente para que guarida.js y minijuegos.js lo usen también
@@ -88,13 +88,13 @@ function actualizarContador() {
  * Construye el elemento DOM de la tarjeta de un sospechoso.
  */
 function crearTarjetaSospechoso(sosp) {
-  const revisado = progreso.sospechososRevisados[sosp.id];
+  const vencido = progreso.sospechososRevisados[sosp.id];
 
   const card = document.createElement('div');
-  card.className = 'sospechoso-card' + (revisado ? ' revisado' : '');
+  card.className = 'sospechoso-card' + (vencido ? ' revisado' : '');
   card.dataset.id = sosp.id;
   card.setAttribute('role', 'button');
-  card.setAttribute('aria-label', sosp.nombre);
+  card.setAttribute('aria-label', vencido ? sosp.nombre + ' (descartado)' : sosp.nombre);
 
   card.innerHTML = `
     <div class="sospechoso-foto-wrap">
@@ -102,16 +102,19 @@ function crearTarjetaSospechoso(sosp) {
            alt="${sosp.nombre}"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
       <div class="sospechoso-placeholder" style="display:none;">?</div>
-      ${revisado ? '<span class="sospechoso-check">✓</span>' : ''}
+      ${vencido ? '<div class="sospechoso-tache">✗</div>' : ''}
     </div>
     <span class="sospechoso-nombre">${sosp.nombre}</span>
   `;
 
-  card.addEventListener('click', () => {
-    if (typeof abrirGuarida === 'function') {
-      abrirGuarida(sosp);
-    }
-  });
+  // Si ya se venció a este sospechoso, la tarjeta ya no hace nada al tocarla
+  if (!vencido) {
+    card.addEventListener('click', () => {
+      if (typeof abrirGuarida === 'function') {
+        abrirGuarida(sosp);
+      }
+    });
+  }
 
   return card;
 }
@@ -150,11 +153,13 @@ function crearTarjetaBuck() {
 
 /**
  * marcarSospechosoRevisado(sospechosoId)
- * Guarda el progreso y revisa si ya se completaron los 9 (para
- * disparar la llamada final de Foxy).
+ * Guarda el progreso, recuerda cuál fue el ÚLTIMO sospechoso vencido
+ * (para que la pista de Foxy hable de él), y revisa si ya se
+ * completaron los 9 (para disparar la llamada final).
  */
 function marcarSospechosoRevisado(sospechosoId) {
   progreso.sospechososRevisados[sospechosoId] = true;
+  progreso.ultimoVencido = SOSPECHOSOS[sospechosoId].slug;
   guardarProgreso(progreso);
 
   const total = progreso.sospechososRevisados.filter(Boolean).length;
