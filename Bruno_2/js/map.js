@@ -79,6 +79,10 @@ function inicializarMapa() {
   const container = document.getElementById('map-container');
   if (!container) return;
 
+  // El botón flotante de contacto (Foxy) solo debe verse a partir del
+  // mapa, nunca antes (ni en la llamada inicial ni en los candados).
+  document.getElementById('contact-btn')?.classList.remove('hidden');
+
   // Limpiar pines previos (en caso de que se llame más de una vez)
   container.innerHTML = '';
 
