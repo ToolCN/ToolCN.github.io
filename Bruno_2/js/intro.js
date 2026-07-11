@@ -113,8 +113,8 @@ function mostrarLlamadaIntro() {
   iniciarVibracionLlamada();
 
   // Conectar los botones (se reasignan cada vez para evitar duplicados)
-  document.getElementById('intro-btn-answer').onclick = contestarIntro;
-  document.getElementById('intro-btn-hangup').onclick = colgarIntro;
+  alTocarBoton(document.getElementById('intro-btn-answer'), contestarIntro);
+  alTocarBoton(document.getElementById('intro-btn-hangup'), colgarIntro);
 }
 
 /**
