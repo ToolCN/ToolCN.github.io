@@ -177,7 +177,9 @@ const PISTAS_MUSICA_FONDO = ['audio-bg', 'audio-bg-mapa'];
 
 // Volumen bajo para que la música NUNCA opaque los efectos de
 // sonido (click, unlock, cadena cayendo, voces, etc.)
-const VOLUMEN_MUSICA_FONDO = 0.12;
+// Se bajó al 25% del valor anterior (0.12 → 0.03) porque seguía
+// escuchándose fuerte.
+const VOLUMEN_MUSICA_FONDO = 0.03;
 
 // La música del menú de sospechosos se escuchaba muy fuerte —
 // se le baja a la mitad respecto a las demás pistas.
