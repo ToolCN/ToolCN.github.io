@@ -1,14 +1,24 @@
 // ================================================================
 // guarida.js — La guarida de cada sospechoso
 //
-// Este archivo maneja:
-//   - abrirGuarida(sospechoso): fondo + personaje + confesión + minijuego
-//   - onMinijuegoGanado(sospechoso): abre la caja, muestra el hallazgo
-//   - reproducirVoz(ruta): único reproductor para las 27 voces de los
-//     9 sospechosos (en vez de 27 elementos <audio> distintos en el HTML)
-//   - El teléfono: Bruno llama a Foxy y recibe una pista distinta según
-//     qué sospechoso tenga abierto en ese momento
-//   - iniciarLlamadaFinal(): la llamada de Foxy que revela a Buck
+// FLUJO COMPLETO de una guarida (todo dentro de #screen-guarida):
+//   1. Bruno entra → ve fondo + personaje + botón "Llamar"
+//   2. Toca "Llamar" → suena el tono de LLAMADA SALIENTE (ttt-ttt-ttt)
+//      entre 5 y 10 segundos (aleatorio)
+//   3. Contesta el sospechoso → se reproduce su confesión (termina
+//      diciendo que hay que superar un reto) → aparece el minijuego
+//   4. Bruno gana el minijuego → espera entre 5 y 10 segundos
+//      (aleatorio) → el sospechoso llama de VUELTA (llamada entrante)
+//   5. Si Bruno cuelga esa llamada sin contestar, vuelve a sonar
+//      sola 3 segundos después — así hasta que la conteste
+//   6. Al contestar → se reproduce el audio de "éxito" (la confesión
+//      final/graciosa) → se abre la caja secreta con el hallazgo
+//   7. Ese sospechoso queda marcado como vencido (tache rojo) y no
+//      se puede volver a entrar a su guarida
+//
+// El teléfono para pedirle pistas a FOXY (contact-btn) es un sistema
+// aparte: solo aparece en la pantalla de sospechosos, nunca dentro
+// de una guarida.
 // ================================================================
 
 
@@ -18,12 +28,9 @@
 
 /**
  * reproducirVoz(ruta, onEnded)
- * Reproduce cualquiera de las voces de los sospechosos usando el
- * ÚNICO elemento <audio id="audio-dinamico"> del HTML. Le cambia el
- * "src" antes de reproducir, en vez de tener 27 audios distintos
- * declarados en el HTML.
- * @param {string} ruta - ej. 'assets/audio/voz-sospechoso-01-reylobo.mp3'
- * @param {Function} [onEnded] - se llama cuando termina de sonar
+ * Único reproductor para las voces de los sospechosos: se le cambia
+ * el "src" antes de reproducir en vez de tener un <audio> por cada
+ * archivo.
  */
 function reproducirVoz(ruta, onEnded) {
   const el = document.getElementById('audio-dinamico');
@@ -35,44 +42,111 @@ function reproducirVoz(ruta, onEnded) {
   el.onended = onEnded || null;
 
   el.play().catch(err => {
-    // Si el archivo todavía no existe (no lo has subido), no rompemos
-    // el juego: solo avisamos en consola y seguimos como si hubiera
-    // terminado de hablar.
     console.log('[Bruno2] No se pudo reproducir', ruta + ':', err.message);
     if (onEnded) onEnded();
   });
 }
 
-
-// ----------------------------------------------------------------
-// ABRIR UNA GUARIDA
-// ----------------------------------------------------------------
-
 /**
- * abrirGuarida(sosp)
- * Se llama al tocar una tarjeta de sospechoso (ver map.js).
- * @param {Object} sosp - un objeto del array SOSPECHOSOS (ver map.js)
+ * numAleatorio(min, max)
+ * Entero aleatorio entre min y max (ambos incluidos). Se usa para
+ * los tiempos de espera "entre 5 y 10 segundos", etc.
  */
+function numAleatorio(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+// ----------------------------------------------------------------
+// CONTROL DE TEMPORIZADORES DE LA GUARIDA
+// ----------------------------------------------------------------
+// Guarda cualquier setTimeout pendiente del flujo de llamada actual,
+// para poder cancelarlo si Bruno sale de la guarida a medias (botón
+// "Volver"), y así no queden llamadas sonando de fondo.
+
+let temporizadorGuarida = null;
+
+function programarGuarida(fn, ms) {
+  temporizadorGuarida = setTimeout(fn, ms);
+  return temporizadorGuarida;
+}
+
+function limpiarTemporizadorGuarida() {
+  if (temporizadorGuarida) {
+    clearTimeout(temporizadorGuarida);
+    temporizadorGuarida = null;
+  }
+}
+
+
+// ----------------------------------------------------------------
+// SONIDOS DE LLAMADA (tono saliente y ringtone entrante)
+// ----------------------------------------------------------------
+
+function reproducirTonoLlamando() {
+  const el = document.getElementById('audio-tono-llamando');
+  if (!el) return;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+function detenerTonoLlamando() {
+  const el = document.getElementById('audio-tono-llamando');
+  if (el) { el.pause(); el.currentTime = 0; }
+}
+function reproducirRingtone() {
+  const el = document.getElementById('audio-ringtone');
+  if (!el) return;
+  el.currentTime = 0;
+  el.play().catch(() => {});
+}
+function detenerRingtone() {
+  const el = document.getElementById('audio-ringtone');
+  if (el) { el.pause(); el.currentTime = 0; }
+}
+
+
+// ----------------------------------------------------------------
+// MOSTRAR SOLO UN "ESTADO" DE LA GUARIDA A LA VEZ
+// ----------------------------------------------------------------
+
+const ESTADOS_GUARIDA = [
+  'guarida-llamar-btn',
+  'guarida-llamando',
+  'minijuego-container',
+  'guarida-esperando',
+  'guarida-llamada-entrante',
+  'caja-secreta',
+];
+
+function ocultarTodosLosEstadosGuarida() {
+  ESTADOS_GUARIDA.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+}
+
+
+// ----------------------------------------------------------------
+// PASO 1: ABRIR LA GUARIDA
+// ----------------------------------------------------------------
+
+let sospechosoActual = null; // objeto del sospechoso cuya guarida está abierta
+
 function abrirGuarida(sosp) {
-  // Detener cualquier minijuego que hubiera quedado corriendo de una
-  // visita anterior (evita temporizadores fantasma en segundo plano)
+  limpiarTemporizadorGuarida();
+  detenerTonoLlamando();
+  detenerRingtone();
   if (typeof detenerMinijuegoActual === 'function') detenerMinijuegoActual();
 
-  // Recordar qué sospechoso está abierto (el teléfono lo usa para
-  // saber qué pista reproducir)
-  progreso.sospechosoSeleccionado = sosp.slug;
-  guardarProgreso(progreso);
+  sospechosoActual = sosp;
 
   mostrarPantalla('screen-guarida');
 
-  // Número de archivo: id 0 → "01", id 8 → "09"
+  // El teléfono de pistas de Foxy solo vive en la pantalla de sospechosos
+  document.getElementById('contact-btn')?.classList.add('hidden');
+
   const num = String(sosp.id + 1).padStart(2, '0');
 
-  // Fondo de la guarida
   const bg = document.getElementById('guarida-bg');
   bg.style.backgroundImage = `url('assets/images/guaridas/guarida-${num}-${sosp.slug}.jpg')`;
 
-  // Foto del personaje
   const img = document.getElementById('guarida-personaje-img');
   img.style.display = '';
   img.src = `assets/images/sospechosos/${num}-${sosp.slug}.jpg`;
@@ -80,9 +154,6 @@ function abrirGuarida(sosp) {
 
   document.getElementById('guarida-nombre').textContent = sosp.nombre;
 
-  // Ocultar la caja (por si quedó abierta de una visita anterior a esta guarida)
-  const caja = document.getElementById('caja-secreta');
-  caja.classList.add('hidden');
   document.getElementById('caja-icono').textContent = '🔒';
   document.getElementById('caja-icono').classList.remove('caja-abierta');
   const hallazgoImg = document.getElementById('hallazgo-img');
@@ -90,16 +161,39 @@ function abrirGuarida(sosp) {
   hallazgoImg.style.display = '';
   document.getElementById('guarida-continuar-btn').classList.add('hidden');
 
-  // Reproducir la confesión + planteamiento del reto
+  ocultarTodosLosEstadosGuarida();
+  document.getElementById('guarida-llamar-btn').classList.remove('hidden');
+}
+
+
+// ----------------------------------------------------------------
+// PASO 2: LLAMAR (tono de llamada saliente, 5-10s aleatorio)
+// ----------------------------------------------------------------
+
+function iniciarLlamadaSaliente() {
+  ocultarTodosLosEstadosGuarida();
+  document.getElementById('guarida-llamando').classList.remove('hidden');
+  reproducirTonoLlamando();
+
+  const espera = numAleatorio(5000, 10000);
+  programarGuarida(contestarLlamadaSaliente, espera);
+}
+
+function contestarLlamadaSaliente() {
+  detenerTonoLlamando();
+  ocultarTodosLosEstadosGuarida();
+
+  const sosp = sospechosoActual;
+  const num = String(sosp.id + 1).padStart(2, '0');
+
   reproducirVoz(`assets/audio/voz-sospechoso-${num}-${sosp.slug}.mp3`);
 
-  // Lanzar el minijuego correspondiente (definido en minijuegos.js)
   const container = document.getElementById('minijuego-container');
   container.classList.remove('hidden');
   container.innerHTML = '';
 
   if (window.MINIJUEGOS && window.MINIJUEGOS[sosp.juego]) {
-    window.MINIJUEGOS[sosp.juego](container, () => onMinijuegoGanado(sosp));
+    window.MINIJUEGOS[sosp.juego](container, onMinijuegoGanado);
   } else {
     console.warn('[Bruno2] Minijuego no encontrado para:', sosp.juego);
   }
@@ -107,63 +201,79 @@ function abrirGuarida(sosp) {
 
 
 // ----------------------------------------------------------------
-// GANAR EL MINIJUEGO → SE ABRE LA CAJA
+// PASO 3: GANAR EL MINIJUEGO → esperar y recibir la llamada de vuelta
 // ----------------------------------------------------------------
 
-/**
- * onMinijuegoGanado(sosp)
- * Se llama automáticamente desde dentro de cada minijuego cuando
- * Bruno lo completa con éxito.
- */
-function onMinijuegoGanado(sosp) {
+function onMinijuegoGanado() {
   if (typeof detenerMinijuegoActual === 'function') detenerMinijuegoActual();
 
+  ocultarTodosLosEstadosGuarida();
+  document.getElementById('guarida-esperando').classList.remove('hidden');
+
+  const espera = numAleatorio(5000, 10000);
+  programarGuarida(mostrarLlamadaEntrante, espera);
+}
+
+function mostrarLlamadaEntrante() {
+  ocultarTodosLosEstadosGuarida();
+  document.getElementById('guarida-llamada-entrante').classList.remove('hidden');
+  reproducirRingtone();
+}
+
+function contestarLlamadaEntrante() {
+  limpiarTemporizadorGuarida();
+  detenerRingtone();
+  ocultarTodosLosEstadosGuarida();
+
+  const sosp = sospechosoActual;
   const num = String(sosp.id + 1).padStart(2, '0');
 
-  // Limpiar el área del minijuego
-  const container = document.getElementById('minijuego-container');
-  container.innerHTML = '';
-  container.classList.add('hidden');
-
-  // Mostrar la caja abriéndose
-  const caja = document.getElementById('caja-secreta');
-  caja.classList.remove('hidden');
+  document.getElementById('caja-secreta').classList.remove('hidden');
   document.getElementById('caja-icono').textContent = '🔓';
   document.getElementById('caja-icono').classList.add('caja-abierta');
   reproducirSonido('audio-caja-abre');
 
-  // Un momento después: mostrar el hallazgo gracioso + la voz de éxito
-  setTimeout(() => {
-    const hallazgoImg = document.getElementById('hallazgo-img');
-    hallazgoImg.style.display = '';
-    hallazgoImg.src = `assets/images/hallazgos/hallazgo-${num}-${sosp.slug}.jpg`;
-    hallazgoImg.classList.remove('hidden');
+  reproducirVoz(`assets/audio/voz-exito-${num}-${sosp.slug}.mp3`);
 
-    reproducirVoz(`assets/audio/voz-exito-${num}-${sosp.slug}.mp3`);
+  const hallazgoImg = document.getElementById('hallazgo-img');
+  hallazgoImg.style.display = '';
+  hallazgoImg.src = `assets/images/hallazgos/hallazgo-${num}-${sosp.slug}.jpg`;
+  hallazgoImg.classList.remove('hidden');
 
-    document.getElementById('guarida-continuar-btn').classList.remove('hidden');
-  }, 500);
+  document.getElementById('guarida-continuar-btn').classList.remove('hidden');
 
-  // Marcar como revisado, guardar progreso, y ver si ya se completaron los 9
-  // (función definida en map.js)
   if (typeof marcarSospechosoRevisado === 'function') {
     marcarSospechosoRevisado(sosp.id);
   }
 }
 
+/**
+ * colgarLlamadaEntrante()
+ * Si Bruno cuelga sin contestar, la llamada vuelve a sonar sola
+ * 3 segundos después. Se repite hasta que la conteste.
+ */
+function colgarLlamadaEntrante() {
+  detenerRingtone();
+  ocultarTodosLosEstadosGuarida();
+  document.getElementById('guarida-esperando').classList.remove('hidden');
+  programarGuarida(mostrarLlamadaEntrante, 3000);
+}
+
 
 // ----------------------------------------------------------------
-// SALIR DE LA GUARIDA (botones "Volver" y "Volver a sospechosos")
+// SALIR DE LA GUARIDA
 // ----------------------------------------------------------------
 
 function volverASospechosos() {
+  limpiarTemporizadorGuarida();
+  detenerTonoLlamando();
+  detenerRingtone();
   if (typeof detenerMinijuegoActual === 'function') detenerMinijuegoActual();
 
   const dinamico = document.getElementById('audio-dinamico');
   if (dinamico) dinamico.pause();
 
-  progreso.sospechosoSeleccionado = null;
-  guardarProgreso(progreso);
+  sospechosoActual = null;
 
   mostrarPantalla('screen-map');
   progreso.pantallaActual = 'map';
@@ -175,15 +285,9 @@ function volverASospechosos() {
 
 // ----------------------------------------------------------------
 // TELÉFONO: BRUNO LLAMA A FOXY PIDIENDO UNA PISTA
+// (solo existe en la pantalla de sospechosos)
 // ----------------------------------------------------------------
 
-/**
- * llamarAFoxy()
- * Llamada SALIENTE (Bruno marca). Foxy contesta solo después de
- * "sonar" un momento, y da una pista distinta según qué sospechoso
- * tenga Bruno abierto en ese momento (o una pista genérica si está
- * en la pantalla de sospechosos sin ninguno abierto).
- */
 function llamarAFoxy() {
   const overlay = document.getElementById('screen-call');
   const statusEl = document.getElementById('call-status-text');
@@ -191,49 +295,49 @@ function llamarAFoxy() {
   document.getElementById('call-rings')?.classList.remove('hidden');
   statusEl.textContent = 'Llamando...';
 
-  const ringtone = document.getElementById('audio-ringtone');
-  if (ringtone) {
-    ringtone.currentTime = 0;
-    ringtone.play().catch(() => {});
-  }
+  reproducirTonoLlamando();
 
-  const timeoutId = setTimeout(() => {
-    if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+  setTimeout(() => {
+    detenerTonoLlamando();
     document.getElementById('call-rings')?.classList.add('hidden');
     statusEl.textContent = 'Foxy: hablando...';
 
-    // ¿Qué sospechoso tiene Bruno abierto ahora mismo?
-    const slug = progreso.sospechosoSeleccionado;
+    const slug = progreso.ultimoVencido;
     let ruta;
     if (slug) {
       const idx = SOSPECHOSOS.findIndex(s => s.slug === slug);
       const num = String(idx + 1).padStart(2, '0');
       ruta = `assets/audio/pista-${num}-${slug}.mp3`;
     } else {
-      // No hay ningún sospechoso abierto (llamó desde la pantalla general)
       ruta = 'assets/audio/pista-general.mp3';
     }
 
     reproducirVoz(ruta, () => {
       statusEl.textContent = 'Llamada finalizada';
     });
-  }, 1800);
+  }, numAleatorio(2000, 3000));
 }
 
-// Botón flotante de teléfono
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('contact-btn')?.addEventListener('click', llamarAFoxy);
 
-  document.getElementById('btn-hangup')?.addEventListener('click', () => {
+// ----------------------------------------------------------------
+// CONECTAR TODOS LOS BOTONES
+// ----------------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+  alTocarBoton(document.getElementById('contact-btn'), llamarAFoxy);
+
+  alTocarBoton(document.getElementById('btn-hangup'), () => {
     document.getElementById('screen-call')?.classList.add('hidden');
-    const ringtone = document.getElementById('audio-ringtone');
-    if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+    detenerTonoLlamando();
     const dinamico = document.getElementById('audio-dinamico');
     if (dinamico) dinamico.pause();
   });
 
-  document.getElementById('guarida-back-btn')?.addEventListener('click', volverASospechosos);
-  document.getElementById('guarida-continuar-btn')?.addEventListener('click', volverASospechosos);
+  alTocarBoton(document.getElementById('guarida-back-btn'), volverASospechosos);
+  alTocarBoton(document.getElementById('guarida-continuar-btn'), volverASospechosos);
+  alTocarBoton(document.getElementById('guarida-llamar-btn'), iniciarLlamadaSaliente);
+  alTocarBoton(document.getElementById('guarida-btn-contestar'), contestarLlamadaEntrante);
+  alTocarBoton(document.getElementById('guarida-btn-colgar'), colgarLlamadaEntrante);
 });
 
 
@@ -241,11 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // LLAMADA FINAL: FOXY REVELA QUE FUE BUCK
 // ----------------------------------------------------------------
 
-/**
- * iniciarLlamadaFinal()
- * Se dispara automáticamente 15 segundos después de revisar al
- * noveno sospechoso (ver map.js → marcarSospechosoRevisado()).
- */
 function iniciarLlamadaFinal() {
   progreso.casoResuelto = true;
   guardarProgreso(progreso);
@@ -256,22 +355,16 @@ function iniciarLlamadaFinal() {
   document.getElementById('call-rings')?.classList.remove('hidden');
   statusEl.textContent = 'Llamada entrante...';
 
-  const ringtone = document.getElementById('audio-ringtone');
-  if (ringtone) {
-    ringtone.currentTime = 0;
-    ringtone.play().catch(() => {});
-  }
+  reproducirRingtone();
 
   setTimeout(() => {
-    if (ringtone) { ringtone.pause(); ringtone.currentTime = 0; }
+    detenerRingtone();
     document.getElementById('call-rings')?.classList.add('hidden');
     statusEl.textContent = 'Foxy: hablando...';
 
     reproducirVoz('assets/audio/voz-final-foxy.mp3', () => {
       statusEl.textContent = 'Llamada finalizada';
 
-      // Cerrar la llamada y llevar a Bruno de vuelta a la cuadrícula,
-      // donde ahora aparece la tarjeta secreta de Buck.
       setTimeout(() => {
         overlay.classList.add('hidden');
         mostrarPantalla('screen-map');
@@ -283,5 +376,4 @@ function iniciarLlamadaFinal() {
   }, 2200);
 }
 
-// Exponer para que map.js la pueda llamar
 window.iniciarLlamadaFinal = iniciarLlamadaFinal;
