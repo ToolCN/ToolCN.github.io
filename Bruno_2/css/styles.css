@@ -508,9 +508,9 @@ html, body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: clamp(10px, 2.5vw, 24px);
-  max-width: 900px;
-  width: 92%;
-  max-height: 72vh;
+  max-width: 1000px;
+  width: 94%;
+  max-height: 80vh;
   overflow-y: auto;
   padding: 8px;
 }
@@ -519,10 +519,12 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 10px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 12px;
+  padding: 14px 8px;
+  min-height: clamp(140px, 24vh, 220px);
+  border-radius: 14px;
   background: rgba(20, 20, 30, 0.5);
   border: 2px solid rgba(255, 215, 0, 0.2);
   transition: transform 0.15s ease, border-color 0.2s ease;
@@ -533,14 +535,20 @@ html, body {
   transform: scale(0.95);
 }
 
+/* Sospechoso ya vencido/descartado: tache rojo, ya no se puede volver a entrar */
 .sospechoso-card.revisado {
-  border-color: rgba(57, 255, 20, 0.5);
+  border-color: rgba(255, 60, 60, 0.5);
+  cursor: default;
+  opacity: 0.75;
+}
+.sospechoso-card.revisado:active {
+  transform: none;
 }
 
 .sospechoso-foto-wrap {
   position: relative;
-  width: clamp(64px, 12vw, 110px);
-  height: clamp(64px, 12vw, 110px);
+  width: clamp(80px, 15vw, 140px);
+  height: clamp(80px, 15vw, 140px);
   border-radius: 50%;
   overflow: hidden;
   background: #1a1a24;
@@ -559,29 +567,26 @@ html, body {
   height: 100%;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   color: var(--c-texto-dim);
 }
 
-.sospechoso-check {
+/* Tache rojo grande sobre toda la foto, indica "no es el ladrón" */
+.sospechoso-tache {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
-  background: var(--c-verde);
-  color: #000;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  font-weight: bold;
-  box-shadow: 0 0 8px rgba(57,255,20,0.5);
+  font-size: 3rem;
+  color: #ff3c3c;
+  text-shadow: 0 0 10px rgba(255,60,60,0.8), 0 2px 4px rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.35);
+  border-radius: 50%;
 }
 
 .sospechoso-nombre {
-  font-size: clamp(0.65rem, 1.6vw, 0.85rem);
+  font-size: clamp(0.75rem, 1.8vw, 1rem);
   text-align: center;
   color: var(--c-texto);
   line-height: 1.2;
@@ -667,6 +672,52 @@ html, body {
   text-shadow: var(--sombra-dorada);
   letter-spacing: 2px;
   margin: 8px 0 4px;
+}
+
+/* Botón grande de "Llamar" al entrar a la guarida */
+.guarida-llamar-btn {
+  position: relative;
+  z-index: 2;
+  font-size: 1.1rem;
+  padding: 16px 36px;
+  margin-top: 10px;
+}
+
+/* Estados de "llamando..." y "llamada entrante" dentro de la guarida */
+.guarida-llamada-estado {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.guarida-esperando {
+  position: relative;
+  z-index: 2;
+  color: var(--c-texto-dim);
+  font-style: italic;
+  margin-top: 14px;
+}
+
+/* Versión chica de los anillos de llamada (reutiliza los colores/estilo
+   de .call-ring pero a menor escala para caber dentro de la guarida) */
+.call-rings-mini {
+  position: relative;
+  width: 70px;
+  height: 70px;
+}
+.call-rings-mini .call-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--c-dorado);
+  animation: callRing 1.6s ease-out infinite;
+}
+.call-rings-mini .ring-2 {
+  animation-delay: 0.5s;
 }
 
 .minijuego-container {
@@ -762,66 +813,118 @@ html, body {
 .luna-campo {
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 320px;
   background: rgba(0,0,0,0.3);
   border-radius: 12px;
   overflow: hidden;
 }
 .luna {
   position: absolute;
-  width: 60px;
-  height: 60px;
-  font-size: 2.6rem;
+  width: 80px;
+  height: 80px;
+  font-size: 3.4rem;
   background: none;
   border: none;
   cursor: pointer;
   line-height: 1;
-  filter: drop-shadow(0 0 10px rgba(255,255,200,0.6));
+  filter: drop-shadow(0 0 12px rgba(255,255,200,0.6));
+}
+.minijuego-fallo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 100%;
+  color: var(--c-texto);
 }
 
 
 /* ================================================================
-   MINIJUEGO 2 — FERIA (Charro Negro)
+   MINIJUEGO 2 — LOTERÍA (Charro Negro)
    ================================================================ */
-.feria-grid {
+.loteria-campo {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* La carta "fantasma": 16 casillas centradas donde van las piezas */
+.loteria-carta {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  width: 100%;
+  gap: 3px;
+  width: 200px;
+  height: 200px;
+  z-index: 1;
+  pointer-events: none;
 }
-.feria-item {
-  aspect-ratio: 1;
-  font-size: 1.8rem;
-  background: rgba(255,255,255,0.06);
-  border: 2px solid rgba(255,215,0,0.25);
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-
-/* ================================================================
-   MINIJUEGO 3 — ESTRELLAS (El Empresario)
-   ================================================================ */
-.estrellas-campo {
-  font-size: 1.6rem;
-  text-align: center;
-  min-height: 70px;
+.loteria-casilla {
+  background: rgba(255,255,255,0.05);
+  border: 1px dashed rgba(255,215,0,0.3);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  color: var(--c-texto);
+  font-size: 1.3rem;
 }
-.estrellas-opciones {
+.loteria-fantasma {
+  opacity: 0.18;
+  transition: opacity 0.3s ease;
+}
+
+/* Las piezas que "volaron" y flotan por el campo */
+.loteria-pieza {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  font-size: 1.7rem;
+  background: rgba(20,20,30,0.7);
+  border: 2px solid var(--c-dorado-dark);
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 5;
+  animation: loteriaFlotar 3s ease-in-out infinite;
+}
+.loteria-pieza.loteria-colocada {
+  opacity: 0;
+  pointer-events: none;
+}
+@keyframes loteriaFlotar {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25%      { transform: translate(8px, -10px) rotate(4deg); }
+  50%      { transform: translate(-8px, 6px) rotate(-4deg); }
+  75%      { transform: translate(6px, 8px) rotate(3deg); }
+}
+
+
+/* ================================================================
+   MINIJUEGO 3 — MATEMÁTICAS (El Empresario)
+   ================================================================ */
+.mate-operacion {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--c-dorado);
+  text-align: center;
+  font-family: var(--f-titulo);
+}
+.mate-opciones {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
 }
-.estrellas-btn {
-  min-width: 56px;
-  min-height: 48px;
-  font-size: 1.2rem;
+.mate-btn {
+  min-width: 72px;
+  min-height: 56px;
+  font-size: 1.3rem;
   font-weight: bold;
   background: rgba(255,255,255,0.08);
   border: 2px solid var(--c-dorado-dark);
@@ -837,7 +940,7 @@ html, body {
 .linterna-campo {
   position: relative;
   width: 100%;
-  height: 240px;
+  height: 260px;
   background: #000;
   border-radius: 12px;
   overflow: hidden;
@@ -853,6 +956,17 @@ html, body {
   justify-content: center;
   opacity: 0.2;
   z-index: 1;
+}
+.linterna-monstruo {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  font-size: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  filter: drop-shadow(0 0 10px rgba(255,0,0,0.6));
 }
 .linterna-luz {
   position: absolute;
@@ -871,11 +985,12 @@ html, body {
    MINIJUEGO 5 — MEMORIA (Plankton)
    ================================================================ */
 .memoria-secuencia {
-  font-size: 1.8rem;
-  min-height: 50px;
+  font-size: 2.6rem;
+  min-height: 70px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
+  align-items: center;
 }
 .memoria-ficha {
   animation: fichaAparece 0.3s ease;
@@ -886,14 +1001,14 @@ html, body {
 }
 .memoria-opciones {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
 }
 .memoria-btn {
-  width: 56px;
-  height: 56px;
-  font-size: 1.6rem;
+  width: 68px;
+  height: 68px;
+  font-size: 2rem;
   background: rgba(255,255,255,0.08);
   border: 2px solid var(--c-dorado-dark);
   border-radius: 10px;
@@ -906,66 +1021,68 @@ html, body {
 
 
 /* ================================================================
-   MINIJUEGO 6 — LÁSER (El Lobo)
+   MINIJUEGO 6 — LÁSER (El Lobo) — carriles con alerta previa
    ================================================================ */
-.laser-campo {
-  position: relative;
-  width: 100%;
-  height: 160px;
-  background: rgba(0,0,0,0.35);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.laser-linea {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 8px;
-  background: linear-gradient(90deg, transparent, #ff2b2b, transparent);
-  box-shadow: 0 0 12px rgba(255,40,40,0.8);
-}
-.laser-linea.laser-alto {
-  top: 30px;
-}
-.laser-linea.laser-bajo {
-  top: 120px;
-}
-.laser-personaje {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 2.2rem;
-}
-.laser-botones {
+.laser-carriles {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.laser-carril {
+  height: 60px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.laser-carril.laser-alerta {
+  background: rgba(255, 40, 40, 0.35);
+  border-color: #ff2b2b;
+  animation: laserAlertaPulso 0.4s infinite alternate;
+}
+@keyframes laserAlertaPulso {
+  from { box-shadow: 0 0 6px rgba(255,40,40,0.4); }
+  to   { box-shadow: 0 0 22px rgba(255,40,40,0.9); }
+}
+.laser-personaje-mini {
+  font-size: 1.8rem;
 }
 
 
 /* ================================================================
-   MINIJUEGO 7 — ORO (Villano Dragón)
+   MINIJUEGO 7 — ORO / MEMORAMA (Villano Dragón)
    ================================================================ */
-.oro-grid {
+.oro-memorama {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   width: 100%;
 }
-.oro-item {
+.oro-carta {
   aspect-ratio: 1;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   background: rgba(255,255,255,0.06);
   border: 2px solid rgba(255,255,255,0.2);
   border-radius: 10px;
   cursor: pointer;
 }
-.oro-correcto  { border-color: var(--c-verde); opacity: 0.4; }
-.oro-incorrecto { border-color: #ff3c3c; opacity: 0.4; }
+.oro-carta-volteada {
+  border-color: var(--c-dorado);
+}
+.oro-carta-resuelta {
+  opacity: 0.35;
+  pointer-events: none;
+}
 
 
 /* ================================================================
-   MINIJUEGO 8 — LABERINTO (El Prototipo)
+   MINIJUEGO 8 — LABERINTO (El Prototipo) — 7x7 con guardias
    ================================================================ */
 .laberinto-grid {
   display: grid;
@@ -973,6 +1090,10 @@ html, body {
   gap: 3px;
   width: min(100%, 260px);
   aspect-ratio: 1;
+}
+.laberinto-grid-7 {
+  grid-template-columns: repeat(7, 1fr);
+  width: min(100%, 320px);
 }
 .laberinto-celda {
   background: rgba(255,255,255,0.06);
@@ -983,6 +1104,9 @@ html, body {
 }
 .laberinto-meta {
   background: rgba(57, 255, 20, 0.3);
+}
+.laberinto-guardia {
+  background: rgba(255, 140, 0, 0.6);
 }
 .laberinto-jugador {
   background: var(--c-dorado);
@@ -1000,7 +1124,7 @@ html, body {
 
 
 /* ================================================================
-   MINIJUEGO 9 — ESCONDITE (Blue)
+   MINIJUEGO 9 — ESCONDITE (Blue) — dirección segura
    ================================================================ */
 .escondite-campo {
   width: 100%;
@@ -1015,11 +1139,11 @@ html, body {
   font-size: 3.5rem;
   transition: transform 0.2s ease;
 }
-.escondite-mirando {
-  transform: scale(1.15);
-}
-.escondite-no-mirando {
-  opacity: 0.7;
+.escondite-spots {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 
@@ -1232,17 +1356,18 @@ html, body {
 }
 
 .call-btn {
-  width: 72px;
-  height: 72px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   border: none;
-  font-size: 2rem;
+  font-size: 2.2rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .call-btn:active { transform: scale(0.88); }
