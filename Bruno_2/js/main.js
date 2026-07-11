@@ -23,7 +23,7 @@ const STORAGE_KEY = 'bruno2_progreso';
 
 // Estado inicial: lo que hay la PRIMERA VEZ que Bruno abre la app.
 const ESTADO_INICIAL = {
-  candadosAbiertos:     [false, false, false],          // 3 candados
+  candadosAbiertos:     [false, false],          // 2 candados
   misionesCompletadas:  [false, false, false, false, false], // 5 misiones
   capitulo:             1,      // capítulo actual de la historia (1, 2, 3…)
   pantallaActual:       'locks' // 'locks' o 'map'
@@ -182,6 +182,41 @@ function reproducirSonido(audioId) {
 
 
 // ----------------------------------------------------------------
+// BOTÓN DE REINICIO (esquina superior derecha, discreto)
+// ----------------------------------------------------------------
+
+/**
+ * inicializarBotonReinicio()
+ * Conecta el botón de reinicio con su modal de confirmación.
+ * El botón por sí solo NO borra nada: primero siempre pide confirmar,
+ * para evitar que Bruno lo toque por accidente y pierda su progreso.
+ */
+function inicializarBotonReinicio() {
+  const btnReinicio = document.getElementById('reset-btn');
+  const modal        = document.getElementById('reset-modal');
+  const btnConfirmar  = document.getElementById('reset-confirm');
+  const btnCancelar   = document.getElementById('reset-cancel');
+
+  if (!btnReinicio || !modal) return; // Por si el HTML aún no tiene estos elementos
+
+  // Al tocar el botón: mostrar el modal de confirmación (todavía no borra nada)
+  btnReinicio.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+  });
+
+  // Confirmar: aquí sí se borra el progreso y se recarga la app
+  btnConfirmar.addEventListener('click', () => {
+    reiniciarProgreso();
+  });
+
+  // Cancelar: solo cerrar el modal, sin tocar el progreso
+  btnCancelar.addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+}
+
+
+// ----------------------------------------------------------------
 // INICIALIZACIÓN PRINCIPAL
 // ----------------------------------------------------------------
 
@@ -190,6 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Iniciar música la primera vez que el usuario toca o hace clic
   document.body.addEventListener('touchstart', iniciarMusica, { once: true });
   document.body.addEventListener('click',      iniciarMusica, { once: true });
+
+  // Conectar el botón de reinicio (esquina superior derecha) con su modal
+  inicializarBotonReinicio();
 
   // Corrección de estado inconsistente: si todos los candados están
   // abiertos pero la pantalla guardada es 'locks', ir al mapa directamente.
