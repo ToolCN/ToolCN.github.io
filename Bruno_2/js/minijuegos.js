@@ -131,7 +131,7 @@ function juegoLuna(container, onWin) {
 
 
 // ================================================================
-// 2. CHARRO NEGRO — Lotería: junta las 16 piezas voladoras
+// 2. CHARRO NEGRO — Lotería: ARRASTRA cada pieza a su casilla exacta
 // ================================================================
 function juegoLoteria(container, onWin) {
   detenerMinijuegoActual();
@@ -140,7 +140,7 @@ function juegoLoteria(container, onWin) {
   let colocadas = 0;
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">¡Las piezas de la carta salieron volando! Tócalas para regresarlas a su lugar</p>
+    <p class="minijuego-instruccion">Arrastra cada pieza voladora hasta SU casilla exacta en la carta</p>
     <div class="loteria-campo" id="loteria-campo">
       <div class="loteria-carta" id="loteria-carta"></div>
     </div>
@@ -159,51 +159,122 @@ function juegoLoteria(container, onWin) {
   });
 
   const indicesBarajados = ICONOS.map((_, i) => i).sort(() => Math.random() - 0.5);
-  const piezas = [];
 
   indicesBarajados.forEach(indexOriginal => {
-    const pieza = document.createElement('button');
+    const pieza = document.createElement('div');
     pieza.className = 'loteria-pieza';
     pieza.textContent = ICONOS[indexOriginal];
     pieza.dataset.index = indexOriginal;
     campo.appendChild(pieza);
-    piezas.push(pieza);
+    posicionarAleatorio(pieza);
+    hacerArrastrable(pieza);
   });
 
   function posicionarAleatorio(pieza) {
-    const maxX = Math.max(campo.clientWidth  - 54, 0);
-    const maxY = Math.max(campo.clientHeight - 54, 0);
+    const maxX = Math.max(campo.clientWidth  - 58, 0);
+    const maxY = Math.max(campo.clientHeight - 58, 0);
     pieza.style.left = (Math.random() * maxX) + 'px';
     pieza.style.top  = (Math.random() * maxY) + 'px';
     pieza.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
     pieza.style.animationDelay = (Math.random() * 1.5) + 's';
   }
-  piezas.forEach(posicionarAleatorio);
 
-  piezas.forEach(pieza => {
-    alTocar(pieza, () => {
+  /**
+   * hacerArrastrable(pieza)
+   * Conecta la pieza a eventos de arrastre reales (dedo o mouse).
+   * Al soltarla, SOLO se acomoda si el CENTRO de la pieza quedó
+   * dentro de SU casilla correcta (no cualquier casilla, ni con
+   * solo tocar el área general de la carta). Si no es su lugar,
+   * simplemente se queda donde la soltaron.
+   */
+  function hacerArrastrable(pieza) {
+    let arrastrando = false;
+    let offsetX = 0, offsetY = 0;
+
+    function iniciar(clientX, clientY) {
       if (pieza.classList.contains('loteria-colocada')) return;
+      arrastrando = true;
+      pieza.style.animation = 'none'; // deja de flotar mientras se arrastra
+      pieza.style.transition = 'none';
+      pieza.classList.add('loteria-arrastrando');
+      const rect = pieza.getBoundingClientRect();
+      offsetX = clientX - rect.left;
+      offsetY = clientY - rect.top;
+    }
+
+    function mover(clientX, clientY) {
+      if (!arrastrando) return;
+      const rectCampo = campo.getBoundingClientRect();
+      let x = clientX - rectCampo.left - offsetX;
+      let y = clientY - rectCampo.top - offsetY;
+      x = Math.max(0, Math.min(x, campo.clientWidth  - pieza.offsetWidth));
+      y = Math.max(0, Math.min(y, campo.clientHeight - pieza.offsetHeight));
+      pieza.style.left = x + 'px';
+      pieza.style.top  = y + 'px';
+    }
+
+    function soltar() {
+      if (!arrastrando) return;
+      arrastrando = false;
+      pieza.classList.remove('loteria-arrastrando');
 
       const idx = pieza.dataset.index;
-      const casillaDestino = carta.querySelector(`.loteria-casilla[data-index="${idx}"]`);
-      const rectCasilla = casillaDestino.getBoundingClientRect();
-      const rectCampo = campo.getBoundingClientRect();
+      const casillaCorrecta = carta.querySelector(`.loteria-casilla[data-index="${idx}"]`);
+      const rectPieza = pieza.getBoundingClientRect();
+      const rectCasilla = casillaCorrecta.getBoundingClientRect();
+      const centroX = rectPieza.left + rectPieza.width / 2;
+      const centroY = rectPieza.top + rectPieza.height / 2;
 
-      pieza.style.animation = 'none';
-      pieza.style.transition = 'left 0.4s ease, top 0.4s ease, opacity 0.3s ease 0.4s';
-      pieza.style.left = (rectCasilla.left - rectCampo.left + 2) + 'px';
-      pieza.style.top  = (rectCasilla.top  - rectCampo.top  + 2) + 'px';
-      pieza.style.zIndex = 0;
+      const esSuLugar = centroX >= rectCasilla.left && centroX <= rectCasilla.right &&
+                         centroY >= rectCasilla.top  && centroY <= rectCasilla.bottom;
 
-      registrarTemporizador(setTimeout(() => {
+      if (esSuLugar) {
+        const rectCampo = campo.getBoundingClientRect();
+        pieza.style.transition = 'left 0.2s ease, top 0.2s ease, opacity 0.3s ease 0.2s';
+        pieza.style.left = (rectCasilla.left - rectCampo.left + rectCasilla.width  / 2 - pieza.offsetWidth  / 2) + 'px';
+        pieza.style.top  = (rectCasilla.top  - rectCampo.top  + rectCasilla.height / 2 - pieza.offsetHeight / 2) + 'px';
         pieza.classList.add('loteria-colocada');
-        casillaDestino.querySelector('.loteria-fantasma').style.opacity = '1';
+        casillaCorrecta.querySelector('.loteria-fantasma').style.opacity = '1';
+
         colocadas += 1;
         container.querySelector('#loteria-contador').textContent = `${colocadas} / 16`;
-        if (colocadas >= 16) onWin();
-      }, 420));
+        registrarTemporizador(setTimeout(() => { pieza.style.opacity = '0'; }, 210));
+        if (colocadas >= 16) registrarTemporizador(setTimeout(onWin, 400));
+      } else {
+        // No era su lugar: se queda flotando justo donde la soltaron
+        registrarTemporizador(setTimeout(() => {
+          if (!pieza.classList.contains('loteria-colocada')) {
+            pieza.style.animation = 'loteriaFlotar 3s ease-in-out infinite';
+          }
+        }, 30));
+      }
+    }
+
+    pieza.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      iniciar(t.clientX, t.clientY);
+    }, { passive: false });
+    pieza.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      mover(t.clientX, t.clientY);
+    }, { passive: false });
+    pieza.addEventListener('touchend', soltar);
+
+    pieza.addEventListener('mousedown', e => {
+      e.preventDefault();
+      iniciar(e.clientX, e.clientY);
+      const onMove = ev => mover(ev.clientX, ev.clientY);
+      const onUp = () => {
+        soltar();
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
     });
-  });
+  }
 }
 
 
@@ -228,7 +299,7 @@ function juegoMatematicas(container, onWin) {
       if (b > a) { const t = a; a = b; b = t; }
       resultado = a - b;
     }
-    return { texto: `${a} ${esSuma ? '+' : '−'} ${b}`, resultado };
+    return { a, b, esSuma, resultado };
   }
 
   function siguienteRonda() {
@@ -245,7 +316,13 @@ function juegoMatematicas(container, onWin) {
 
     container.innerHTML = `
       <p class="minijuego-instruccion">Operación ${ronda} de ${TOTAL}</p>
-      <div class="mate-operacion">${problema.texto} = ?</div>
+      <div class="mate-vertical">
+        <div class="mate-fila-num">${problema.a}</div>
+        <div class="mate-fila-num mate-fila-b">
+          <span class="mate-signo">${problema.esSuma ? '+' : '−'}</span>${problema.b}
+        </div>
+        <div class="mate-linea"></div>
+      </div>
       <div class="mate-opciones" id="mate-opciones"></div>
     `;
 
@@ -392,18 +469,37 @@ function juegoMemoria(container, onWin) {
   const ingredientes = ['🍞', '🥩', '🧀', '🍅', '🥬'];
 
   container.innerHTML = `
-    <p class="minijuego-instruccion" id="memoria-instruccion">Memoriza el orden (3 segundos)</p>
-    <div class="memoria-secuencia" id="memoria-secuencia">
-      ${ingredientes.map(i => `<span class="memoria-ficha">${i}</span>`).join('')}
-    </div>
+    <p class="minijuego-instruccion" id="memoria-instruccion">Memoriza el orden...</p>
+    <div class="memoria-secuencia" id="memoria-secuencia"></div>
     <div class="memoria-opciones" id="memoria-opciones"></div>
   `;
 
-  registrarTemporizador(setTimeout(() => {
-    // Borrar la secuencia por completo: ya no se puede "hacer trampa" viéndola
-    container.querySelector('#memoria-secuencia').innerHTML = '';
-    container.querySelector('#memoria-instruccion').textContent = 'Ahora tócalos en el mismo orden';
+  const secuenciaDiv = container.querySelector('#memoria-secuencia');
+  let i = 0;
 
+  // Mostrar los ingredientes UNO POR UNO, en orden ascendente, hasta
+  // que los 5 estén visibles a la vez.
+  function mostrarSiguiente() {
+    if (i < ingredientes.length) {
+      const span = document.createElement('span');
+      span.className = 'memoria-ficha';
+      span.textContent = ingredientes[i];
+      secuenciaDiv.appendChild(span);
+      i += 1;
+      registrarTemporizador(setTimeout(mostrarSiguiente, 600));
+      return;
+    }
+
+    // Ya se ven los 5: esperar 3 segundos completos con la secuencia
+    // visible, y HASTA ENTONCES borrarla para que responda de memoria.
+    registrarTemporizador(setTimeout(() => {
+      secuenciaDiv.innerHTML = '';
+      container.querySelector('#memoria-instruccion').textContent = 'Ahora tócalos en el mismo orden';
+      montarOpciones();
+    }, 3000));
+  }
+
+  function montarOpciones() {
     let respuestaIdx = 0;
     const opcionesDiv = container.querySelector('#memoria-opciones');
     const barajados = [...ingredientes].sort(() => Math.random() - 0.5);
@@ -425,7 +521,9 @@ function juegoMemoria(container, onWin) {
       });
       opcionesDiv.appendChild(btn);
     });
-  }, 3000));
+  }
+
+  mostrarSiguiente();
 }
 
 
@@ -436,14 +534,13 @@ function juegoMemoria(container, onWin) {
 function juegoLaser(container, onWin) {
   detenerMinijuegoActual();
 
-  const META = 6;
+  const META = 8;
   let ronda = 0;
   let posicionActual = 1; // 0 arriba, 1 medio, 2 abajo
-  let carrilPeligro = null;
-  let rondaActiva = false;
+  let carrilesPeligro = [];
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Cuando un carril se ponga en alerta roja, ¡múdate a otro carril antes de que dispare!</p>
+    <p class="minijuego-instruccion">Un carril parpadeará en VERDE 3 veces de aviso — cuando se ponga ROJO, no debes estar ahí</p>
     <div class="laser-carriles" id="laser-carriles">
       <button class="laser-carril" data-carril="0"><span class="laser-personaje-mini hidden">🐺</span></button>
       <button class="laser-carril" data-carril="1"><span class="laser-personaje-mini hidden">🐺</span></button>
@@ -468,21 +565,48 @@ function juegoLaser(container, onWin) {
     });
   });
 
-  function nuevaRonda() {
-    rondaActiva = true;
-    carrilPeligro = Math.floor(Math.random() * 3);
-    carrilesEls[carrilPeligro].classList.add('laser-alerta');
+  /**
+   * elegirCarriles()
+   * A partir de la ronda 6, se activan 2 carriles peligrosos a la
+   * vez (solo queda 1 carril seguro) — mucho más difícil.
+   */
+  function elegirCarriles() {
+    const cantidad = ronda >= 5 ? 2 : 1;
+    const disponibles = [0, 1, 2].sort(() => Math.random() - 0.5);
+    return disponibles.slice(0, cantidad);
+  }
 
-    registrarTemporizador(setTimeout(() => {
-      if (!rondaActiva) return;
-      rondaActiva = false;
-      carrilesEls.forEach(c => c.classList.remove('laser-alerta'));
-      if (posicionActual === carrilPeligro) {
-        fallar();
-      } else {
-        acierto();
+  function nuevaRonda() {
+    carrilesPeligro = elegirCarriles();
+
+    // Fase de aviso: parpadea en VERDE exactamente 3 veces (6 cambios
+    // de estado = 3 ciclos de encendido/apagado). La velocidad del
+    // parpadeo se acelera un poco en rondas avanzadas.
+    let parpadeos = 0;
+    const totalParpadeos = 6;
+    const velocidad = Math.max(300 - ronda * 12, 170);
+
+    const intervaloAviso = registrarTemporizador(setInterval(() => {
+      carrilesPeligro.forEach(c => carrilesEls[c].classList.toggle('laser-aviso-verde'));
+      parpadeos += 1;
+
+      if (parpadeos >= totalParpadeos) {
+        clearInterval(intervaloAviso);
+        carrilesPeligro.forEach(c => carrilesEls[c].classList.remove('laser-aviso-verde'));
+
+        // Ahora sí: peligro real (rojo)
+        carrilesPeligro.forEach(c => carrilesEls[c].classList.add('laser-alerta'));
+
+        registrarTemporizador(setTimeout(() => {
+          carrilesPeligro.forEach(c => carrilesEls[c].classList.remove('laser-alerta'));
+          if (carrilesPeligro.includes(posicionActual)) {
+            fallar();
+          } else {
+            acierto();
+          }
+        }, 650));
       }
-    }, 1500));
+    }, velocidad));
   }
 
   function acierto() {
@@ -491,7 +615,7 @@ function juegoLaser(container, onWin) {
     if (ronda >= META) {
       onWin();
     } else {
-      registrarTemporizador(setTimeout(nuevaRonda, 500));
+      registrarTemporizador(setTimeout(nuevaRonda, 450));
     }
   }
 
@@ -516,7 +640,7 @@ function juegoOro(container, onWin) {
   detenerMinijuegoActual();
 
   const simbolosOro   = ['💰', '👑', '🟨'];
-  const simbolosFalso = ['🪨', '⚪', '🥔'];
+  const simbolosFalso = ['🪨', '⚪', '🥔', '🦴', '🧊'];
   let mazo = [...simbolosOro, ...simbolosOro, ...simbolosFalso, ...simbolosFalso];
   mazo = mazo.sort(() => Math.random() - 0.5);
 
@@ -586,35 +710,43 @@ function juegoLaberinto(container, onWin) {
   detenerMinijuegoActual();
 
   // 0 libre, 1 pared, 2 inicio (informativo), 3 meta.
-  // Las filas 2 y 4 (donde patrullan los guardias) están COMPLETAMENTE
-  // abiertas a propósito: así el guardia solo ocupa una celda a la vez
-  // y siempre queda espacio de sobra para rodearlo, en vez de bloquear
-  // el único paso posible.
+  // Las filas 2, 4 y 6 (donde patrullan los guardias) están COMPLETAMENTE
+  // abiertas a propósito: así cada guardia solo ocupa una celda a la vez
+  // y siempre queda espacio de sobra para rodearlo.
+  const N = 9;
   const MAPA = [
-    [2, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 1, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0],
-    [1, 1, 0, 1, 0, 1, 1],
-    [0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 0, 1, 1, 0],
-    [0, 0, 0, 0, 0, 0, 3],
+    [2, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 1, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 0, 1, 0, 1, 1, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 1, 1, 0, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 0, 1, 0, 1, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 3],
   ];
 
-  // Los guardias patrullan de un lado a otro de su fila (ping-pong)
+  // 3 guardias-policía patrullando de un lado a otro de su fila
   const rutaGuardia1 = [
-    { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 },
-    { x: 5, y: 2 }, { x: 4, y: 2 }, { x: 3, y: 2 }, { x: 2, y: 2 },
+    { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 },
+    { x: 6, y: 2 }, { x: 7, y: 2 }, { x: 6, y: 2 }, { x: 5, y: 2 }, { x: 4, y: 2 },
+    { x: 3, y: 2 }, { x: 2, y: 2 },
   ];
   const rutaGuardia2 = [
-    { x: 5, y: 4 }, { x: 4, y: 4 }, { x: 3, y: 4 }, { x: 2, y: 4 },
-    { x: 1, y: 4 }, { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 },
+    { x: 7, y: 4 }, { x: 6, y: 4 }, { x: 5, y: 4 }, { x: 4, y: 4 }, { x: 3, y: 4 },
+    { x: 2, y: 4 }, { x: 1, y: 4 }, { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 },
+    { x: 5, y: 4 }, { x: 6, y: 4 },
   ];
-  let pasoGuardia1 = 0, pasoGuardia2 = 0;
+  const rutaGuardia3 = [
+    { x: 1, y: 6 }, { x: 3, y: 6 }, { x: 5, y: 6 }, { x: 7, y: 6 },
+    { x: 5, y: 6 }, { x: 3, y: 6 },
+  ];
+  let pasoGuardia1 = 0, pasoGuardia2 = 0, pasoGuardia3 = 0;
   let pos = { x: 0, y: 0 };
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Llega a la salida. Evita las paredes Y a los guardias que patrullan</p>
-    <div class="laberinto-grid laberinto-grid-7" id="laberinto-grid"></div>
+    <p class="minijuego-instruccion">Llega a la salida. Evita las paredes Y a los policías que patrullan</p>
+    <div class="laberinto-grid laberinto-grid-9" id="laberinto-grid"></div>
     <div class="laberinto-controles">
       <button class="btn-secondary" id="lab-arriba">⬆️</button>
       <div class="laberinto-fila-controles">
@@ -628,7 +760,7 @@ function juegoLaberinto(container, onWin) {
   const grid = container.querySelector('#laberinto-grid');
 
   function posGuardias() {
-    return [rutaGuardia1[pasoGuardia1], rutaGuardia2[pasoGuardia2]];
+    return [rutaGuardia1[pasoGuardia1], rutaGuardia2[pasoGuardia2], rutaGuardia3[pasoGuardia3]];
   }
 
   function dibujar() {
@@ -640,7 +772,10 @@ function juegoLaberinto(container, onWin) {
         div.className = 'laberinto-celda';
         if (celda === 1) div.classList.add('laberinto-peligro');
         if (celda === 3) div.classList.add('laberinto-meta');
-        if (guardias.some(g => g.x === x && g.y === y)) div.classList.add('laberinto-guardia');
+        if (guardias.some(g => g.x === x && g.y === y)) {
+          div.classList.add('laberinto-guardia');
+          div.textContent = '👮';
+        }
         if (pos.x === x && pos.y === y) div.classList.add('laberinto-jugador');
         grid.appendChild(div);
       });
@@ -653,7 +788,7 @@ function juegoLaberinto(container, onWin) {
 
   function mover(dx, dy) {
     const nx = pos.x + dx, ny = pos.y + dy;
-    if (nx < 0 || nx > 6 || ny < 0 || ny > 6) return;
+    if (nx < 0 || nx >= N || ny < 0 || ny >= N) return;
     if (MAPA[ny][nx] === 1) { pos = { x: 0, y: 0 }; dibujar(); return; }
     pos = { x: nx, y: ny };
     if (chocaConGuardia()) { pos = { x: 0, y: 0 }; dibujar(); return; }
@@ -672,6 +807,7 @@ function juegoLaberinto(container, onWin) {
   const intervaloGuardias = registrarTemporizador(setInterval(() => {
     pasoGuardia1 = (pasoGuardia1 + 1) % rutaGuardia1.length;
     pasoGuardia2 = (pasoGuardia2 + 1) % rutaGuardia2.length;
+    pasoGuardia3 = (pasoGuardia3 + 1) % rutaGuardia3.length;
     if (chocaConGuardia()) pos = { x: 0, y: 0 };
     dibujar();
   }, 800));
@@ -686,46 +822,63 @@ function juegoLaberinto(container, onWin) {
 function juegoEscondite(container, onWin) {
   detenerMinijuegoActual();
 
-  const META = 6;
-  let logrados = 0;
-  let miradaActual = 1; // 0 izquierda, 1 centro, 2 derecha
+  const META_PROGRESO = 100;
+  const AVANCE_POR_TOQUE = 9;
+  let avance = 0;
+  let luzVerde = true;
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Escóndete en el lugar donde Blue NO esté mirando</p>
-    <div class="escondite-campo">
-      <div class="escondite-blue" id="escondite-blue">👀</div>
+    <p class="minijuego-instruccion">Luz verde: toca CORRER para avanzar. Luz roja: no toques nada o Blue te atrapa</p>
+    <div class="escondite-semaforo">
+      <div class="escondite-blue-grande" id="escondite-blue-grande">🙈</div>
+      <div class="escondite-luz" id="escondite-luz">VERDE</div>
     </div>
-    <p class="minijuego-contador" id="escondite-contador">0 / ${META}</p>
-    <div class="escondite-spots">
-      <button class="btn-secondary" data-spot="0">⬅️ Izquierda</button>
-      <button class="btn-secondary" data-spot="1">⬆️ Centro</button>
-      <button class="btn-secondary" data-spot="2">➡️ Derecha</button>
-    </div>
+    <div class="barra-tiempo"><div class="barra-tiempo-interna" id="escondite-avance"></div></div>
+    <button class="btn-primary" id="escondite-correr-btn">🏃 Correr</button>
   `;
 
-  const blueEl   = container.querySelector('#escondite-blue');
-  const contador = container.querySelector('#escondite-contador');
-  const FLECHAS  = ['👈', '👀', '👉'];
+  const blueEl   = container.querySelector('#escondite-blue-grande');
+  const luzEl    = container.querySelector('#escondite-luz');
+  const barraEl  = container.querySelector('#escondite-avance');
+  const btnCorrer = container.querySelector('#escondite-correr-btn');
 
-  function cambiarMirada() {
-    miradaActual = Math.floor(Math.random() * 3);
-    blueEl.textContent = FLECHAS[miradaActual];
-    registrarTemporizador(setTimeout(cambiarMirada, 900 + Math.random() * 700));
+  function actualizarBarra() {
+    barraEl.style.width = avance + '%';
   }
-  cambiarMirada();
 
-  container.querySelectorAll('[data-spot]').forEach(btn => {
-    alTocar(btn, () => {
-      const spot = Number(btn.dataset.spot);
-      if (spot === miradaActual) {
-        logrados = 0;
-        contador.textContent = `0 / ${META}`;
-      } else {
-        logrados += 1;
-        contador.textContent = `${logrados} / ${META}`;
-        if (logrados >= META) onWin();
-      }
-    });
+  function cambiarLuz() {
+    luzVerde = !luzVerde;
+    blueEl.textContent = luzVerde ? '🙈' : '👀';
+    blueEl.classList.toggle('escondite-mirando', !luzVerde);
+    luzEl.textContent = luzVerde ? 'VERDE' : 'ROJO';
+    luzEl.classList.toggle('escondite-luz-roja', !luzVerde);
+
+    // La luz verde dura un poco más que la roja; ambas se acortan
+    // levemente conforme se acerca a la meta, para más tensión al final.
+    const factor = 1 - (avance / META_PROGRESO) * 0.35;
+    const duracion = luzVerde
+      ? numAleatorioLocal(1100, 2000) * factor
+      : numAleatorioLocal(900, 1700) * factor;
+
+    registrarTemporizador(setTimeout(cambiarLuz, duracion));
+  }
+  cambiarLuz();
+
+  function atrapado() {
+    avance = Math.max(0, avance - 35); // retrocede, no se va a cero de golpe
+    actualizarBarra();
+    blueEl.classList.add('escondite-atrapado');
+    registrarTemporizador(setTimeout(() => blueEl.classList.remove('escondite-atrapado'), 350));
+  }
+
+  alTocar(btnCorrer, () => {
+    if (luzVerde) {
+      avance = Math.min(META_PROGRESO, avance + AVANCE_POR_TOQUE);
+      actualizarBarra();
+      if (avance >= META_PROGRESO) onWin();
+    } else {
+      atrapado();
+    }
   });
 }
 
