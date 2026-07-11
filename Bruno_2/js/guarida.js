@@ -371,6 +371,13 @@ function iniciarLlamadaFinal() {
         progreso.pantallaActual = 'map';
         guardarProgreso(progreso);
         if (typeof inicializarMapa === 'function') inicializarMapa();
+
+        // El caso queda cerrado: ya no se puede llamar a Foxy de nuevo
+        document.getElementById('contact-btn')?.classList.add('hidden');
+
+        // Mostrar a Buck a pantalla completa automáticamente, sin
+        // necesidad de tocar nada — el juego termina aquí.
+        document.getElementById('screen-buck')?.classList.remove('hidden');
       }, 1200);
     });
   }, 2200);
