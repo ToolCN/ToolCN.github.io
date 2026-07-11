@@ -810,8 +810,8 @@ html, body {
 }
 
 .hallazgo-img {
-  width: clamp(100px, 20vw, 160px);
-  height: clamp(100px, 20vw, 160px);
+  width: clamp(200px, 40vw, 320px);
+  height: clamp(200px, 40vw, 320px);
   object-fit: cover;
   border-radius: 12px;
   border: 2px solid var(--c-dorado-dark);
