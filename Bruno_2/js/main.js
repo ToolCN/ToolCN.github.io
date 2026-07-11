@@ -28,7 +28,7 @@ const ESTADO_INICIAL = {
 
   // --- Sistema de los 9 sospechosos ---
   sospechososRevisados: [false, false, false, false, false, false, false, false, false],
-  sospechosoSeleccionado: null, // slug del sospechoso cuya guarida está abierta ahora mismo (o null)
+  ultimoVencido:        null,   // slug del último sospechoso vencido (para la pista de Foxy)
   casoResuelto:         false,  // true después de la llamada final de Foxy (revela a Buck)
 };
 
@@ -97,6 +97,31 @@ window.reiniciarProgreso = reiniciarProgreso;
  * Oculta todas las pantallas y muestra solo la indicada.
  * @param {string} id - ID del elemento <div class="screen">, ej. 'screen-locks'
  */
+/**
+ * alTocarBoton(el, handler)
+ * Conecta un botón tanto a "touchstart" (respuesta inmediata en
+ * tablet) como a "click" (para poder probar desde computadora),
+ * sin que se dispare dos veces en pantallas táctiles. Se usa en
+ * TODOS los botones de "Contestar"/"Colgar"/"Llamar" para que
+ * respondan siempre al primer toque (antes a veces no reaccionaban
+ * a la primera porque solo estaban conectados a "click", que en
+ * tablets tarda ~300ms o a veces se pierde si el dedo se mueve
+ * un poquito).
+ */
+function alTocarBoton(el, handler) {
+  if (!el) return;
+  let disparadoPorTouch = false;
+  el.addEventListener('touchstart', e => {
+    e.preventDefault();
+    disparadoPorTouch = true;
+    handler(e);
+  }, { passive: false });
+  el.addEventListener('click', e => {
+    if (disparadoPorTouch) { disparadoPorTouch = false; return; }
+    handler(e);
+  });
+}
+
 function mostrarPantalla(id) {
   // Ocultar todas las pantallas
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
