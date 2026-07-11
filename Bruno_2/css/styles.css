@@ -709,6 +709,16 @@ html, body {
   font-size: 1.4rem;
 }
 
+/* Imagen real del personaje dentro de caller-avatar / chat-avatar.
+   Como esos contenedores ya son circulares con overflow:hidden,
+   la imagen solo necesita llenar el espacio y recortarse bien. */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 
 /* ================================================================
    PANTALLA DE LLAMADA
