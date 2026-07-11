@@ -483,10 +483,7 @@ html, body {
 }
 
 .map-title {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
+  margin-top: 28px;
   font-family: var(--f-titulo);
   font-size: clamp(1rem, 3vw, 1.6rem);
   color: var(--c-dorado);
@@ -496,108 +493,539 @@ html, body {
   z-index: 5;
 }
 
-.map-container {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
+.map-subtitle {
+  color: var(--c-texto-dim);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  z-index: 5;
+  margin-bottom: 10px;
 }
 
-/* ---- PINES DE MISIÓN ---- */
-.map-pin {
-  position: absolute;
-  transform: translate(-50%, -50%);
+/* ---- CUADRÍCULA DE SOSPECHOSOS ---- */
+.sospechosos-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 2.5vw, 24px);
+  max-width: 900px;
+  width: 92%;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.sospechoso-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  cursor: default;
-  z-index: 10;
+  gap: 6px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(20, 20, 30, 0.5);
+  border: 2px solid rgba(255, 215, 0, 0.2);
+  transition: transform 0.15s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.pin-icon {
-  width: 60px;
-  height: 60px;
+.sospechoso-card:active {
+  transform: scale(0.95);
+}
+
+.sospechoso-card.revisado {
+  border-color: rgba(57, 255, 20, 0.5);
+}
+
+.sospechoso-foto-wrap {
+  position: relative;
+  width: clamp(64px, 12vw, 110px);
+  height: clamp(64px, 12vw, 110px);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #1a1a24;
+  border: 2px solid var(--c-dorado-dark);
+}
+
+.sospechoso-foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sospechoso-placeholder {
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: var(--c-texto-dim);
+}
+
+.sospechoso-check {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--c-verde);
+  color: #000;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.7rem;
-  border: 3px solid transparent;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-  transition: transform 0.15s ease;
+  font-size: 0.8rem;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(57,255,20,0.5);
+}
+
+.sospechoso-nombre {
+  font-size: clamp(0.65rem, 1.6vw, 0.85rem);
+  text-align: center;
+  color: var(--c-texto);
+  line-height: 1.2;
+}
+
+/* La tarjeta secreta de Buck destaca del resto */
+.sospechoso-secreto {
+  border-color: var(--c-dorado);
+  animation: brilloSecreto 1.6s ease-in-out infinite;
+}
+
+@keyframes brilloSecreto {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+  50%      { box-shadow: 0 0 24px rgba(255,215,0,0.7); }
+}
+
+
+/* ================================================================
+   PANTALLA 3: GUARIDA DE UN SOSPECHOSO
+   ================================================================ */
+
+#screen-guarida {
+  overflow-y: auto;
+  padding: 20px 0 40px;
+}
+
+.guarida-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  /* Fondo oscuro por defecto mientras no subas la imagen real de cada guarida */
+  background-color: #0d0d16;
+  z-index: 0;
+}
+
+.guarida-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 100%);
+}
+
+.guarida-back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  background: rgba(0,0,0,0.5);
+  color: var(--c-texto);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: var(--radio);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guarida-personaje-wrap {
   position: relative;
   z-index: 2;
+  width: clamp(90px, 16vw, 150px);
+  height: clamp(90px, 16vw, 150px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--c-dorado-dark);
+  box-shadow: 0 0 20px rgba(255,215,0,0.3);
+  margin-top: 8px;
 }
 
-.pin-label {
-  font-size: 0.68rem;
-  font-weight: bold;
+.guarida-personaje-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.guarida-nombre {
+  position: relative;
+  z-index: 2;
+  font-family: var(--f-titulo);
+  color: var(--c-dorado);
+  text-shadow: var(--sombra-dorada);
+  letter-spacing: 2px;
+  margin: 8px 0 4px;
+}
+
+.minijuego-container {
+  position: relative;
+  z-index: 2;
+  width: 92%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(10, 10, 18, 0.55);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.minijuego-instruccion {
+  font-size: 0.85rem;
+  color: var(--c-texto);
   text-align: center;
-  max-width: 88px;
-  line-height: 1.25;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.8);
-  letter-spacing: 0.5px;
+  margin: 0;
 }
 
-/* Estado: BLOQUEADO */
-.pin-bloqueado .pin-icon {
-  background: rgba(30, 30, 40, 0.85);
-  border-color: rgba(255, 255, 255, 0.15);
-  opacity: 0.55;
+.minijuego-contador {
+  font-family: var(--f-titulo);
+  color: var(--c-dorado);
+  font-size: 1rem;
+  margin: 0;
 }
 
-.pin-bloqueado .pin-label {
-  color: var(--c-texto-dim);
+/* Barra de tiempo reutilizada por varios minijuegos */
+.barra-tiempo {
+  width: 100%;
+  height: 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.barra-tiempo-interna {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--c-verde), var(--c-dorado));
+  transition: width 0.1s linear;
 }
 
-/* Estado: DISPONIBLE (interactivo) */
-.pin-disponible {
+/* Parpadeo genérico de "respuesta incorrecta" */
+.parpadeo-error {
+  animation: parpadeoError 0.4s;
+}
+@keyframes parpadeoError {
+  0%, 100% { background: inherit; }
+  50%      { background: rgba(255, 60, 60, 0.5); }
+}
+
+/* ---- CAJA SECRETA ---- */
+.caja-secreta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.caja-icono {
+  font-size: 3rem;
+  transition: transform 0.3s ease;
+}
+.caja-icono.caja-abierta {
+  animation: cajaAbrirse 0.5s ease;
+}
+@keyframes cajaAbrirse {
+  0%   { transform: scale(1) rotate(0deg); }
+  50%  { transform: scale(1.3) rotate(-10deg); }
+  100% { transform: scale(1.1) rotate(0deg); }
+}
+
+.hallazgo-img {
+  width: clamp(100px, 20vw, 160px);
+  height: clamp(100px, 20vw, 160px);
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid var(--c-dorado-dark);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+
+/* ================================================================
+   MINIJUEGO 1 — LUNA (Rey Lobo)
+   ================================================================ */
+.luna-campo {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.luna {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  font-size: 2.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(255,255,200,0.6));
+}
+
+
+/* ================================================================
+   MINIJUEGO 2 — FERIA (Charro Negro)
+   ================================================================ */
+.feria-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.feria-item {
+  aspect-ratio: 1;
+  font-size: 1.8rem;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,215,0,0.25);
+  border-radius: 10px;
   cursor: pointer;
 }
 
-.pin-disponible .pin-icon {
-  background: rgba(0, 60, 140, 0.85);
-  border-color: var(--c-azul);
-  box-shadow: 0 0 22px rgba(0, 180, 255, 0.5), 0 4px 12px rgba(0,0,0,0.5);
+
+/* ================================================================
+   MINIJUEGO 3 — ESTRELLAS (El Empresario)
+   ================================================================ */
+.estrellas-campo {
+  font-size: 1.6rem;
+  text-align: center;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  color: var(--c-texto);
+}
+.estrellas-opciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.estrellas-btn {
+  min-width: 56px;
+  min-height: 48px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid var(--c-dorado-dark);
+  border-radius: 10px;
+  color: var(--c-dorado);
+  cursor: pointer;
 }
 
-.pin-disponible:active .pin-icon {
-  transform: scale(0.88);
-}
 
-.pin-disponible .pin-label {
-  color: #b0d8ff;
+/* ================================================================
+   MINIJUEGO 4 — LINTERNA (Springtrap)
+   ================================================================ */
+.linterna-campo {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: none;
 }
-
-/* Anillo pulsante en pines disponibles */
-.pin-pulse {
+.linterna-salida {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 3px solid var(--c-azul);
-  animation: pinPulse 1.8s ease-out infinite;
+  width: 50px;
+  height: 50px;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.2;
   z-index: 1;
+}
+.linterna-luz {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 68%);
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
   pointer-events: none;
+  z-index: 2;
 }
 
-@keyframes pinPulse {
-  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.7; }
-  100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
-}
 
-/* Estado: COMPLETADO */
-.pin-completado .pin-icon {
-  background: rgba(0, 70, 20, 0.85);
+/* ================================================================
+   MINIJUEGO 5 — MEMORIA (Plankton)
+   ================================================================ */
+.memoria-secuencia {
+  font-size: 1.8rem;
+  min-height: 50px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.memoria-ficha {
+  animation: fichaAparece 0.3s ease;
+}
+@keyframes fichaAparece {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.memoria-opciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.memoria-btn {
+  width: 56px;
+  height: 56px;
+  font-size: 1.6rem;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid var(--c-dorado-dark);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.memoria-btn-correcto {
   border-color: var(--c-verde);
-  box-shadow: 0 0 18px rgba(57, 255, 20, 0.35), 0 4px 12px rgba(0,0,0,0.5);
+  opacity: 0.5;
 }
 
-.pin-completado .pin-label {
-  color: #80ff80;
+
+/* ================================================================
+   MINIJUEGO 6 — LÁSER (El Lobo)
+   ================================================================ */
+.laser-campo {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.laser-linea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(90deg, transparent, #ff2b2b, transparent);
+  box-shadow: 0 0 12px rgba(255,40,40,0.8);
+}
+.laser-linea.laser-alto {
+  top: 30px;
+}
+.laser-linea.laser-bajo {
+  top: 120px;
+}
+.laser-personaje {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2.2rem;
+}
+.laser-botones {
+  display: flex;
+  gap: 12px;
+}
+
+
+/* ================================================================
+   MINIJUEGO 7 — ORO (Villano Dragón)
+   ================================================================ */
+.oro-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.oro-item {
+  aspect-ratio: 1;
+  font-size: 1.8rem;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.oro-correcto  { border-color: var(--c-verde); opacity: 0.4; }
+.oro-incorrecto { border-color: #ff3c3c; opacity: 0.4; }
+
+
+/* ================================================================
+   MINIJUEGO 8 — LABERINTO (El Prototipo)
+   ================================================================ */
+.laberinto-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  width: min(100%, 260px);
+  aspect-ratio: 1;
+}
+.laberinto-celda {
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+}
+.laberinto-peligro {
+  background: rgba(255, 60, 60, 0.3);
+}
+.laberinto-meta {
+  background: rgba(57, 255, 20, 0.3);
+}
+.laberinto-jugador {
+  background: var(--c-dorado);
+}
+.laberinto-controles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.laberinto-fila-controles {
+  display: flex;
+  gap: 40px;
+}
+
+
+/* ================================================================
+   MINIJUEGO 9 — ESCONDITE (Blue)
+   ================================================================ */
+.escondite-campo {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+}
+.escondite-blue {
+  font-size: 3.5rem;
+  transition: transform 0.2s ease;
+}
+.escondite-mirando {
+  transform: scale(1.15);
+}
+.escondite-no-mirando {
+  opacity: 0.7;
+}
+
+
+/* ---- AVATAR DE BUCK (panel final) ---- */
+.buck-avatar {
+  border-color: var(--c-verde) !important;
 }
 
 /* ---- MODAL DE MISIÓN ---- */
