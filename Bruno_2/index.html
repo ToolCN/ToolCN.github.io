@@ -22,8 +22,30 @@
 <body>
 
   <!-- =========================================================
+       BOTÓN DE REINICIO (esquina superior derecha)
+       A propósito es discreto (fondo negro, casi invisible sobre
+       el fondo oscuro de la app) para que Bruno no lo toque sin
+       querer. Al presionarlo, SIEMPRE pide confirmación antes
+       de borrar el progreso.
+       ========================================================= -->
+  <button id="reset-btn" class="reset-btn" aria-label="Reiniciar progreso">↺</button>
+
+  <!-- Modal de confirmación de reinicio -->
+  <div id="reset-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <h3>¿Reiniciar progreso?</h3>
+      <p>Esto borrará todo el avance guardado (candados, misiones y capítulo) y la app empezará desde cero. No se puede deshacer.</p>
+      <div class="modal-buttons">
+        <button id="reset-cancel"  class="btn-secondary">Cancelar</button>
+        <button id="reset-confirm" class="btn-primary">Sí, reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
        PANTALLA 1: CANDADOS
-       Muestra 3 cadenas con sus candados de combinación.
+       Muestra 2 cadenas con sus candados de combinación.
        ========================================================= -->
   <div id="screen-locks" class="screen hidden">
 
@@ -31,15 +53,22 @@
     <div class="locks-bg" aria-hidden="true"></div>
 
     <h1 class="title-main">MISIÓN CLASIFICADA</h1>
-    <p class="subtitle">Abre los 3 candados para acceder</p>
+    <p class="subtitle">Abre los 2 candados para acceder</p>
 
-    <!-- Contenedor de las 3 cadenas. Los candados cuelgan de ellas. -->
+    <!-- Contenedor de las 2 cadenas. Cada candado "amarra" los dos
+         extremos de su cadena (por eso cada chain-unit tiene 2 tiras
+         de cadena -izquierda y derecha- que llegan al candado desde
+         ambos lados, en vez de una sola tira colgando arriba). -->
     <div class="chains-container">
 
       <!-- ---- CANDADO 0 ---- -->
       <!-- data-combo="X,Y,Z" → combinación correcta (ver locks.js para cambiarla) -->
       <div class="chain-unit" id="chain-0">
-        <div class="chain-links" aria-hidden="true"></div>
+        <!-- Las 2 tiras de cadena que el candado mantiene unidas -->
+        <div class="chain-loop" aria-hidden="true">
+          <div class="chain-strand chain-left"></div>
+          <div class="chain-strand chain-right"></div>
+        </div>
         <div class="lock" id="lock-0" data-combo="1,2,3">
           <div class="lock-shackle" aria-hidden="true"></div>
           <div class="lock-body">
@@ -64,7 +93,10 @@
 
       <!-- ---- CANDADO 1 ---- -->
       <div class="chain-unit" id="chain-1">
-        <div class="chain-links" aria-hidden="true"></div>
+        <div class="chain-loop" aria-hidden="true">
+          <div class="chain-strand chain-left"></div>
+          <div class="chain-strand chain-right"></div>
+        </div>
         <div class="lock" id="lock-1" data-combo="4,5,6">
           <div class="lock-shackle" aria-hidden="true"></div>
           <div class="lock-body">
@@ -77,29 +109,6 @@
               </div>
               <div class="wheel-wrapper">
                 <div class="wheel" data-lock="1" data-wheel="2"></div>
-              </div>
-            </div>
-          </div>
-          <div class="lock-open-flash" aria-hidden="true"></div>
-          <div class="lock-badge">✓</div>
-        </div>
-      </div>
-
-      <!-- ---- CANDADO 2 ---- -->
-      <div class="chain-unit" id="chain-2">
-        <div class="chain-links" aria-hidden="true"></div>
-        <div class="lock" id="lock-2" data-combo="7,8,9">
-          <div class="lock-shackle" aria-hidden="true"></div>
-          <div class="lock-body">
-            <div class="wheels-container">
-              <div class="wheel-wrapper">
-                <div class="wheel" data-lock="2" data-wheel="0"></div>
-              </div>
-              <div class="wheel-wrapper">
-                <div class="wheel" data-lock="2" data-wheel="1"></div>
-              </div>
-              <div class="wheel-wrapper">
-                <div class="wheel" data-lock="2" data-wheel="2"></div>
               </div>
             </div>
           </div>
