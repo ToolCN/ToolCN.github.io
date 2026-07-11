@@ -145,28 +145,72 @@
 
 
   <!-- =========================================================
-       PANTALLA 2: MAPA DE MISIONES
+       PANTALLA 2: SOSPECHOSOS
+       Cuadrícula de 9 sospechosos (+ 1 tarjeta secreta de Buck,
+       oculta hasta que se resuelve el caso). Se generan
+       dinámicamente desde js/map.js.
        ========================================================= -->
   <div id="screen-map" class="screen hidden">
 
-    <h2 class="map-title">MAPA DE MISIONES</h2>
+    <h2 class="map-title">SOSPECHOSOS</h2>
+    <p class="map-subtitle" id="sospechosos-contador">0 de 9 revisados</p>
 
-    <!-- El mapa: TODO: reemplazar el fondo CSS con una imagen real:
-         style="background-image: url('assets/images/mapa.jpg')"        -->
-    <div class="map-container" id="map-container">
-      <!-- Los pines de misión se generan dinámicamente desde map.js -->
-    </div>
-
-    <!-- Modal que aparece al tocar un pin disponible -->
-    <div id="mission-modal" class="modal hidden" role="dialog" aria-modal="true">
-      <div class="modal-content">
-        <h3 id="modal-title">Misión</h3>
-        <p id="modal-desc">Descripción...</p>
-        <button id="modal-close" class="btn-primary">Cerrar</button>
-      </div>
+    <div class="sospechosos-grid" id="sospechosos-grid">
+      <!-- Las 9 tarjetas + la tarjeta secreta de Buck se generan aquí -->
     </div>
 
   </div><!-- /screen-map -->
+
+
+  <!-- =========================================================
+       PANTALLA 3: GUARIDA DE UN SOSPECHOSO
+       Fondo + personaje + minijuego + caja secreta. Todo el
+       contenido (imagen, nombre, minijuego) se llena dinámicamente
+       desde js/guarida.js según qué sospechoso se seleccionó.
+       ========================================================= -->
+  <div id="screen-guarida" class="screen hidden">
+
+    <div class="guarida-bg" id="guarida-bg" aria-hidden="true"></div>
+
+    <button id="guarida-back-btn" class="guarida-back-btn" aria-label="Volver a sospechosos">← Volver</button>
+
+    <div class="guarida-personaje-wrap">
+      <img id="guarida-personaje-img" class="guarida-personaje-img" src="" alt=""
+           onerror="this.style.display='none';">
+    </div>
+
+    <h2 id="guarida-nombre" class="guarida-nombre"></h2>
+
+    <!-- Aquí se monta el minijuego correspondiente (ver js/minijuegos.js) -->
+    <div id="minijuego-container" class="minijuego-container"></div>
+
+    <!-- La caja secreta: aparece cerrada, se "abre" al ganar el minijuego -->
+    <div id="caja-secreta" class="caja-secreta hidden">
+      <div class="caja-icono" id="caja-icono">🔒</div>
+      <img id="hallazgo-img" class="hallazgo-img hidden" alt="Hallazgo" onerror="this.style.display='none';">
+      <button id="guarida-continuar-btn" class="btn-primary hidden">Volver a sospechosos</button>
+    </div>
+
+  </div><!-- /screen-guarida -->
+
+
+  <!-- =========================================================
+       OVERLAY: REVELACIÓN FINAL (Buck)
+       Aparece al tocar la tarjeta secreta, después de la llamada
+       final de Foxy.
+       ========================================================= -->
+  <div id="screen-buck" class="overlay-screen hidden" role="dialog" aria-modal="true">
+    <div class="call-container">
+      <div class="caller-avatar buck-avatar">
+        <img class="avatar-img" src="assets/images/sospechosos/10-buck.jpg" alt="Buck"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-placeholder" style="display:none;">🐶</div>
+      </div>
+      <h2 class="caller-name">¡Era Buck!</h2>
+      <p class="call-status">El verdadero ladrón del Hueso de Oro. Hay que ir a buscarlo antes de que lo entierre más hondo.</p>
+      <button id="buck-close-btn" class="btn-primary">Entendido</button>
+    </div>
+  </div><!-- /screen-buck -->
 
 
   <!-- =========================================================
@@ -214,84 +258,46 @@
        BOTÓN FLOTANTE DE CONTACTO
        Siempre visible. Abre llamada o chat según el modo.
        ========================================================= -->
-  <button id="contact-btn" class="contact-fab hidden" aria-label="Contactar a Foxy">
-    <!-- TODO: reemplazar con la imagen del personaje cuando esté definido.
-         Por ahora se usa un ícono de señal de radio como placeholder. -->
-    <span class="contact-icon" aria-hidden="true">📡</span>
+  <button id="contact-btn" class="contact-fab hidden" aria-label="Llamar a Foxy">
+    <span class="contact-icon" aria-hidden="true">📞</span>
     <span class="contact-pulse" aria-hidden="true"></span>
   </button>
 
 
   <!-- =========================================================
-       OVERLAY: PANTALLA DE LLAMADA ENTRANTE
+       OVERLAY: TELÉFONO (Bruno llama a Foxy pidiendo pista)
+       Es una llamada SALIENTE (Bruno marca), no entrante, por
+       eso no hay botón de "contestar" — se conecta sola después
+       de "sonar" un momento. El audio que se escucha depende de
+       qué sospechoso tenga abierto Bruno en ese momento
+       (ver js/guarida.js → llamarAFoxy()).
        ========================================================= -->
   <div id="screen-call" class="overlay-screen hidden" role="dialog" aria-modal="true">
     <div class="call-container">
 
-      <!-- Avatar / foto del personaje.
-           Intenta cargar la imagen real; si no existe todavía
-           (o no la has subido), se oculta sola y se ve el "?". -->
       <div class="caller-avatar">
         <img class="avatar-img" src="assets/images/personaje.jpg" alt="Foxy"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         <div class="avatar-placeholder" style="display:none;">?</div>
       </div>
 
-      <!-- Nombre del personaje (si cambia de identidad más adelante en la
-           historia, edítalo aquí y en contact.js → NOMBRE_PERSONAJE) -->
       <h2 class="caller-name">Foxy</h2>
-      <p class="call-status" id="call-status-text">Llamada entrante...</p>
+      <p class="call-status" id="call-status-text">Llamando...</p>
 
       <!-- Anillos de animación de "teléfono sonando" -->
-      <div class="call-rings" aria-hidden="true">
+      <div class="call-rings" id="call-rings" aria-hidden="true">
         <div class="call-ring ring-1"></div>
         <div class="call-ring ring-2"></div>
         <div class="call-ring ring-3"></div>
       </div>
 
-      <!-- Botones de contestar y colgar -->
+      <!-- Solo hay botón de colgar (la llamada la contesta Foxy solo) -->
       <div class="call-buttons">
-        <button id="btn-answer" class="call-btn answer" aria-label="Contestar">📞</button>
         <button id="btn-hangup" class="call-btn hangup" aria-label="Colgar">📵</button>
       </div>
 
     </div>
   </div><!-- /screen-call -->
-
-
-  <!-- =========================================================
-       OVERLAY: CHAT ESTILO WHATSAPP
-       ========================================================= -->
-  <div id="screen-chat" class="overlay-screen hidden" role="dialog" aria-modal="true">
-    <div class="chat-container">
-
-      <!-- Cabecera del chat -->
-      <div class="chat-header">
-        <div class="chat-avatar">
-          <img class="avatar-img" src="assets/images/personaje.jpg" alt="Foxy"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="avatar-placeholder small" style="display:none;">?</div>
-        </div>
-        <!-- TODO: reemplazar con el nombre real del personaje -->
-        <div class="chat-header-info">
-          <span class="chat-name">Foxy</span>
-          <span class="chat-online">en línea</span>
-        </div>
-        <button id="chat-close" class="chat-close-btn" aria-label="Cerrar chat">✕</button>
-      </div>
-
-      <!-- Área de mensajes con burbujas -->
-      <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
-        <!-- Los mensajes se insertan dinámicamente desde contact.js -->
-      </div>
-
-      <!-- Indicador de "escribiendo..." (tres puntos animados) -->
-      <div class="chat-typing" id="chat-typing" aria-label="El agente está escribiendo">
-        <span></span><span></span><span></span>
-      </div>
-
-    </div>
-  </div><!-- /screen-chat -->
 
 
   <!-- =========================================================
@@ -322,6 +328,18 @@
   <!-- Voz del personaje en la llamada de introducción (la creas tú en ElevenLabs). -->
   <audio id="audio-intro-voz" src="assets/audio/voz-intro.mp3"           preload="none"></audio>
 
+  <!-- Llamada final de Foxy (revela al verdadero culpable) -->
+  <audio id="audio-final-foxy" src="assets/audio/voz-final-foxy.mp3"     preload="none"></audio>
+
+  <!-- Sonido de "caja abriéndose" al ganar un minijuego -->
+  <audio id="audio-caja-abre" src="assets/audio/caja-abre.mp3"           preload="none"></audio>
+
+  <!-- ÚNICO reproductor de voz "dinámico": se usa para los 27 audios de los
+       9 sospechosos (confesión, pista y éxito de cada uno). En vez de crear
+       27 elementos <audio> distintos, este solo se le cambia el "src" desde
+       JavaScript justo antes de reproducirlo (ver js/guarida.js → reproducirVoz()). -->
+  <audio id="audio-dinamico" preload="none"></audio>
+
 
   <!-- =========================================================
        SCRIPTS — El orden importa:
@@ -332,7 +350,8 @@
   <script src="js/intro.js"></script>
   <script src="js/locks.js"></script>
   <script src="js/map.js"></script>
-  <script src="js/contact.js"></script>
+  <script src="js/guarida.js"></script>
+  <script src="js/minijuegos.js"></script>
 
 </body>
 </html>
