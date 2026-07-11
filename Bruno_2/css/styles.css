@@ -788,6 +788,18 @@ html, body {
   font-size: 3rem;
   transition: transform 0.3s ease;
 }
+
+/* Mientras suena el audio de apertura (3s), la caja "tiembla" un
+   poco, como si algo estuviera a punto de salir de adentro. */
+.caja-icono.caja-abriendose {
+  animation: cajaTemblando 0.35s ease-in-out infinite;
+}
+@keyframes cajaTemblando {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-8deg); }
+  75%      { transform: rotate(8deg); }
+}
+
 .caja-icono.caja-abierta {
   animation: cajaAbrirse 0.5s ease;
 }
@@ -804,6 +816,17 @@ html, body {
   border-radius: 12px;
   border: 2px solid var(--c-dorado-dark);
   box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* Animación de "salir de la caja": empieza chico y abajo (como si
+   viniera de adentro) y sube/crece hasta su tamaño normal. */
+.hallazgo-img.hallazgo-emergiendo {
+  animation: hallazgoEmerger 0.6s ease-out;
+}
+@keyframes hallazgoEmerger {
+  0%   { transform: translateY(35px) scale(0.25); opacity: 0; }
+  60%  { transform: translateY(-10px) scale(1.08); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 
