@@ -18,8 +18,8 @@
 //       Cada array tiene 3 números, uno por rueda.
 //       Ejemplo: [3, 7, 1] significa que hay que poner 3-7-1.
 const COMBINACIONES = [
-  [1, 2, 3],   // Candado 0 (cadena izquierda)   → código: 1-2-3
-  [4, 5, 6],   // Candado 1 (cadena derecha)      → código: 4-5-6
+  [2, 8, 5],   // Candado 0 (cadena izquierda)   → código: 2-8-5
+  [1, 6, 2],   // Candado 1 (cadena derecha)      → código: 1-6-2
 ];
 
 // Altura en píxeles de cada dígito en la rueda.
