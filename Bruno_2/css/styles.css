@@ -520,10 +520,10 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
-  padding: 14px 8px;
-  min-height: clamp(140px, 24vh, 220px);
+  padding: 10px 6px;
+  min-height: clamp(150px, 26vh, 240px);
   border-radius: 14px;
   background: rgba(20, 20, 30, 0.5);
   border: 2px solid rgba(255, 215, 0, 0.2);
@@ -547,8 +547,8 @@ html, body {
 
 .sospechoso-foto-wrap {
   position: relative;
-  width: clamp(80px, 15vw, 140px);
-  height: clamp(80px, 15vw, 140px);
+  width: clamp(100px, 19vw, 175px);
+  height: clamp(100px, 19vw, 175px);
   border-radius: 50%;
   overflow: hidden;
   background: #1a1a24;
@@ -846,10 +846,11 @@ html, body {
 .loteria-campo {
   position: relative;
   width: 100%;
-  height: 340px;
+  height: min(62vh, 520px);
   background: rgba(0,0,0,0.25);
   border-radius: 12px;
   overflow: hidden;
+  touch-action: none; /* evita que la pantalla se desplace al arrastrar */
 }
 
 /* La carta "fantasma": 16 casillas centradas donde van las piezas */
@@ -860,38 +861,50 @@ html, body {
   transform: translate(-50%, -50%);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
-  width: 200px;
-  height: 200px;
+  gap: 4px;
+  width: min(70vw, 320px);
+  height: min(70vw, 320px);
   z-index: 1;
   pointer-events: none;
 }
 .loteria-casilla {
   background: rgba(255,255,255,0.05);
   border: 1px dashed rgba(255,215,0,0.3);
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.8rem;
 }
 .loteria-fantasma {
   opacity: 0.18;
   transition: opacity 0.3s ease;
 }
 
-/* Las piezas que "volaron" y flotan por el campo */
+/* Las piezas que "volaron" y flotan por el campo, arrastrables */
 .loteria-pieza {
   position: absolute;
-  width: 50px;
-  height: 50px;
-  font-size: 1.7rem;
-  background: rgba(20,20,30,0.7);
+  width: 58px;
+  height: 58px;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20,20,30,0.75);
   border: 2px solid var(--c-dorado-dark);
   border-radius: 10px;
-  cursor: pointer;
+  cursor: grab;
   z-index: 5;
+  touch-action: none;
+  user-select: none;
   animation: loteriaFlotar 3s ease-in-out infinite;
+}
+.loteria-pieza.loteria-arrastrando {
+  cursor: grabbing;
+  z-index: 10;
+  border-color: var(--c-dorado);
+  box-shadow: 0 0 16px rgba(255,215,0,0.6);
+  transform: scale(1.08);
 }
 .loteria-pieza.loteria-colocada {
   opacity: 0;
@@ -908,13 +921,35 @@ html, body {
 /* ================================================================
    MINIJUEGO 3 — MATEMÁTICAS (El Empresario)
    ================================================================ */
-.mate-operacion {
-  font-size: 2rem;
+
+/* La operación en columna, como se escribe a mano: un número arriba,
+   el otro abajo con su signo, y una línea antes del resultado. */
+.mate-vertical {
+  font-family: var(--f-titulo);
+  font-size: 2.1rem;
   font-weight: bold;
   color: var(--c-dorado);
-  text-align: center;
-  font-family: var(--f-titulo);
+  text-align: right;
+  width: min(70vw, 200px);
+  margin: 0 auto;
 }
+.mate-fila-num {
+  padding: 2px 6px;
+  letter-spacing: 1px;
+}
+.mate-fila-b {
+  position: relative;
+}
+.mate-signo {
+  position: absolute;
+  left: 0;
+  font-size: 1.6rem;
+}
+.mate-linea {
+  border-bottom: 4px solid var(--c-dorado);
+  margin-top: 4px;
+}
+
 .mate-opciones {
   display: flex;
   gap: 12px;
@@ -1046,6 +1081,11 @@ html, body {
   border-color: #ff2b2b;
   animation: laserAlertaPulso 0.4s infinite alternate;
 }
+.laser-carril.laser-aviso-verde {
+  background: rgba(50, 220, 80, 0.4);
+  border-color: #39ff14;
+  box-shadow: 0 0 14px rgba(57,255,20,0.5);
+}
 @keyframes laserAlertaPulso {
   from { box-shadow: 0 0 6px rgba(255,40,40,0.4); }
   to   { box-shadow: 0 0 22px rgba(255,40,40,0.9); }
@@ -1082,7 +1122,7 @@ html, body {
 
 
 /* ================================================================
-   MINIJUEGO 8 — LABERINTO (El Prototipo) — 7x7 con guardias
+   MINIJUEGO 8 — LABERINTO (El Prototipo) — hasta 9x9 con guardias
    ================================================================ */
 .laberinto-grid {
   display: grid;
@@ -1095,9 +1135,17 @@ html, body {
   grid-template-columns: repeat(7, 1fr);
   width: min(100%, 320px);
 }
+.laberinto-grid-9 {
+  grid-template-columns: repeat(9, 1fr);
+  width: min(94vw, 400px);
+}
 .laberinto-celda {
   background: rgba(255,255,255,0.06);
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
 }
 .laberinto-peligro {
   background: rgba(255, 60, 60, 0.3);
@@ -1106,7 +1154,7 @@ html, body {
   background: rgba(57, 255, 20, 0.3);
 }
 .laberinto-guardia {
-  background: rgba(255, 140, 0, 0.6);
+  background: rgba(0, 90, 200, 0.5);
 }
 .laberinto-jugador {
   background: var(--c-dorado);
@@ -1124,32 +1172,94 @@ html, body {
 
 
 /* ================================================================
-   MINIJUEGO 9 — ESCONDITE (Blue) — dirección segura
+   MINIJUEGO 9 — ESCONDITE (Blue) — luz verde / luz roja
    ================================================================ */
-.escondite-campo {
+.escondite-semaforo {
   width: 100%;
-  height: 140px;
+  min-height: 160px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   background: rgba(255,255,255,0.05);
   border-radius: 12px;
+  padding: 10px 0;
 }
-.escondite-blue {
-  font-size: 3.5rem;
+.escondite-blue-grande {
+  font-size: 4.5rem;
   transition: transform 0.2s ease;
 }
-.escondite-spots {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+.escondite-blue-grande.escondite-mirando {
+  transform: scale(1.15);
+}
+.escondite-blue-grande.escondite-atrapado {
+  animation: esconditeAtrapado 0.35s;
+}
+@keyframes esconditeAtrapado {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.3) rotate(-6deg); }
+}
+.escondite-luz {
+  font-family: var(--f-titulo);
+  font-weight: bold;
+  letter-spacing: 3px;
+  color: var(--c-verde);
+  text-shadow: 0 0 10px rgba(57,255,20,0.6);
+}
+.escondite-luz.escondite-luz-roja {
+  color: #ff3c3c;
+  text-shadow: 0 0 10px rgba(255,60,60,0.7);
 }
 
 
-/* ---- AVATAR DE BUCK (panel final) ---- */
-.buck-avatar {
-  border-color: var(--c-verde) !important;
+/* ---- REVELACIÓN FINAL DE BUCK (pantalla completa) ---- */
+.buck-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  background: radial-gradient(ellipse at center, rgba(30,60,20,0.75) 0%, rgba(0,0,0,0.92) 75%);
+}
+.buck-titulo {
+  font-family: var(--f-titulo);
+  font-size: clamp(1.6rem, 5vw, 3rem);
+  color: var(--c-dorado);
+  text-shadow: var(--sombra-dorada);
+  letter-spacing: 3px;
+}
+.buck-foto-wrap {
+  position: relative;
+  width: min(70vw, 70vh, 420px);
+  height: min(70vw, 70vh, 420px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 6px solid var(--c-verde);
+  box-shadow: 0 0 50px rgba(57,255,20,0.5);
+}
+.buck-foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.buck-placeholder {
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: 6rem;
+}
+.buck-texto {
+  max-width: 480px;
+  text-align: center;
+  font-size: 1.05rem;
+  color: var(--c-texto);
+  padding: 0 12px;
 }
 
 /* ---- MODAL DE MISIÓN ---- */
