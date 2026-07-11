@@ -112,6 +112,7 @@ function detenerRingtone() {
 const ESTADOS_GUARIDA = [
   'guarida-llamar-btn',
   'guarida-llamando',
+  'guarida-confesando',
   'minijuego-container',
   'guarida-esperando',
   'guarida-llamada-entrante',
@@ -161,6 +162,7 @@ function abrirGuarida(sosp) {
   hallazgoImg.classList.remove('hallazgo-emergiendo');
   hallazgoImg.style.display = '';
   document.getElementById('guarida-continuar-btn').classList.add('hidden');
+  document.getElementById('guarida-continuar-btn').disabled = true;
 
   ocultarTodosLosEstadosGuarida();
   document.getElementById('guarida-llamar-btn').classList.remove('hidden');
@@ -183,11 +185,24 @@ function iniciarLlamadaSaliente() {
 function contestarLlamadaSaliente() {
   detenerTonoLlamando();
   ocultarTodosLosEstadosGuarida();
+  document.getElementById('guarida-confesando').classList.remove('hidden');
 
   const sosp = sospechosoActual;
   const num = String(sosp.id + 1).padStart(2, '0');
 
-  reproducirVoz(`assets/audio/voz-sospechoso-${num}-${sosp.slug}.mp3`);
+  // El minijuego solo arranca hasta que la confesión TERMINE de sonar.
+  reproducirVoz(`assets/audio/voz-sospechoso-${num}-${sosp.slug}.mp3`, () => {
+    iniciarMinijuegoDelSospechoso(sosp);
+  });
+}
+
+/**
+ * iniciarMinijuegoDelSospechoso(sosp)
+ * Se llama automáticamente cuando termina de sonar la confesión
+ * (ver contestarLlamadaSaliente).
+ */
+function iniciarMinijuegoDelSospechoso(sosp) {
+  ocultarTodosLosEstadosGuarida();
 
   const container = document.getElementById('minijuego-container');
   container.classList.remove('hidden');
@@ -241,14 +256,24 @@ function contestarLlamadaEntrante() {
   const hallazgoImg = document.getElementById('hallazgo-img');
   hallazgoImg.classList.add('hidden');
   hallazgoImg.classList.remove('hallazgo-emergiendo');
-  document.getElementById('guarida-continuar-btn').classList.add('hidden');
 
-  reproducirSonido('audio-caja-abre'); // dura ~3s mientras se abre
-  reproducirVoz(`assets/audio/voz-exito-${num}-${sosp.slug}.mp3`);
+  // El botón "Continuar" no se puede tocar todavía: aparece deshabilitado
+  // y solo se habilita cuando el audio de éxito TERMINE de sonar por
+  // completo (no antes, aunque ya se vea el hallazgo).
+  const btnContinuar = document.getElementById('guarida-continuar-btn');
+  btnContinuar.classList.add('hidden');
+  btnContinuar.disabled = true;
 
-  // Esperar los 3 segundos del sonido de apertura antes de revelar
-  // el hallazgo, con una animación de que "sale" de la caja.
-  registrarTemporizadorGuarida3s(() => {
+  reproducirSonido('audio-caja-abre'); // dura ~7s mientras se abre
+  reproducirVoz(`assets/audio/voz-exito-${num}-${sosp.slug}.mp3`, () => {
+    // El audio terminó de verdad: ahora sí se puede continuar
+    btnContinuar.classList.remove('hidden');
+    btnContinuar.disabled = false;
+  });
+
+  // Esperar 7 segundos (lo que dura el sonido de apertura) antes de
+  // revelar el hallazgo, con la animación de que "sale" de la caja.
+  registrarTemporizadorGuarida7s(() => {
     cajaIcono.textContent = '🔓';
     cajaIcono.classList.remove('caja-abriendose');
     cajaIcono.classList.add('caja-abierta');
@@ -257,8 +282,6 @@ function contestarLlamadaEntrante() {
     hallazgoImg.src = `assets/images/hallazgos/hallazgo-${num}-${sosp.slug}.jpg`;
     hallazgoImg.classList.remove('hidden');
     hallazgoImg.classList.add('hallazgo-emergiendo');
-
-    document.getElementById('guarida-continuar-btn').classList.remove('hidden');
   });
 
   if (typeof marcarSospechosoRevisado === 'function') {
@@ -267,13 +290,14 @@ function contestarLlamadaEntrante() {
 }
 
 /**
- * registrarTemporizadorGuarida3s(fn)
- * Pequeño ayudante para el retraso fijo de 3 segundos de la caja,
- * registrado igual que los demás temporizadores de la guarida para
- * poder cancelarlo si Bruno sale a medias.
+ * registrarTemporizadorGuarida7s(fn)
+ * Ayudante para el retraso fijo de 7 segundos de la caja (lo que
+ * dura el sonido de apertura), registrado igual que los demás
+ * temporizadores de la guarida para poder cancelarlo si Bruno sale
+ * a medias.
  */
-function registrarTemporizadorGuarida3s(fn) {
-  programarGuarida(fn, 3000);
+function registrarTemporizadorGuarida7s(fn) {
+  programarGuarida(fn, 7000);
 }
 
 /**
