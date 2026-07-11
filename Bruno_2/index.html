@@ -181,10 +181,38 @@
 
     <h2 id="guarida-nombre" class="guarida-nombre"></h2>
 
-    <!-- Aquí se monta el minijuego correspondiente (ver js/minijuegos.js) -->
-    <div id="minijuego-container" class="minijuego-container"></div>
+    <!-- ESTADO 1: botón para iniciar la llamada -->
+    <button id="guarida-llamar-btn" class="btn-primary guarida-llamar-btn">📞 Llamar</button>
 
-    <!-- La caja secreta: aparece cerrada, se "abre" al ganar el minijuego -->
+    <!-- ESTADO 2: "llamando..." (tono de llamada saliente) -->
+    <div id="guarida-llamando" class="guarida-llamada-estado hidden">
+      <div class="call-rings-mini" aria-hidden="true">
+        <div class="call-ring ring-1"></div>
+        <div class="call-ring ring-2"></div>
+      </div>
+      <p>Llamando...</p>
+    </div>
+
+    <!-- ESTADO 3: el minijuego (ver js/minijuegos.js) -->
+    <div id="minijuego-container" class="minijuego-container hidden"></div>
+
+    <!-- ESTADO 4: esperando a que el sospechoso llame de vuelta -->
+    <p id="guarida-esperando" class="guarida-esperando hidden">El sospechoso está pensando...</p>
+
+    <!-- ESTADO 5: llamada ENTRANTE del sospechoso vencido -->
+    <div id="guarida-llamada-entrante" class="guarida-llamada-estado hidden">
+      <div class="call-rings-mini" aria-hidden="true">
+        <div class="call-ring ring-1"></div>
+        <div class="call-ring ring-2"></div>
+      </div>
+      <p>Llamada entrante...</p>
+      <div class="call-buttons">
+        <button id="guarida-btn-contestar" class="call-btn answer" aria-label="Contestar">📞</button>
+        <button id="guarida-btn-colgar" class="call-btn hangup" aria-label="Colgar">📵</button>
+      </div>
+    </div>
+
+    <!-- ESTADO 6: la caja secreta, se abre al contestar esa última llamada -->
     <div id="caja-secreta" class="caja-secreta hidden">
       <div class="caja-icono" id="caja-icono">🔒</div>
       <img id="hallazgo-img" class="hallazgo-img hidden" alt="Hallazgo" onerror="this.style.display='none';">
@@ -324,6 +352,10 @@
 
   <!-- TODO: reemplazar con el tono de "llamada entrante" en bucle. -->
   <audio id="audio-ringtone" src="assets/audio/ringtone.mp3"     loop    preload="none"></audio>
+
+  <!-- Tono de "llamando" (saliente) — el ttt-ttt-ttt espaciado, NO el de
+       timbre. Suena mientras Bruno espera a que el sospechoso conteste. -->
+  <audio id="audio-tono-llamando" src="assets/audio/tono-llamando.mp3" loop preload="none"></audio>
 
   <!-- Voz del personaje en la llamada de introducción (la creas tú en ElevenLabs). -->
   <audio id="audio-intro-voz" src="assets/audio/voz-intro.mp3"           preload="none"></audio>
