@@ -271,7 +271,10 @@ function markLockOpen(lockIdx, save) {
 
   // Clases CSS que cambian la apariencia a "abierto"
   lockEl.classList.add('opened');
-  chainEl.classList.add('unlocked');
+  chainEl.classList.add('unlocked'); // esto dispara la animación de la cadena cayendo (CSS)
+
+  // Sonido de la cadena cayendo, sincronizado con esa misma animación
+  reproducirSonido('audio-chain-fall');
 
   // Desactivar las ruedas para que no se muevan una vez abierto
   lockEl.querySelectorAll('.wheel').forEach(w => {
