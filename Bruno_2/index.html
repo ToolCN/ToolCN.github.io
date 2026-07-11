@@ -319,8 +319,12 @@
         <div class="call-ring ring-3"></div>
       </div>
 
-      <!-- Solo hay botón de colgar (la llamada la contesta Foxy solo) -->
+      <!-- El botón de contestar está oculto por defecto: en la llamada
+           saliente de Bruno hacia Foxy (pedir pista) no hace falta,
+           Foxy contesta solo. Solo se muestra en la llamada FINAL
+           (Foxy llamando a Bruno), donde sí hay que contestar. -->
       <div class="call-buttons">
+        <button id="btn-answer" class="call-btn answer hidden" aria-label="Contestar">📞</button>
         <button id="btn-hangup" class="call-btn hangup" aria-label="Colgar">📵</button>
       </div>
 
