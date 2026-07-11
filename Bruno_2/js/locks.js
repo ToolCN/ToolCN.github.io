@@ -19,13 +19,12 @@
 //       Ejemplo: [3, 7, 1] significa que hay que poner 3-7-1.
 const COMBINACIONES = [
   [1, 2, 3],   // Candado 0 (cadena izquierda)   → código: 1-2-3
-  [4, 5, 6],   // Candado 1 (cadena central)      → código: 4-5-6
-  [7, 8, 9],   // Candado 2 (cadena derecha)       → código: 7-8-9
+  [4, 5, 6],   // Candado 1 (cadena derecha)      → código: 4-5-6
 ];
 
 // Altura en píxeles de cada dígito en la rueda.
-// DEBE coincidir con la propiedad CSS: .wheel-digit { height: 64px; }
-const DIGIT_HEIGHT = 64;
+// DEBE coincidir con la propiedad CSS: .wheel-digit { height: 84px; }
+const DIGIT_HEIGHT = 84;
 
 // ----------------------------------------------------------------
 // ESTADO DE LAS RUEDAS
@@ -33,7 +32,6 @@ const DIGIT_HEIGHT = 64;
 // currentValues[indiceCandado][indiceRueda] = dígito mostrado (0-9)
 // Empieza en 0-0-0 para todos los candados.
 const currentValues = [
-  [0, 0, 0],
   [0, 0, 0],
   [0, 0, 0],
 ];
