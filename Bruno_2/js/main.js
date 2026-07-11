@@ -23,10 +23,13 @@ const STORAGE_KEY = 'bruno2_progreso';
 
 // Estado inicial: lo que hay la PRIMERA VEZ que Bruno abre la app.
 const ESTADO_INICIAL = {
-  candadosAbiertos:     [false, false],          // 2 candados
-  misionesCompletadas:  [false, false, false, false, false], // 5 misiones
-  capitulo:             1,      // capítulo actual de la historia (1, 2, 3…)
-  pantallaActual:       'start' // 'start' (primera vez) → 'locks' → 'map'
+  candadosAbiertos:      [false, false],          // 2 candados
+  pantallaActual:        'start', // 'start' → 'locks' → 'map'
+
+  // --- Sistema de los 9 sospechosos ---
+  sospechososRevisados: [false, false, false, false, false, false, false, false, false],
+  sospechosoSeleccionado: null, // slug del sospechoso cuya guarida está abierta ahora mismo (o null)
+  casoResuelto:         false,  // true después de la llamada final de Foxy (revela a Buck)
 };
 
 
@@ -299,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       document.querySelectorAll('.overlay-screen').forEach(s => s.classList.add('hidden'));
-      document.getElementById('mission-modal')?.classList.add('hidden');
+      document.getElementById('screen-buck')?.classList.add('hidden');
     }
   });
 
