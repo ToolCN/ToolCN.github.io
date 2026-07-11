@@ -44,6 +44,19 @@
 
 
   <!-- =========================================================
+       PANTALLA 0: START
+       Lo primero que ve Bruno. Al tocar el botón, arranca la
+       llamada de introducción (ver js/intro.js).
+       ========================================================= -->
+  <div id="screen-start" class="screen hidden">
+    <div class="locks-bg" aria-hidden="true"></div>
+    <h1 class="title-main">MISIÓN CLASIFICADA</h1>
+    <p class="subtitle">Toca para comenzar</p>
+    <button id="start-btn" class="btn-primary">▶ START</button>
+  </div>
+
+
+  <!-- =========================================================
        PANTALLA 1: CANDADOS
        Muestra 2 cadenas con sus candados de combinación.
        ========================================================= -->
@@ -157,6 +170,47 @@
 
 
   <!-- =========================================================
+       OVERLAY: LLAMADA DE INTRODUCCIÓN
+       Aparece justo después de tocar el botón START, antes de
+       ver los candados. Usa las mismas clases visuales que la
+       pantalla de llamada normal (call-container, call-rings,
+       call-buttons) pero con sus propios IDs, porque su lógica
+       es distinta: si cuelgan, vuelve a llamar en 10 segundos,
+       y no se puede cerrar hasta contestar. Ver js/intro.js.
+       ========================================================= -->
+  <div id="screen-intro-call" class="overlay-screen hidden" role="dialog" aria-modal="true">
+    <div class="call-container">
+
+      <div class="caller-avatar">
+        <img class="avatar-img" src="assets/images/personaje.jpg" alt="Desconocido"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-placeholder" style="display:none;">?</div>
+      </div>
+
+      <h2 class="caller-name">Número desconocido</h2>
+      <p class="call-status" id="intro-call-status">Llamada entrante...</p>
+
+      <!-- Anillos de "sonando" (se ocultan solos cuando pasa a modo "hablando") -->
+      <div class="call-rings" id="intro-call-rings" aria-hidden="true">
+        <div class="call-ring ring-1"></div>
+        <div class="call-ring ring-2"></div>
+        <div class="call-ring ring-3"></div>
+      </div>
+
+      <!-- Botones de contestar/colgar (se ocultan al contestar) -->
+      <div class="call-buttons" id="intro-call-buttons">
+        <button id="intro-btn-answer" class="call-btn answer" aria-label="Contestar">📞</button>
+        <button id="intro-btn-hangup" class="call-btn hangup" aria-label="Colgar">📵</button>
+      </div>
+
+      <!-- Aparece cuando termina de hablar el personaje -->
+      <button id="intro-continue-btn" class="btn-primary hidden">Continuar</button>
+
+    </div>
+  </div><!-- /screen-intro-call -->
+
+
+  <!-- =========================================================
        BOTÓN FLOTANTE DE CONTACTO
        Siempre visible. Abre llamada o chat según el modo.
        ========================================================= -->
@@ -174,12 +228,13 @@
   <div id="screen-call" class="overlay-screen hidden" role="dialog" aria-modal="true">
     <div class="call-container">
 
-      <!-- Avatar / foto del personaje -->
+      <!-- Avatar / foto del personaje.
+           Intenta cargar la imagen real; si no existe todavía
+           (o no la has subido), se oculta sola y se ve el "?". -->
       <div class="caller-avatar">
-        <!-- TODO: reemplazar con imagen real del personaje:
-             <img src="assets/images/personaje.jpg" alt="Agente X">
-             Por ahora se muestra una silueta de interrogación. -->
-        <div class="avatar-placeholder">?</div>
+        <img class="avatar-img" src="assets/images/personaje.jpg" alt="Agente X"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-placeholder" style="display:none;">?</div>
       </div>
 
       <!-- TODO: reemplazar "Agente X" con el nombre real del personaje -->
@@ -212,8 +267,9 @@
       <!-- Cabecera del chat -->
       <div class="chat-header">
         <div class="chat-avatar">
-          <!-- TODO: reemplazar con imagen real del personaje -->
-          <div class="avatar-placeholder small">?</div>
+          <img class="avatar-img" src="assets/images/personaje.jpg" alt="Agente X"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="avatar-placeholder small" style="display:none;">?</div>
         </div>
         <!-- TODO: reemplazar con el nombre real del personaje -->
         <div class="chat-header-info">
@@ -244,8 +300,11 @@
        ========================================================= -->
 
   <!-- TODO: reemplazar 'assets/audio/musica-fondo.mp3' con la música de fondo real.
-             Estilo: suspenso/misterio, bucle suave. -->
+             Estilo: suspenso/misterio, bucle suave. Volumen bajo (se controla en main.js). -->
   <audio id="audio-bg"      src="assets/audio/musica-fondo.mp3"  loop    preload="none"></audio>
+
+  <!-- Música de fondo distinta para la pantalla del MAPA (se activa sola al llegar ahí). -->
+  <audio id="audio-bg-mapa" src="assets/audio/musica-mapa.mp3"   loop    preload="none"></audio>
 
   <!-- TODO: reemplazar con un sonido de "click" mecánico corto (tipo reloj/combinación). -->
   <audio id="audio-click"   src="assets/audio/click.mp3"                 preload="none"></audio>
@@ -253,8 +312,14 @@
   <!-- TODO: reemplazar con sonido de "candado abriéndose" (clic metálico + resorte). -->
   <audio id="audio-unlock"  src="assets/audio/unlock.mp3"                preload="none"></audio>
 
+  <!-- Sonido de la cadena cayendo al piso, justo después de abrirse el candado. -->
+  <audio id="audio-chain-fall" src="assets/audio/cadena-cayendo.mp3"     preload="none"></audio>
+
   <!-- TODO: reemplazar con el tono de "llamada entrante" en bucle. -->
   <audio id="audio-ringtone" src="assets/audio/ringtone.mp3"     loop    preload="none"></audio>
+
+  <!-- Voz del personaje en la llamada de introducción (la creas tú en ElevenLabs). -->
+  <audio id="audio-intro-voz" src="assets/audio/voz-intro.mp3"           preload="none"></audio>
 
 
   <!-- =========================================================
@@ -263,6 +328,7 @@
        luego los módulos que dependen de él.
        ========================================================= -->
   <script src="js/main.js"></script>
+  <script src="js/intro.js"></script>
   <script src="js/locks.js"></script>
   <script src="js/map.js"></script>
   <script src="js/contact.js"></script>
