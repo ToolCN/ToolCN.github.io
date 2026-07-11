@@ -1,13 +1,9 @@
 // ================================================================
-// minijuegos.js — Los 9 retos, uno por sospechoso
+// minijuegos.js — Los 9 retos, uno por sospechoso (v2, reelaborados)
 //
-// Cada minijuego es una función que recibe:
-//   container → el <div id="minijuego-container"> donde debe dibujarse
+// Cada minijuego recibe:
+//   container → el <div> donde debe dibujarse
 //   onWin     → función que HAY que llamar cuando Bruno gana
-//
-// Todos usan los mismos 2 ayudantes de abajo:
-//   alTocar(el, fn)          → conecta un toque/clic de forma segura
-//   registrarTemporizador(id) → para poder cancelar timers si Bruno sale antes
 // ================================================================
 
 
@@ -15,7 +11,6 @@
 // AYUDANTES COMPARTIDOS
 // ----------------------------------------------------------------
 
-// Lista de todos los setTimeout/setInterval activos del minijuego actual
 let temporizadoresActivos = [];
 
 function registrarTemporizador(id) {
@@ -23,13 +18,6 @@ function registrarTemporizador(id) {
   return id;
 }
 
-/**
- * detenerMinijuegoActual()
- * Cancela TODOS los temporizadores pendientes del minijuego que
- * estaba corriendo. Se llama desde guarida.js siempre que se sale
- * de una guarida o se empieza un minijuego nuevo, para que no queden
- * relojes corriendo en segundo plano.
- */
 function detenerMinijuegoActual() {
   temporizadoresActivos.forEach(id => {
     clearTimeout(id);
@@ -41,11 +29,11 @@ window.detenerMinijuegoActual = detenerMinijuegoActual;
 
 /**
  * alTocar(el, handler)
- * Conecta un elemento tanto a touchstart (para tablet) como a click
- * (para poder probar desde una computadora), sin que se dispare dos
- * veces en pantallas táctiles.
+ * Conecta un elemento tanto a touchstart (tablet) como a click
+ * (para probar desde computadora), sin doble disparo en táctil.
  */
 function alTocar(el, handler) {
+  if (!el) return;
   let disparadoPorTouch = false;
   el.addEventListener('touchstart', e => {
     e.preventDefault();
@@ -58,171 +46,224 @@ function alTocar(el, handler) {
   });
 }
 
+function numAleatorioLocal(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 
 // ================================================================
-// 1. RE​Y LOBO — Toca la luna 10 veces
+// 1. REY LOBO — Toca la luna 10 veces
+//    - Campo más grande, la luna se mueve más rápido según se acerca al 10
+//    - Si falla, aparece un botón "Reintentar" (ya no reintenta solo)
+//    - Al 3er intento se vuelve tan fácil que es imposible fallar
 // ================================================================
 function juegoLuna(container, onWin) {
   detenerMinijuegoActual();
 
-  let intento = 1;   // sube cada vez que se falla (hace el juego más fácil)
+  let intento = 1;
   let toques  = 0;
   const META  = 10;
 
-  container.innerHTML = `
-    <p class="minijuego-instruccion">Toca la luna 10 veces antes de que se esconda</p>
-    <div class="luna-campo" id="luna-campo">
-      <button class="luna" id="luna-elemento" aria-label="Luna">🌕</button>
-    </div>
-    <p class="minijuego-contador" id="luna-contador">0 / 10</p>
-  `;
-
-  const campo     = container.querySelector('#luna-campo');
-  const luna      = container.querySelector('#luna-elemento');
-  const contador  = container.querySelector('#luna-contador');
-  let escapeId;
+  function render() {
+    container.innerHTML = `
+      <p class="minijuego-instruccion">Toca la luna 10 veces antes de que se esconda</p>
+      <div class="luna-campo" id="luna-campo">
+        <button class="luna" id="luna-elemento" aria-label="Luna">🌕</button>
+      </div>
+      <p class="minijuego-contador" id="luna-contador">0 / ${META}</p>
+    `;
+    iniciarRonda();
+  }
 
   function tiempoVisible() {
-    // Empieza más lento en cada reintento (más fácil), y se acelera
-    // un poco con cada toque logrado dentro de la misma ronda.
+    // 3er intento en adelante: modo "imposible fallar"
+    if (intento >= 3) return 3200;
     const base = 1400 + (intento - 1) * 500;
-    return Math.max(base - toques * 60, 500);
+    return Math.max(base - toques * 70, 450);
   }
 
-  function reposicionar() {
-    const maxX = Math.max(campo.clientWidth  - 70, 0);
-    const maxY = Math.max(campo.clientHeight - 70, 0);
-    luna.style.left = (Math.random() * maxX) + 'px';
-    luna.style.top  = (Math.random() * maxY) + 'px';
-  }
+  function iniciarRonda() {
+    const campo = container.querySelector('#luna-campo');
+    const luna  = container.querySelector('#luna-elemento');
 
-  function siguienteRonda() {
-    reposicionar();
-    escapeId = registrarTemporizador(setTimeout(fallar, tiempoVisible()));
-  }
-
-  function fallar() {
-    intento += 1;
-    toques = 0;
-    contador.textContent = 'Se escapó... ¡de nuevo!';
-    registrarTemporizador(setTimeout(() => {
-      contador.textContent = `0 / ${META}`;
-      siguienteRonda();
-    }, 900));
-  }
-
-  alTocar(luna, () => {
-    clearTimeout(escapeId);
-    toques += 1;
-    contador.textContent = `${toques} / ${META}`;
-    if (toques >= META) {
-      onWin();
-    } else {
-      siguienteRonda();
+    function reposicionar() {
+      const maxX = Math.max(campo.clientWidth  - 80, 0);
+      const maxY = Math.max(campo.clientHeight - 80, 0);
+      luna.style.left = (Math.random() * maxX) + 'px';
+      luna.style.top  = (Math.random() * maxY) + 'px';
     }
-  });
 
-  siguienteRonda();
-}
+    let escapeId;
+    function siguienteToque() {
+      reposicionar();
+      escapeId = registrarTemporizador(setTimeout(fallar, tiempoVisible()));
+    }
 
+    function fallar() {
+      const campoEl = container.querySelector('#luna-campo');
+      campoEl.innerHTML = `
+        <div class="minijuego-fallo">
+          <p>¡Se escondió entre las nubes!</p>
+          <button class="btn-primary" id="luna-reintentar-btn">Reintentar</button>
+        </div>
+      `;
+      intento += 1;
+      toques = 0;
+      alTocar(container.querySelector('#luna-reintentar-btn'), () => render());
+    }
 
-// ================================================================
-// 2. CHARRO NEGRO — Encuentra el amuleto antes de que cante el gallo
-// ================================================================
-function juegoFeria(container, onWin) {
-  detenerMinijuegoActual();
-
-  const objetos = ['🎭', '🕯️', '🎲', '🃏', '🔮', '🎪', '🗝️', '🀄'];
-  const correctoIdx = Math.floor(Math.random() * objetos.length);
-  const TIEMPO_LIMITE = 9000;
-
-  container.innerHTML = `
-    <p class="minijuego-instruccion">Encuentra el amuleto correcto antes de que cante el gallo</p>
-    <div class="barra-tiempo"><div class="barra-tiempo-interna" id="feria-barra"></div></div>
-    <div class="feria-grid" id="feria-grid"></div>
-  `;
-
-  const grid  = container.querySelector('#feria-grid');
-  const barra = container.querySelector('#feria-barra');
-
-  objetos.forEach((emoji, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'feria-item';
-    btn.textContent = emoji;
-    alTocar(btn, () => {
-      if (i === correctoIdx) {
+    alTocar(luna, () => {
+      clearTimeout(escapeId);
+      toques += 1;
+      container.querySelector('#luna-contador').textContent = `${toques} / ${META}`;
+      if (toques >= META) {
         onWin();
       } else {
-        btn.classList.add('parpadeo-error');
-        setTimeout(() => btn.classList.remove('parpadeo-error'), 400);
+        siguienteToque();
       }
     });
-    grid.appendChild(btn);
-  });
 
-  const inicio = Date.now();
-  const intervaloId = registrarTemporizador(setInterval(() => {
-    const restante = Math.max(0, 1 - (Date.now() - inicio) / TIEMPO_LIMITE);
-    barra.style.width = (restante * 100) + '%';
-    if (restante <= 0) {
-      clearInterval(intervaloId);
-      juegoFeria(container, onWin); // cantó el gallo: reintenta con nuevo orden
-    }
-  }, 100));
+    siguienteToque();
+  }
+
+  render();
 }
 
 
 // ================================================================
-// 3. EL EMPRESARIO — Cuenta las estrellas (3 rondas)
+// 2. CHARRO NEGRO — Lotería: junta las 16 piezas voladoras
 // ================================================================
-function juegoEstrellas(container, onWin) {
+function juegoLoteria(container, onWin) {
+  detenerMinijuegoActual();
+
+  const ICONOS = ['☀️','🌙','⭐','❤️','🌳','🐍','🌵','🎸','🌸','🐓','🐟','🔔','🌈','☂️','🍉','🗝️'];
+  let colocadas = 0;
+
+  container.innerHTML = `
+    <p class="minijuego-instruccion">¡Las piezas de la carta salieron volando! Tócalas para regresarlas a su lugar</p>
+    <div class="loteria-campo" id="loteria-campo">
+      <div class="loteria-carta" id="loteria-carta"></div>
+    </div>
+    <p class="minijuego-contador" id="loteria-contador">0 / 16</p>
+  `;
+
+  const campo = container.querySelector('#loteria-campo');
+  const carta = container.querySelector('#loteria-carta');
+
+  ICONOS.forEach((icono, i) => {
+    const casilla = document.createElement('div');
+    casilla.className = 'loteria-casilla';
+    casilla.dataset.index = i;
+    casilla.innerHTML = `<span class="loteria-fantasma">${icono}</span>`;
+    carta.appendChild(casilla);
+  });
+
+  const indicesBarajados = ICONOS.map((_, i) => i).sort(() => Math.random() - 0.5);
+  const piezas = [];
+
+  indicesBarajados.forEach(indexOriginal => {
+    const pieza = document.createElement('button');
+    pieza.className = 'loteria-pieza';
+    pieza.textContent = ICONOS[indexOriginal];
+    pieza.dataset.index = indexOriginal;
+    campo.appendChild(pieza);
+    piezas.push(pieza);
+  });
+
+  function posicionarAleatorio(pieza) {
+    const maxX = Math.max(campo.clientWidth  - 54, 0);
+    const maxY = Math.max(campo.clientHeight - 54, 0);
+    pieza.style.left = (Math.random() * maxX) + 'px';
+    pieza.style.top  = (Math.random() * maxY) + 'px';
+    pieza.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
+    pieza.style.animationDelay = (Math.random() * 1.5) + 's';
+  }
+  piezas.forEach(posicionarAleatorio);
+
+  piezas.forEach(pieza => {
+    alTocar(pieza, () => {
+      if (pieza.classList.contains('loteria-colocada')) return;
+
+      const idx = pieza.dataset.index;
+      const casillaDestino = carta.querySelector(`.loteria-casilla[data-index="${idx}"]`);
+      const rectCasilla = casillaDestino.getBoundingClientRect();
+      const rectCampo = campo.getBoundingClientRect();
+
+      pieza.style.animation = 'none';
+      pieza.style.transition = 'left 0.4s ease, top 0.4s ease, opacity 0.3s ease 0.4s';
+      pieza.style.left = (rectCasilla.left - rectCampo.left + 2) + 'px';
+      pieza.style.top  = (rectCasilla.top  - rectCampo.top  + 2) + 'px';
+      pieza.style.zIndex = 0;
+
+      registrarTemporizador(setTimeout(() => {
+        pieza.classList.add('loteria-colocada');
+        casillaDestino.querySelector('.loteria-fantasma').style.opacity = '1';
+        colocadas += 1;
+        container.querySelector('#loteria-contador').textContent = `${colocadas} / 16`;
+        if (colocadas >= 16) onWin();
+      }, 420));
+    });
+  });
+}
+
+
+// ================================================================
+// 3. EL EMPRESARIO — 3 operaciones matemáticas (suma/resta, 3 dígitos)
+// ================================================================
+function juegoMatematicas(container, onWin) {
   detenerMinijuegoActual();
 
   let ronda = 0;
-  const TOTAL_RONDAS = 3;
+  const TOTAL = 3;
+
+  function generarProblema() {
+    const esSuma = Math.random() < 0.5;
+    let a = numAleatorioLocal(100, 899);
+    let b, resultado;
+    if (esSuma) {
+      b = numAleatorioLocal(100, Math.max(100, 999 - a));
+      resultado = a + b;
+    } else {
+      b = numAleatorioLocal(100, a); // b <= a para no dar negativos
+      if (b > a) { const t = a; a = b; b = t; }
+      resultado = a - b;
+    }
+    return { texto: `${a} ${esSuma ? '+' : '−'} ${b}`, resultado };
+  }
 
   function siguienteRonda() {
-    if (ronda >= TOTAL_RONDAS) { onWin(); return; }
+    if (ronda >= TOTAL) { onWin(); return; }
     ronda += 1;
 
-    const cantidadReal = 3 + Math.floor(Math.random() * 6); // 3 a 8
-    const estrellasHtml = '⭐'.repeat(cantidadReal);
-
-    const opciones = new Set([cantidadReal]);
+    const problema = generarProblema();
+    const opciones = new Set([problema.resultado]);
     while (opciones.size < 4) {
-      const val = Math.max(1, cantidadReal + Math.floor(Math.random() * 5) - 2);
-      opciones.add(val);
+      const delta = numAleatorioLocal(1, 20) * (Math.random() < 0.5 ? -1 : 1);
+      opciones.add(Math.max(0, problema.resultado + delta));
     }
     const opcionesArr = Array.from(opciones).sort(() => Math.random() - 0.5);
 
     container.innerHTML = `
-      <p class="minijuego-instruccion">Ronda ${ronda} de ${TOTAL_RONDAS}: memoriza cuántas estrellas ves</p>
-      <div class="estrellas-campo" id="estrellas-campo">${estrellasHtml}</div>
-      <div class="estrellas-opciones hidden" id="estrellas-opciones"></div>
+      <p class="minijuego-instruccion">Operación ${ronda} de ${TOTAL}</p>
+      <div class="mate-operacion">${problema.texto} = ?</div>
+      <div class="mate-opciones" id="mate-opciones"></div>
     `;
 
-    const campo = container.querySelector('#estrellas-campo');
-
-    registrarTemporizador(setTimeout(() => {
-      campo.textContent = '¿Cuántas había?';
-      const opcionesDiv = container.querySelector('#estrellas-opciones');
-      opcionesDiv.classList.remove('hidden');
-
-      opcionesArr.forEach(valor => {
-        const btn = document.createElement('button');
-        btn.className = 'estrellas-btn';
-        btn.textContent = valor;
-        alTocar(btn, () => {
-          if (valor === cantidadReal) {
-            siguienteRonda();
-          } else {
-            btn.classList.add('parpadeo-error');
-            setTimeout(() => btn.classList.remove('parpadeo-error'), 400);
-          }
-        });
-        opcionesDiv.appendChild(btn);
+    const opcionesDiv = container.querySelector('#mate-opciones');
+    opcionesArr.forEach(valor => {
+      const btn = document.createElement('button');
+      btn.className = 'mate-btn';
+      btn.textContent = valor;
+      alTocar(btn, () => {
+        if (valor === problema.resultado) {
+          siguienteRonda();
+        } else {
+          btn.classList.add('parpadeo-error');
+          setTimeout(() => btn.classList.remove('parpadeo-error'), 400);
+        }
       });
-    }, 2500));
+      opcionesDiv.appendChild(btn);
+    });
   }
 
   siguienteRonda();
@@ -230,100 +271,143 @@ function juegoEstrellas(container, onWin) {
 
 
 // ================================================================
-// 4. SPRINGTRAP — Encuentra la salida con la linterna
+// 4. SPRINGTRAP — Linterna (3 cuartos, la puerta se mueve sola,
+//    y de vez en cuando aparece un "monstruo" cerca de la luz)
 // ================================================================
 function juegoLinterna(container, onWin) {
   detenerMinijuegoActual();
 
-  container.innerHTML = `
-    <p class="minijuego-instruccion">Mueve la linterna con el dedo y encuentra la salida antes de que se acabe la luz</p>
-    <div class="linterna-campo" id="linterna-campo">
-      <div class="linterna-salida" id="linterna-salida">🚪</div>
-      <div class="linterna-luz" id="linterna-luz"></div>
-    </div>
-    <div class="barra-tiempo"><div class="barra-tiempo-interna" id="linterna-barra"></div></div>
-  `;
+  let cuarto = 0;
+  const TOTAL_CUARTOS = 3;
 
-  const campo  = container.querySelector('#linterna-campo');
-  const salida = container.querySelector('#linterna-salida');
-  const luz    = container.querySelector('#linterna-luz');
-  const barra  = container.querySelector('#linterna-barra');
+  function siguienteCuarto() {
+    if (cuarto >= TOTAL_CUARTOS) { onWin(); return; }
+    cuarto += 1;
 
-  const maxX = Math.max(campo.clientWidth  - 50, 0);
-  const maxY = Math.max(campo.clientHeight - 50, 0);
-  salida.style.left = (Math.random() * maxX) + 'px';
-  salida.style.top  = (Math.random() * maxY) + 'px';
+    container.innerHTML = `
+      <p class="minijuego-instruccion">Cuarto ${cuarto} de ${TOTAL_CUARTOS}: encuentra la salida antes de que se acabe la luz</p>
+      <div class="linterna-campo" id="linterna-campo">
+        <div class="linterna-salida" id="linterna-salida">🚪</div>
+        <div class="linterna-monstruo hidden" id="linterna-monstruo">👹</div>
+        <div class="linterna-luz" id="linterna-luz"></div>
+      </div>
+      <div class="barra-tiempo"><div class="barra-tiempo-interna" id="linterna-barra"></div></div>
+    `;
 
-  function mover(clientX, clientY) {
-    const rect = campo.getBoundingClientRect();
-    luz.style.left = (clientX - rect.left) + 'px';
-    luz.style.top  = (clientY - rect.top)  + 'px';
+    const campo    = container.querySelector('#linterna-campo');
+    const salida   = container.querySelector('#linterna-salida');
+    const monstruo = container.querySelector('#linterna-monstruo');
+    const luz      = container.querySelector('#linterna-luz');
+    const barra    = container.querySelector('#linterna-barra');
+
+    let luzX = campo.clientWidth / 2;
+    let luzY = campo.clientHeight / 2;
+    let terminado = false;
+
+    function reposicionarSalida() {
+      const maxX = Math.max(campo.clientWidth  - 50, 0);
+      const maxY = Math.max(campo.clientHeight - 50, 0);
+      salida.style.left = (Math.random() * maxX) + 'px';
+      salida.style.top  = (Math.random() * maxY) + 'px';
+    }
+    reposicionarSalida();
+
+    function mover(clientX, clientY) {
+      const rect = campo.getBoundingClientRect();
+      luzX = clientX - rect.left;
+      luzY = clientY - rect.top;
+      luz.style.left = luzX + 'px';
+      luz.style.top  = luzY + 'px';
+    }
+    campo.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      mover(t.clientX, t.clientY);
+    }, { passive: false });
+    campo.addEventListener('mousemove', e => mover(e.clientX, e.clientY));
+
+    // La puerta se reubica sola; más seguido en cuartos avanzados
+    const intervaloPuerta = registrarTemporizador(
+      setInterval(reposicionarSalida, Math.max(5000 - cuarto * 800, 2400))
+    );
+
+    // El monstruo aparece de vez en cuando; si está muy cerca de la luz, susto = reinicia el cuarto
+    const intervaloMonstruo = registrarTemporizador(setInterval(() => {
+      const maxX = Math.max(campo.clientWidth  - 60, 0);
+      const maxY = Math.max(campo.clientHeight - 60, 0);
+      const mx = Math.random() * maxX;
+      const my = Math.random() * maxY;
+      monstruo.style.left = mx + 'px';
+      monstruo.style.top  = my + 'px';
+      monstruo.classList.remove('hidden');
+
+      registrarTemporizador(setTimeout(() => monstruo.classList.add('hidden'), 500));
+
+      const distancia = Math.hypot(mx - luzX, my - luzY);
+      if (distancia < 90 && !terminado) {
+        terminado = true;
+        detenerCuarto();
+        cuarto -= 1; // repetir el mismo cuarto
+        registrarTemporizador(setTimeout(siguienteCuarto, 700));
+      }
+    }, 3500));
+
+    const TIEMPO_LIMITE = 13000;
+    const inicio = Date.now();
+    const intervaloTiempo = registrarTemporizador(setInterval(() => {
+      const restante = Math.max(0, 1 - (Date.now() - inicio) / TIEMPO_LIMITE);
+      barra.style.width = (restante * 100) + '%';
+      if (restante <= 0 && !terminado) {
+        terminado = true;
+        detenerCuarto();
+        cuarto -= 1; // se acabó la luz: repetir el mismo cuarto
+        siguienteCuarto();
+      }
+    }, 100));
+
+    function detenerCuarto() {
+      clearInterval(intervaloPuerta);
+      clearInterval(intervaloMonstruo);
+      clearInterval(intervaloTiempo);
+    }
+
+    alTocar(salida, () => {
+      if (terminado) return;
+      terminado = true;
+      detenerCuarto();
+      siguienteCuarto();
+    });
   }
 
-  campo.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const t = e.touches[0];
-    mover(t.clientX, t.clientY);
-  }, { passive: false });
-
-  campo.addEventListener('mousemove', e => mover(e.clientX, e.clientY));
-
-  alTocar(salida, () => {
-    clearInterval(intervaloId);
-    onWin();
-  });
-
-  const TIEMPO_LIMITE = 13000;
-  const inicio = Date.now();
-  const intervaloId = registrarTemporizador(setInterval(() => {
-    const restante = Math.max(0, 1 - (Date.now() - inicio) / TIEMPO_LIMITE);
-    barra.style.width = (restante * 100) + '%';
-    if (restante <= 0) {
-      clearInterval(intervaloId);
-      juegoLinterna(container, onWin); // se acabó la luz: reintenta
-    }
-  }, 100));
+  siguienteCuarto();
 }
 
 
 // ================================================================
-// 5. PLANKTON — Memoriza los 5 ingredientes de la Cangreburguer
+// 5. PLANKTON — Memoriza los 5 ingredientes (3s, luego se borran)
 // ================================================================
 function juegoMemoria(container, onWin) {
   detenerMinijuegoActual();
 
-  // TODO: ajusta este orden/emojis si quieres que coincida exacto con
-  // la receta real (pan, carne, queso, tomate, lechuga, por ejemplo)
   const ingredientes = ['🍞', '🥩', '🧀', '🍅', '🥬'];
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Memoriza el orden de los ingredientes</p>
-    <div class="memoria-secuencia" id="memoria-secuencia"></div>
-    <p class="minijuego-instruccion hidden" id="memoria-turno">Ahora tócalos en el mismo orden</p>
+    <p class="minijuego-instruccion" id="memoria-instruccion">Memoriza el orden (3 segundos)</p>
+    <div class="memoria-secuencia" id="memoria-secuencia">
+      ${ingredientes.map(i => `<span class="memoria-ficha">${i}</span>`).join('')}
+    </div>
     <div class="memoria-opciones" id="memoria-opciones"></div>
   `;
 
-  const secuenciaDiv = container.querySelector('#memoria-secuencia');
-  let i = 0;
+  registrarTemporizador(setTimeout(() => {
+    // Borrar la secuencia por completo: ya no se puede "hacer trampa" viéndola
+    container.querySelector('#memoria-secuencia').innerHTML = '';
+    container.querySelector('#memoria-instruccion').textContent = 'Ahora tócalos en el mismo orden';
 
-  function mostrarSiguiente() {
-    if (i >= ingredientes.length) {
-      container.querySelector('#memoria-turno').classList.remove('hidden');
-      montarOpciones();
-      return;
-    }
-    const span = document.createElement('span');
-    span.className = 'memoria-ficha';
-    span.textContent = ingredientes[i];
-    secuenciaDiv.appendChild(span);
-    i += 1;
-    registrarTemporizador(setTimeout(mostrarSiguiente, 700));
-  }
-
-  let respuestaIdx = 0;
-  function montarOpciones() {
+    let respuestaIdx = 0;
     const opcionesDiv = container.querySelector('#memoria-opciones');
     const barajados = [...ingredientes].sort(() => Math.random() - 0.5);
+
     barajados.forEach(emoji => {
       const btn = document.createElement('button');
       btn.className = 'memoria-btn';
@@ -341,51 +425,69 @@ function juegoMemoria(container, onWin) {
       });
       opcionesDiv.appendChild(btn);
     });
-  }
-
-  mostrarSiguiente();
+  }, 3000));
 }
 
 
 // ================================================================
-// 6. EL LOBO — Esquiva los rayos láser de seguridad
+// 6. EL LOBO — Esquiva el láser cambiando de carril a tiempo
+//    (rediseñado por completo: ahora se avisa ANTES de disparar)
 // ================================================================
 function juegoLaser(container, onWin) {
   detenerMinijuegoActual();
 
-  let ronda = 0;
   const META = 6;
+  let ronda = 0;
+  let posicionActual = 1; // 0 arriba, 1 medio, 2 abajo
+  let carrilPeligro = null;
+  let rondaActiva = false;
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Un láser va a aparecer arriba o abajo: toca la acción correcta a tiempo</p>
-    <div class="laser-campo">
-      <div class="laser-linea" id="laser-linea"></div>
-      <div class="laser-personaje">🐺</div>
+    <p class="minijuego-instruccion">Cuando un carril se ponga en alerta roja, ¡múdate a otro carril antes de que dispare!</p>
+    <div class="laser-carriles" id="laser-carriles">
+      <button class="laser-carril" data-carril="0"><span class="laser-personaje-mini hidden">🐺</span></button>
+      <button class="laser-carril" data-carril="1"><span class="laser-personaje-mini hidden">🐺</span></button>
+      <button class="laser-carril" data-carril="2"><span class="laser-personaje-mini hidden">🐺</span></button>
     </div>
     <p class="minijuego-contador" id="laser-contador">0 / ${META}</p>
-    <div class="laser-botones">
-      <button class="btn-secondary" id="laser-btn-agachar">⬇️ Agacharse</button>
-      <button class="btn-secondary" id="laser-btn-saltar">⬆️ Saltar</button>
-    </div>
   `;
 
-  const linea     = container.querySelector('#laser-linea');
-  const contador  = container.querySelector('#laser-contador');
-  let tipoActual  = null; // 'alto' → hay que agacharse / 'bajo' → hay que saltar
-  let activo      = false;
+  const carrilesEls = container.querySelectorAll('.laser-carril');
+
+  function actualizarPersonaje() {
+    carrilesEls.forEach((c, i) => {
+      c.querySelector('.laser-personaje-mini').classList.toggle('hidden', i !== posicionActual);
+    });
+  }
+  actualizarPersonaje();
+
+  carrilesEls.forEach(carrilEl => {
+    alTocar(carrilEl, () => {
+      posicionActual = Number(carrilEl.dataset.carril);
+      actualizarPersonaje();
+    });
+  });
 
   function nuevaRonda() {
-    tipoActual = Math.random() < 0.5 ? 'alto' : 'bajo';
-    linea.className = 'laser-linea laser-' + tipoActual;
-    activo = true;
-    registrarTemporizador(setTimeout(() => { if (activo) fallar(); }, 1600));
+    rondaActiva = true;
+    carrilPeligro = Math.floor(Math.random() * 3);
+    carrilesEls[carrilPeligro].classList.add('laser-alerta');
+
+    registrarTemporizador(setTimeout(() => {
+      if (!rondaActiva) return;
+      rondaActiva = false;
+      carrilesEls.forEach(c => c.classList.remove('laser-alerta'));
+      if (posicionActual === carrilPeligro) {
+        fallar();
+      } else {
+        acierto();
+      }
+    }, 1500));
   }
 
   function acierto() {
-    if (!activo) return;
-    activo = false;
     ronda += 1;
-    contador.textContent = `${ronda} / ${META}`;
+    container.querySelector('#laser-contador').textContent = `${ronda} / ${META}`;
     if (ronda >= META) {
       onWin();
     } else {
@@ -394,105 +496,127 @@ function juegoLaser(container, onWin) {
   }
 
   function fallar() {
-    activo = false;
-    contador.textContent = '¡Alarma activada! Reintentando...';
+    container.querySelector('#laser-contador').textContent = '¡Te alcanzó el láser! Reintentando...';
     registrarTemporizador(setTimeout(() => {
       ronda = 0;
-      contador.textContent = `0 / ${META}`;
+      container.querySelector('#laser-contador').textContent = `0 / ${META}`;
       nuevaRonda();
-    }, 900));
+    }, 1000));
   }
-
-  alTocar(container.querySelector('#laser-btn-agachar'), () => {
-    if (tipoActual === 'alto') acierto(); else fallar();
-  });
-  alTocar(container.querySelector('#laser-btn-saltar'), () => {
-    if (tipoActual === 'bajo') acierto(); else fallar();
-  });
 
   nuevaRonda();
 }
 
 
 // ================================================================
-// 7. VILLANO DRAGÓN — Encuentra el oro de verdad
+// 7. VILLANO DRAGÓN — Memorama: encuentra los 3 pares de oro
+//    (evita las piedras falsas), volteando 2 cartas a la vez
 // ================================================================
 function juegoOro(container, onWin) {
   detenerMinijuegoActual();
 
-  const TOTAL_ORO = 5;
-  const TOTAL_FALSO = 4;
-  let encontrados = 0;
+  const simbolosOro   = ['💰', '👑', '🟨'];
+  const simbolosFalso = ['🪨', '⚪', '🥔'];
+  let mazo = [...simbolosOro, ...simbolosOro, ...simbolosFalso, ...simbolosFalso];
+  mazo = mazo.sort(() => Math.random() - 0.5);
 
-  const items = [];
-  for (let i = 0; i < TOTAL_ORO; i++)   items.push(true);
-  for (let i = 0; i < TOTAL_FALSO; i++) items.push(false);
-  items.sort(() => Math.random() - 0.5);
+  let paresOro = 0;
+  let primeraSeleccion = null;
+  let bloqueado = false;
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Toca solo el oro de verdad (${TOTAL_ORO} piezas), evita las piedras falsas</p>
-    <div class="oro-grid" id="oro-grid"></div>
-    <div class="barra-tiempo"><div class="barra-tiempo-interna" id="oro-barra"></div></div>
+    <p class="minijuego-instruccion">Encuentra los 3 pares de ORO verdadero (evita las piedras)</p>
+    <div class="oro-memorama" id="oro-memorama"></div>
+    <p class="minijuego-contador" id="oro-contador">0 / 3 pares de oro</p>
   `;
 
-  const grid = container.querySelector('#oro-grid');
-  items.forEach(esOro => {
-    const btn = document.createElement('button');
-    btn.className = 'oro-item';
-    btn.textContent = esOro ? '🟨' : '⚪';
-    alTocar(btn, () => {
-      if (btn.disabled) return;
-      btn.disabled = true;
-      if (esOro) {
-        btn.classList.add('oro-correcto');
-        encontrados += 1;
-        if (encontrados >= TOTAL_ORO) {
-          clearInterval(intervaloId);
-          onWin();
-        }
-      } else {
-        btn.classList.add('oro-incorrecto');
-      }
-    });
-    grid.appendChild(btn);
-  });
+  const grid = container.querySelector('#oro-memorama');
 
-  const barra = container.querySelector('#oro-barra');
-  const TIEMPO_LIMITE = 10000;
-  const inicio = Date.now();
-  const intervaloId = registrarTemporizador(setInterval(() => {
-    const restante = Math.max(0, 1 - (Date.now() - inicio) / TIEMPO_LIMITE);
-    barra.style.width = (restante * 100) + '%';
-    if (restante <= 0) {
-      clearInterval(intervaloId);
-      juegoOro(container, onWin);
-    }
-  }, 100));
+  mazo.forEach(simbolo => {
+    const carta = document.createElement('button');
+    carta.className = 'oro-carta';
+    carta.dataset.simbolo = simbolo;
+    carta.dataset.esOro = simbolosOro.includes(simbolo) ? '1' : '0';
+    carta.textContent = '❓';
+    grid.appendChild(carta);
+
+    alTocar(carta, () => {
+      if (bloqueado || carta.classList.contains('oro-carta-resuelta') || carta === primeraSeleccion) return;
+
+      carta.textContent = simbolo;
+      carta.classList.add('oro-carta-volteada');
+
+      if (!primeraSeleccion) {
+        primeraSeleccion = carta;
+        return;
+      }
+
+      bloqueado = true;
+      const actual = primeraSeleccion;
+      const coinciden = actual.dataset.simbolo === carta.dataset.simbolo;
+
+      registrarTemporizador(setTimeout(() => {
+        if (coinciden) {
+          actual.classList.add('oro-carta-resuelta');
+          carta.classList.add('oro-carta-resuelta');
+          if (carta.dataset.esOro === '1') {
+            paresOro += 1;
+            container.querySelector('#oro-contador').textContent = `${paresOro} / 3 pares de oro`;
+            if (paresOro >= 3) { onWin(); }
+          }
+        } else {
+          actual.textContent = '❓';
+          carta.textContent = '❓';
+          actual.classList.remove('oro-carta-volteada');
+          carta.classList.remove('oro-carta-volteada');
+        }
+        primeraSeleccion = null;
+        bloqueado = false;
+      }, 700));
+    });
+  });
 }
 
 
 // ================================================================
-// 8. EL PROTOTIPO — Laberinto de la fábrica de juguetes
+// 8. EL PROTOTIPO — Laberinto más grande (7x7) con 2 guardias
+//    que patrullan de un lado a otro
 // ================================================================
 function juegoLaberinto(container, onWin) {
   detenerMinijuegoActual();
 
-  // 0 = camino libre, 1 = zona peligrosa, 2 = inicio, 3 = meta
+  // 0 libre, 1 pared, 2 inicio (informativo), 3 meta.
+  // Las filas 2 y 4 (donde patrullan los guardias) están COMPLETAMENTE
+  // abiertas a propósito: así el guardia solo ocupa una celda a la vez
+  // y siempre queda espacio de sobra para rodearlo, en vez de bloquear
+  // el único paso posible.
   const MAPA = [
-    [2, 0, 1, 0, 0],
-    [1, 0, 1, 0, 1],
-    [0, 0, 0, 0, 1],
-    [0, 1, 1, 0, 0],
-    [0, 0, 1, 0, 3],
+    [2, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 0, 1, 0, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 3],
   ];
 
+  // Los guardias patrullan de un lado a otro de su fila (ping-pong)
+  const rutaGuardia1 = [
+    { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 },
+    { x: 5, y: 2 }, { x: 4, y: 2 }, { x: 3, y: 2 }, { x: 2, y: 2 },
+  ];
+  const rutaGuardia2 = [
+    { x: 5, y: 4 }, { x: 4, y: 4 }, { x: 3, y: 4 }, { x: 2, y: 4 },
+    { x: 1, y: 4 }, { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 },
+  ];
+  let pasoGuardia1 = 0, pasoGuardia2 = 0;
   let pos = { x: 0, y: 0 };
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Guía al personaje hasta la salida, evita las zonas marcadas</p>
-    <div class="laberinto-grid" id="laberinto-grid"></div>
+    <p class="minijuego-instruccion">Llega a la salida. Evita las paredes Y a los guardias que patrullan</p>
+    <div class="laberinto-grid laberinto-grid-7" id="laberinto-grid"></div>
     <div class="laberinto-controles">
-      <button class="btn-secondary laberinto-btn-arriba" id="lab-arriba">⬆️</button>
+      <button class="btn-secondary" id="lab-arriba">⬆️</button>
       <div class="laberinto-fila-controles">
         <button class="btn-secondary" id="lab-izq">⬅️</button>
         <button class="btn-secondary" id="lab-der">➡️</button>
@@ -503,34 +627,41 @@ function juegoLaberinto(container, onWin) {
 
   const grid = container.querySelector('#laberinto-grid');
 
+  function posGuardias() {
+    return [rutaGuardia1[pasoGuardia1], rutaGuardia2[pasoGuardia2]];
+  }
+
   function dibujar() {
     grid.innerHTML = '';
+    const guardias = posGuardias();
     MAPA.forEach((fila, y) => {
       fila.forEach((celda, x) => {
         const div = document.createElement('div');
         div.className = 'laberinto-celda';
         if (celda === 1) div.classList.add('laberinto-peligro');
         if (celda === 3) div.classList.add('laberinto-meta');
+        if (guardias.some(g => g.x === x && g.y === y)) div.classList.add('laberinto-guardia');
         if (pos.x === x && pos.y === y) div.classList.add('laberinto-jugador');
         grid.appendChild(div);
       });
     });
   }
 
+  function chocaConGuardia() {
+    return posGuardias().some(g => g.x === pos.x && g.y === pos.y);
+  }
+
   function mover(dx, dy) {
-    const nx = pos.x + dx;
-    const ny = pos.y + dy;
-    if (nx < 0 || nx > 4 || ny < 0 || ny > 4) return;
-
-    if (MAPA[ny][nx] === 1) {
-      pos = { x: 0, y: 0 }; // zona peligrosa: reinicia desde el inicio
-      dibujar();
-      return;
-    }
-
+    const nx = pos.x + dx, ny = pos.y + dy;
+    if (nx < 0 || nx > 6 || ny < 0 || ny > 6) return;
+    if (MAPA[ny][nx] === 1) { pos = { x: 0, y: 0 }; dibujar(); return; }
     pos = { x: nx, y: ny };
+    if (chocaConGuardia()) { pos = { x: 0, y: 0 }; dibujar(); return; }
     dibujar();
-    if (MAPA[ny][nx] === 3) onWin();
+    if (MAPA[ny][nx] === 3) {
+      clearInterval(intervaloGuardias);
+      onWin();
+    }
   }
 
   alTocar(container.querySelector('#lab-arriba'), () => mover(0, -1));
@@ -538,66 +669,78 @@ function juegoLaberinto(container, onWin) {
   alTocar(container.querySelector('#lab-izq'),    () => mover(-1, 0));
   alTocar(container.querySelector('#lab-der'),    () => mover(1, 0));
 
+  const intervaloGuardias = registrarTemporizador(setInterval(() => {
+    pasoGuardia1 = (pasoGuardia1 + 1) % rutaGuardia1.length;
+    pasoGuardia2 = (pasoGuardia2 + 1) % rutaGuardia2.length;
+    if (chocaConGuardia()) pos = { x: 0, y: 0 };
+    dibujar();
+  }, 800));
+
   dibujar();
 }
 
 
 // ================================================================
-// 9. BLUE — Escóndete cuando no esté mirando
+// 9. BLUE — Escóndete en la dirección donde NO está mirando
 // ================================================================
 function juegoEscondite(container, onWin) {
   detenerMinijuegoActual();
 
-  const META = 5;
+  const META = 6;
   let logrados = 0;
-  let mirando = false;
+  let miradaActual = 1; // 0 izquierda, 1 centro, 2 derecha
 
   container.innerHTML = `
-    <p class="minijuego-instruccion">Escóndete SOLO cuando Blue no esté mirando</p>
+    <p class="minijuego-instruccion">Escóndete en el lugar donde Blue NO esté mirando</p>
     <div class="escondite-campo">
-      <div class="escondite-blue" id="escondite-blue">🙈</div>
+      <div class="escondite-blue" id="escondite-blue">👀</div>
     </div>
     <p class="minijuego-contador" id="escondite-contador">0 / ${META}</p>
-    <button class="btn-primary" id="escondite-btn">Escóndete</button>
+    <div class="escondite-spots">
+      <button class="btn-secondary" data-spot="0">⬅️ Izquierda</button>
+      <button class="btn-secondary" data-spot="1">⬆️ Centro</button>
+      <button class="btn-secondary" data-spot="2">➡️ Derecha</button>
+    </div>
   `;
 
-  const blueEl    = container.querySelector('#escondite-blue');
-  const contador  = container.querySelector('#escondite-contador');
+  const blueEl   = container.querySelector('#escondite-blue');
+  const contador = container.querySelector('#escondite-contador');
+  const FLECHAS  = ['👈', '👀', '👉'];
 
-  function ciclo() {
-    mirando = !mirando;
-    blueEl.textContent = mirando ? '👀' : '🙈';
-    blueEl.className = 'escondite-blue ' + (mirando ? 'escondite-mirando' : 'escondite-no-mirando');
-    registrarTemporizador(setTimeout(ciclo, 900 + Math.random() * 900));
+  function cambiarMirada() {
+    miradaActual = Math.floor(Math.random() * 3);
+    blueEl.textContent = FLECHAS[miradaActual];
+    registrarTemporizador(setTimeout(cambiarMirada, 900 + Math.random() * 700));
   }
+  cambiarMirada();
 
-  alTocar(container.querySelector('#escondite-btn'), () => {
-    if (mirando) {
-      logrados = 0;
-      contador.textContent = `0 / ${META}`;
-    } else {
-      logrados += 1;
-      contador.textContent = `${logrados} / ${META}`;
-      if (logrados >= META) onWin();
-    }
+  container.querySelectorAll('[data-spot]').forEach(btn => {
+    alTocar(btn, () => {
+      const spot = Number(btn.dataset.spot);
+      if (spot === miradaActual) {
+        logrados = 0;
+        contador.textContent = `0 / ${META}`;
+      } else {
+        logrados += 1;
+        contador.textContent = `${logrados} / ${META}`;
+        if (logrados >= META) onWin();
+      }
+    });
   });
-
-  ciclo();
 }
 
 
 // ================================================================
 // REGISTRO DE MINIJUEGOS
 // ================================================================
-// La clave debe coincidir con el campo "juego" de cada sospechoso en map.js
 window.MINIJUEGOS = {
-  luna:       juegoLuna,
-  feria:      juegoFeria,
-  estrellas:  juegoEstrellas,
-  linterna:   juegoLinterna,
-  memoria:    juegoMemoria,
-  laser:      juegoLaser,
-  oro:        juegoOro,
-  laberinto:  juegoLaberinto,
-  escondite:  juegoEscondite,
+  luna:        juegoLuna,
+  loteria:     juegoLoteria,
+  matematicas: juegoMatematicas,
+  linterna:    juegoLinterna,
+  memoria:     juegoMemoria,
+  laser:       juegoLaser,
+  oro:         juegoOro,
+  laberinto:   juegoLaberinto,
+  escondite:   juegoEscondite,
 };
