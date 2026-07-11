@@ -26,7 +26,7 @@ const ESTADO_INICIAL = {
   candadosAbiertos:     [false, false],          // 2 candados
   misionesCompletadas:  [false, false, false, false, false], // 5 misiones
   capitulo:             1,      // capítulo actual de la historia (1, 2, 3…)
-  pantallaActual:       'locks' // 'locks' o 'map'
+  pantallaActual:       'start' // 'start' (primera vez) → 'locks' → 'map'
 };
 
 
@@ -128,6 +128,9 @@ function transicionAlMapa() {
     progreso.pantallaActual = 'map';
     guardarProgreso(progreso);
 
+    // Música distinta para el mapa (se detiene la de los candados sola)
+    cambiarMusica('audio-bg-mapa');
+
     // Inicializar el mapa (función definida en map.js)
     if (typeof inicializarMapa === 'function') {
       inicializarMapa();
@@ -140,28 +143,64 @@ function transicionAlMapa() {
 // AUDIO
 // ----------------------------------------------------------------
 
-// Evitar intentar reproducir la música múltiples veces
-let musicaIniciada = false;
+// IDs de las pistas de música de fondo que existen en la app.
+// Si agregas una pista nueva para otra pantalla, súmala aquí.
+const PISTAS_MUSICA_FONDO = ['audio-bg', 'audio-bg-mapa'];
+
+// Volumen bajo para que la música NUNCA opaque los efectos de
+// sonido (click, unlock, cadena cayendo, voces, etc.)
+const VOLUMEN_MUSICA_FONDO = 0.12;
+
+/**
+ * cambiarMusica(nuevoId)
+ * Pausa cualquier música de fondo que esté sonando y reproduce la
+ * pista pedida. Se usa para tener una pista distinta en cada
+ * pantalla (candados vs. mapa).
+ * @param {string} nuevoId - ID del <audio> a reproducir, ej. 'audio-bg-mapa'
+ */
+function cambiarMusica(nuevoId) {
+  const nuevo = document.getElementById(nuevoId);
+  if (!nuevo) return;
+
+  // Pausar todas las demás pistas de fondo (para que no se encimen)
+  PISTAS_MUSICA_FONDO.forEach(id => {
+    if (id === nuevoId) return;
+    const otra = document.getElementById(id);
+    if (otra && !otra.paused) {
+      otra.pause();
+      otra.currentTime = 0;
+    }
+  });
+
+  // Si la pista pedida ya está sonando, no reiniciarla
+  if (!nuevo.paused) return;
+
+  nuevo.volume = VOLUMEN_MUSICA_FONDO;
+  nuevo.play().catch(err => {
+    // El navegador puede rechazar la reproducción si no hubo un toque
+    // directo del usuario justo antes. Se ignora — el juego sigue
+    // funcionando sin música de fondo.
+    console.log('[Bruno2] No se pudo reproducir', nuevoId + ':', err.message);
+  });
+}
 
 /**
  * iniciarMusica()
- * Inicia la música de fondo. Los navegadores modernos bloquean
- * el audio hasta que el usuario toca algo, por eso se llama
- * desde el primer evento de toque o clic.
+ * Función de "seguro": si por alguna razón ninguna música de fondo
+ * está sonando todavía (por ejemplo, la primera vez que Bruno toca
+ * una rueda del candado), arranca la de candados. Normalmente esto
+ * ya no hace falta, porque la música se dispara explícitamente:
+ *   - al terminar la llamada de introducción (ver js/intro.js)
+ *   - al entrar al mapa (ver transicionAlMapa más abajo)
  */
 function iniciarMusica() {
-  if (musicaIniciada) return;
-  musicaIniciada = true;
-
-  const audioBg = document.getElementById('audio-bg');
-  if (!audioBg) return;
-
-  audioBg.volume = 0.2; // Volumen bajo para no distraer (0 = mudo, 1 = máximo)
-  audioBg.play().catch(err => {
-    // El navegador puede rechazar la reproducción sin interacción previa.
-    // En ese caso simplemente lo ignoramos — el juego funciona sin música.
-    console.log('[Bruno2] Audio de fondo no disponible:', err.message);
+  const yaSuenaAlgo = PISTAS_MUSICA_FONDO.some(id => {
+    const el = document.getElementById(id);
+    return el && !el.paused;
   });
+  if (yaSuenaAlgo) return;
+
+  cambiarMusica('audio-bg');
 }
 
 /**
@@ -175,8 +214,10 @@ function reproducirSonido(audioId) {
 
   // Rebobinar al inicio para poder reproducirlo varias veces seguidas
   el.currentTime = 0;
-  el.play().catch(() => {
-    // Ignorar si el audio no está disponible (archivo faltante, política del navegador, etc.)
+  el.play().catch(err => {
+    // Ignorar si el audio no está disponible, pero avisar en consola
+    // para que sea fácil detectar archivos con el nombre equivocado.
+    console.log('[Bruno2] No se pudo reproducir', audioId + ':', err.message);
   });
 }
 
@@ -222,10 +263,6 @@ function inicializarBotonReinicio() {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Iniciar música la primera vez que el usuario toca o hace clic
-  document.body.addEventListener('touchstart', iniciarMusica, { once: true });
-  document.body.addEventListener('click',      iniciarMusica, { once: true });
-
   // Conectar el botón de reinicio (esquina superior derecha) con su modal
   inicializarBotonReinicio();
 
@@ -240,10 +277,23 @@ document.addEventListener('DOMContentLoaded', () => {
   if (progreso.pantallaActual === 'map') {
     mostrarPantalla('screen-map');
     // inicializarMapa() se llama desde map.js cuando el DOM está listo
-  } else {
+  } else if (progreso.pantallaActual === 'locks') {
     mostrarPantalla('screen-locks');
     // inicializarCandados() se llama desde locks.js cuando el DOM está listo
+  } else {
+    // 'start' (o cualquier valor inesperado): mostrar la pantalla de inicio.
+    // Ahí Bruno toca START, lo que dispara la llamada de introducción
+    // (ver js/intro.js) y solo después de contestarla pasa a los candados.
+    mostrarPantalla('screen-start');
   }
+
+  // Botón START: arranca la llamada de introducción
+  document.getElementById('start-btn')?.addEventListener('click', () => {
+    mostrarPantalla('screen-start'); // se queda de fondo mientras "suena" la llamada
+    if (typeof iniciarSecuenciaIntro === 'function') {
+      iniciarSecuenciaIntro();
+    }
+  });
 
   // Cerrar overlays con la tecla Escape (útil durante desarrollo en desktop)
   document.addEventListener('keydown', e => {
