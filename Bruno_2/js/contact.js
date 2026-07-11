@@ -35,8 +35,7 @@ window.setModoContacto = modo => { modoContacto = modo; };
 // ----------------------------------------------------------------
 // DATOS DEL PERSONAJE
 // ----------------------------------------------------------------
-// TODO: Reemplazar 'Agente X' con el nombre real del personaje de la historia.
-const NOMBRE_PERSONAJE = 'Agente X';
+const NOMBRE_PERSONAJE = 'Foxy';
 
 
 // ----------------------------------------------------------------
