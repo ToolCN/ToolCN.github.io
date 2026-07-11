@@ -179,6 +179,12 @@ const PISTAS_MUSICA_FONDO = ['audio-bg', 'audio-bg-mapa'];
 // sonido (click, unlock, cadena cayendo, voces, etc.)
 const VOLUMEN_MUSICA_FONDO = 0.12;
 
+// La música del menú de sospechosos se escuchaba muy fuerte —
+// se le baja a la mitad respecto a las demás pistas.
+const VOLUMEN_POR_PISTA = {
+  'audio-bg-mapa': VOLUMEN_MUSICA_FONDO / 2,
+};
+
 /**
  * cambiarMusica(nuevoId)
  * Pausa cualquier música de fondo que esté sonando y reproduce la
@@ -203,7 +209,7 @@ function cambiarMusica(nuevoId) {
   // Si la pista pedida ya está sonando, no reiniciarla
   if (!nuevo.paused) return;
 
-  nuevo.volume = VOLUMEN_MUSICA_FONDO;
+  nuevo.volume = VOLUMEN_POR_PISTA[nuevoId] || VOLUMEN_MUSICA_FONDO;
   nuevo.play().catch(err => {
     // El navegador puede rechazar la reproducción si no hubo un toque
     // directo del usuario justo antes. Se ignora — el juego sigue
