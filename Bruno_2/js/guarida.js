@@ -155,9 +155,10 @@ function abrirGuarida(sosp) {
   document.getElementById('guarida-nombre').textContent = sosp.nombre;
 
   document.getElementById('caja-icono').textContent = '🔒';
-  document.getElementById('caja-icono').classList.remove('caja-abierta');
+  document.getElementById('caja-icono').classList.remove('caja-abierta', 'caja-abriendose');
   const hallazgoImg = document.getElementById('hallazgo-img');
   hallazgoImg.classList.add('hidden');
+  hallazgoImg.classList.remove('hallazgo-emergiendo');
   hallazgoImg.style.display = '';
   document.getElementById('guarida-continuar-btn').classList.add('hidden');
 
@@ -228,23 +229,51 @@ function contestarLlamadaEntrante() {
   const sosp = sospechosoActual;
   const num = String(sosp.id + 1).padStart(2, '0');
 
-  document.getElementById('caja-secreta').classList.remove('hidden');
-  document.getElementById('caja-icono').textContent = '🔓';
-  document.getElementById('caja-icono').classList.add('caja-abierta');
-  reproducirSonido('audio-caja-abre');
-
-  reproducirVoz(`assets/audio/voz-exito-${num}-${sosp.slug}.mp3`);
+  // Mostrar la caja todavía CERRADA, y arrancar el sonido de apertura
+  // y la voz del sospechoso al mismo tiempo, justo al contestar.
+  const caja = document.getElementById('caja-secreta');
+  caja.classList.remove('hidden');
+  const cajaIcono = document.getElementById('caja-icono');
+  cajaIcono.textContent = '🔒';
+  cajaIcono.classList.remove('caja-abierta');
+  cajaIcono.classList.add('caja-abriendose');
 
   const hallazgoImg = document.getElementById('hallazgo-img');
-  hallazgoImg.style.display = '';
-  hallazgoImg.src = `assets/images/hallazgos/hallazgo-${num}-${sosp.slug}.jpg`;
-  hallazgoImg.classList.remove('hidden');
+  hallazgoImg.classList.add('hidden');
+  hallazgoImg.classList.remove('hallazgo-emergiendo');
+  document.getElementById('guarida-continuar-btn').classList.add('hidden');
 
-  document.getElementById('guarida-continuar-btn').classList.remove('hidden');
+  reproducirSonido('audio-caja-abre'); // dura ~3s mientras se abre
+  reproducirVoz(`assets/audio/voz-exito-${num}-${sosp.slug}.mp3`);
+
+  // Esperar los 3 segundos del sonido de apertura antes de revelar
+  // el hallazgo, con una animación de que "sale" de la caja.
+  registrarTemporizadorGuarida3s(() => {
+    cajaIcono.textContent = '🔓';
+    cajaIcono.classList.remove('caja-abriendose');
+    cajaIcono.classList.add('caja-abierta');
+
+    hallazgoImg.style.display = '';
+    hallazgoImg.src = `assets/images/hallazgos/hallazgo-${num}-${sosp.slug}.jpg`;
+    hallazgoImg.classList.remove('hidden');
+    hallazgoImg.classList.add('hallazgo-emergiendo');
+
+    document.getElementById('guarida-continuar-btn').classList.remove('hidden');
+  });
 
   if (typeof marcarSospechosoRevisado === 'function') {
     marcarSospechosoRevisado(sosp.id);
   }
+}
+
+/**
+ * registrarTemporizadorGuarida3s(fn)
+ * Pequeño ayudante para el retraso fijo de 3 segundos de la caja,
+ * registrado igual que los demás temporizadores de la guarida para
+ * poder cancelarlo si Bruno sale a medias.
+ */
+function registrarTemporizadorGuarida3s(fn) {
+  programarGuarida(fn, 3000);
 }
 
 /**
@@ -289,6 +318,9 @@ function volverASospechosos() {
 // ----------------------------------------------------------------
 
 function llamarAFoxy() {
+  enLlamadaFinal = false; // por seguridad: esta es una llamada normal de pistas
+  document.getElementById('btn-answer')?.classList.add('hidden');
+
   const overlay = document.getElementById('screen-call');
   const statusEl = document.getElementById('call-status-text');
   overlay.classList.remove('hidden');
@@ -326,7 +358,14 @@ function llamarAFoxy() {
 document.addEventListener('DOMContentLoaded', () => {
   alTocarBoton(document.getElementById('contact-btn'), llamarAFoxy);
 
+  alTocarBoton(document.getElementById('btn-answer'), contestarLlamadaFinal);
+
   alTocarBoton(document.getElementById('btn-hangup'), () => {
+    if (enLlamadaFinal) {
+      colgarLlamadaFinal();
+      return;
+    }
+    // Llamada normal (Bruno pidiéndole una pista a Foxy): solo cerrar
     document.getElementById('screen-call')?.classList.add('hidden');
     detenerTonoLlamando();
     const dinamico = document.getElementById('audio-dinamico');
@@ -345,42 +384,70 @@ document.addEventListener('DOMContentLoaded', () => {
 // LLAMADA FINAL: FOXY REVELA QUE FUE BUCK
 // ----------------------------------------------------------------
 
+// true mientras la pantalla de llamada (#screen-call) está mostrando
+// la llamada FINAL de Foxy — así el botón de colgar compartido sabe
+// si debe comportarse como la llamada final (con rellamada) o como
+// una llamada normal de pistas (simplemente cerrar).
+let enLlamadaFinal = false;
+
 function iniciarLlamadaFinal() {
   progreso.casoResuelto = true;
   guardarProgreso(progreso);
+  mostrarLlamadaFinalEntrante();
+}
+
+function mostrarLlamadaFinalEntrante() {
+  enLlamadaFinal = true;
 
   const overlay = document.getElementById('screen-call');
   const statusEl = document.getElementById('call-status-text');
   overlay.classList.remove('hidden');
   document.getElementById('call-rings')?.classList.remove('hidden');
+  document.getElementById('btn-answer')?.classList.remove('hidden');
   statusEl.textContent = 'Llamada entrante...';
 
   reproducirRingtone();
+}
 
-  setTimeout(() => {
-    detenerRingtone();
-    document.getElementById('call-rings')?.classList.add('hidden');
-    statusEl.textContent = 'Foxy: hablando...';
+function contestarLlamadaFinal() {
+  detenerRingtone();
+  document.getElementById('call-rings')?.classList.add('hidden');
+  document.getElementById('btn-answer')?.classList.add('hidden');
+  const statusEl = document.getElementById('call-status-text');
+  statusEl.textContent = 'Foxy: hablando...';
 
-    reproducirVoz('assets/audio/voz-final-foxy.mp3', () => {
-      statusEl.textContent = 'Llamada finalizada';
+  reproducirVoz('assets/audio/voz-final-foxy.mp3', () => {
+    statusEl.textContent = 'Llamada finalizada';
 
-      setTimeout(() => {
-        overlay.classList.add('hidden');
-        mostrarPantalla('screen-map');
-        progreso.pantallaActual = 'map';
-        guardarProgreso(progreso);
-        if (typeof inicializarMapa === 'function') inicializarMapa();
+    setTimeout(() => {
+      enLlamadaFinal = false;
+      document.getElementById('screen-call').classList.add('hidden');
+      mostrarPantalla('screen-map');
+      progreso.pantallaActual = 'map';
+      guardarProgreso(progreso);
+      if (typeof inicializarMapa === 'function') inicializarMapa();
 
-        // El caso queda cerrado: ya no se puede llamar a Foxy de nuevo
-        document.getElementById('contact-btn')?.classList.add('hidden');
+      // El caso queda cerrado: ya no se puede llamar a Foxy de nuevo
+      document.getElementById('contact-btn')?.classList.add('hidden');
 
-        // Mostrar a Buck a pantalla completa automáticamente, sin
-        // necesidad de tocar nada — el juego termina aquí.
-        document.getElementById('screen-buck')?.classList.remove('hidden');
-      }, 1200);
-    });
-  }, 2200);
+      // Mostrar a Buck a pantalla completa automáticamente, sin
+      // necesidad de tocar nada — el juego termina aquí.
+      document.getElementById('screen-buck')?.classList.remove('hidden');
+    }, 1200);
+  });
+}
+
+/**
+ * colgarLlamadaFinal()
+ * Si Bruno cuelga sin contestar la llamada final, vuelve a sonar
+ * sola 3 segundos después (igual que la llamada de vuelta de cada
+ * sospechoso) — así nunca se queda "atorado" el final del juego.
+ */
+function colgarLlamadaFinal() {
+  detenerRingtone();
+  document.getElementById('screen-call').classList.add('hidden');
+  document.getElementById('btn-answer')?.classList.add('hidden');
+  setTimeout(mostrarLlamadaFinalEntrante, 3000);
 }
 
 window.iniciarLlamadaFinal = iniciarLlamadaFinal;
