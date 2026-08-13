@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verity - Voz</title>
+<style>
+  body {
+    background: #000;
+    color: #eee;
+    font-family: sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+  }
+  button {
+    padding: 24px 48px;
+    font-size: 1.3rem;
+    border-radius: 12px;
+    border: none;
+    background: #444;
+    color: white;
+  }
+  #estado {
+    position: fixed;
+    bottom: 10px;
+    font-size: 0.8rem;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+
+<button id="btnIniciar">Toca para iniciar (conecta primero la bocina bluetooth)</button>
+<audio id="reproductor"></audio>
+<div id="estado">esperando...</div>
+
+<script src="polling.js"></script>
+<script>
+  const boton = document.getElementById('btnIniciar');
+  const audio = document.getElementById('reproductor');
+  const estado = document.getElementById('estado');
+
+  boton.addEventListener('click', () => {
+    audio.src = "audios/silencio.mp3";
+    audio.play().catch(() => {});
+
+    boton.style.display = 'none';
+    estado.textContent = 'conectado, esperando eventos...';
+
+    iniciarSondeo((evento) => {
+      estado.textContent = `reproduciendo: ${evento}`;
+      audio.src = `audios/${evento}.mp3`;
+      audio.play().catch(err => console.error("No se pudo reproducir:", err));
+    });
+  });
+</script>
+</body>
+</html>
