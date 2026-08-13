@@ -18,9 +18,8 @@
 //       Cada array tiene 3 números, uno por rueda.
 //       Ejemplo: [3, 7, 1] significa que hay que poner 3-7-1.
 const COMBINACIONES = [
-  [1, 2, 3],   // Candado 0 (izquierda)  → código: 1-2-3
-  [4, 5, 6],   // Candado 1 (derecha)    → código: 4-5-6
-  // TODO: Reemplazar con los códigos reales de la historia
+  [2, 8, 1],   // Candado 0 (izquierda)  → código: 2-8-1
+  [2, 1, 6],   // Candado 1 (derecha)    → código: 2-1-6
 ];
 
 // Altura en píxeles de cada dígito en la rueda.
