@@ -7,6 +7,8 @@
 <style>
   body {
     background: #0a0a0a;
+    background-size: cover;
+    background-position: center;
     color: #eee;
     font-family: sans-serif;
     display: flex;
@@ -16,13 +18,19 @@
     margin: 0;
     padding: 20px;
     box-sizing: border-box;
+    position: relative;
   }
   #contenedor {
     max-width: 480px;
     text-align: center;
   }
+  .panel {
+    background: rgba(0, 0, 0, 0.55);
+    padding: 24px;
+    border-radius: 16px;
+  }
   h1 { font-size: 1.4rem; margin-bottom: 16px; }
-  p { font-size: 1.05rem; line-height: 1.5; color: #ccc; margin-bottom: 28px; }
+  p { font-size: 1.05rem; line-height: 1.5; color: #ddd; margin-bottom: 28px; }
   .botones { display: flex; flex-direction: column; gap: 12px; }
   button {
     padding: 16px;
@@ -33,15 +41,112 @@
     color: white;
   }
   button:active { background: #555; }
+
+  #flash {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  #verity-esquina {
+    position: fixed;
+    bottom: 14px;
+    right: 14px;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 14px rgba(0,0,0,.7);
+    z-index: 50;
+    display: none;
+  }
+
+  #popup-verity {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.88);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  #popup-verity.activo { opacity: 1; pointer-events: auto; }
+  #popup-verity img {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  #popup-verity .toca-continuar {
+    font-size: 0.85rem;
+    color: #999;
+    margin: 0;
+  }
+
+  .mapa-noches {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 28px;
+    justify-content: flex-end;
+    padding: 10px;
+  }
+  .noche-nodo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    color: #fff;
+    cursor: pointer;
+  }
+  .noche-nodo:active { background: #555; }
+
+  @keyframes apareceTemblor {
+    0%   { opacity: 0; transform: translateX(20px) rotate(0deg); }
+    20%  { opacity: 1; transform: translateX(0) rotate(-4deg); }
+    40%  { transform: rotate(4deg); }
+    60%  { transform: rotate(-3deg); }
+    80%  { transform: rotate(2deg); }
+    100% { transform: rotate(0deg); }
+  }
+  .noche-nueva { animation: apareceTemblor 0.6s ease-out; }
 </style>
 </head>
 <body>
+
+<div id="flash"></div>
+<img id="verity-esquina" src="" alt="Verity">
+<div id="popup-verity" onclick="saltarPopup()">
+  <img id="popup-verity-img" src="" alt="Verity activa">
+  <p class="toca-continuar">Toca para continuar</p>
+</div>
 
 <div id="contenedor"></div>
 
 <script>
 const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
 const CLAVE = "bruno2026";
+
+let nochesDesbloqueadas = 0;
+let ultimaNocheDesbloqueadaAnimar = null;
+let nocheActual = null;
+let temporizadorPopup = null;
+
+const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
+const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
+const DURACION_POPUP_MS = { 1: 5000, 2: 5000, 3: 5000 };
 
 async function enviarEvento(nombreEvento) {
   if (!nombreEvento) return;
@@ -56,15 +161,81 @@ async function enviarEvento(nombreEvento) {
   }
 }
 
-const PANTALLAS = {
+const contenedor = document.getElementById('contenedor');
 
-  inicio: {
-    titulo: "La Caja de Verity",
-    texto: "Encontraste una caja extraña frente a la puerta. Adentro hay algo que parpadea suavemente.",
-    botones: [
-      { texto: "Abrir la caja", evento: "caja_abierta", siguiente: "acto1_inicio" }
-    ]
-  },
+function mostrarCaja() {
+  document.body.style.backgroundImage = "url('imagenes/fondo-caja.png')";
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>La Caja Misteriosa</h1>
+      <p>Encontraste una caja extraña frente a la puerta. Parece que dentro se escuchan sonidos raros.</p>
+      <div class="botones">
+        <button onclick="abrirCaja()">Abrir la caja</button>
+      </div>
+    </div>
+  `;
+}
+
+function abrirCaja() {
+  enviarEvento('caja_abierta');
+  const flash = document.getElementById('flash');
+  flash.style.opacity = '1';
+
+  setTimeout(() => {
+    nochesDesbloqueadas = 1;
+    mostrarMapa();
+    setTimeout(() => { flash.style.opacity = '0'; }, 50);
+  }, 300);
+}
+
+function mostrarMapa() {
+  document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
+
+  let nodos = '';
+  for (let n = 1; n <= nochesDesbloqueadas; n++) {
+    const esNueva = (n === ultimaNocheDesbloqueadaAnimar);
+    nodos += `
+      <div class="noche-nodo ${esNueva ? 'noche-nueva' : ''}" onclick="iniciarNoche(${n})">
+        Noche ${n}
+      </div>
+    `;
+  }
+
+  contenedor.innerHTML = `<div class="mapa-noches">${nodos}</div>`;
+  ultimaNocheDesbloqueadaAnimar = null;
+}
+
+function desbloquearNoche(n) {
+  nochesDesbloqueadas = n;
+  ultimaNocheDesbloqueadaAnimar = n;
+}
+
+function iniciarNoche(n) {
+  nocheActual = n;
+
+  document.getElementById('popup-verity-img').src = `imagenes/verity-noche${n}.png`;
+  document.getElementById('verity-esquina').src = `imagenes/verity-noche${n}.png`;
+  document.getElementById('verity-esquina').style.display = 'block';
+  document.getElementById('popup-verity').classList.add('activo');
+
+  enviarEvento(EVENTOS_INICIO_NOCHE[n]);
+
+  clearTimeout(temporizadorPopup);
+  temporizadorPopup = setTimeout(cerrarPopupNoche, DURACION_POPUP_MS[n]);
+}
+
+function cerrarPopupNoche() {
+  clearTimeout(temporizadorPopup);
+  document.getElementById('popup-verity').classList.remove('activo');
+  document.body.style.backgroundImage = 'none';
+  mostrarPantalla(PANTALLA_INICIO_NOCHE[nocheActual], { saltarEventoAuto: true });
+}
+
+function saltarPopup() {
+  cerrarPopupNoche();
+}
+
+const PANTALLAS = {
 
   acto1_inicio: {
     titulo: "Noche 1 — Conociendo a Verity",
@@ -74,7 +245,6 @@ const PANTALLAS = {
       { texto: "Comenzar", siguiente: "acto1_trivia" }
     ]
   },
-
 
   acto1_uv: {
     titulo: "La luz especial",
@@ -90,7 +260,7 @@ const PANTALLAS = {
     texto: "Verity dice algo que no debería saber sobre ti...",
     eventoAuto: "acto1_cierre",
     botones: [
-      { texto: "Continuar a la Noche 2", siguiente: "acto2_inicio" }
+      { texto: "Continuar", desbloquear: 2, siguiente: "mapa" }
     ]
   },
 
@@ -125,7 +295,7 @@ const PANTALLAS = {
     texto: "Mañana es la última noche. Verity suena distinta al despedirse.",
     eventoAuto: "acto2_cierre",
     botones: [
-      { texto: "Continuar a la Noche Final", siguiente: "acto3_inicio" }
+      { texto: "Continuar", desbloquear: 3, siguiente: "mapa" }
     ]
   },
 
@@ -191,66 +361,25 @@ const PANTALLAS = {
 
 };
 
-const contenedor = document.getElementById('contenedor');
-
-function mostrarPantalla(id) {
-  // La trivia tiene su propio flujo de varias preguntas,
-  // así que no usa el renderizador genérico de PANTALLAS.
-  if (id === 'acto1_trivia') {
-    mostrarTrivia(0);
-    return;
-  }
-
-  const p = PANTALLAS[id];
-
-  contenedor.innerHTML = `
-    <h1>${p.titulo}</h1>
-    <p>${p.texto}</p>
-    <div class="botones">
-      ${p.botones.map((b, i) => `<button onclick="clicBoton('${id}', ${i})">${b.texto}</button>`).join('')}
-    </div>
-  `;
-
-  if (p.eventoAuto) enviarEvento(p.eventoAuto);
-}
-
-// =========================================================
-// TRIVIA — preguntas reales de Verity (Acto 1)
-// Edita este arreglo para cambiar las preguntas cuando quieras.
-// "correcta" es el índice (0, 1, 2...) de la opción correcta.
-// =========================================================
 const PREGUNTAS_TRIVIA = [
-  {
-    pregunta: "¿Cuántas patas tiene una araña?",
-    opciones: ["6", "8", "10"],
-    correcta: 1
-  },
-  {
-    pregunta: "¿De qué color es la sangre de un pulpo?",
-    opciones: ["Roja", "Azul", "Verde"],
-    correcta: 1
-  },
-  {
-    pregunta: "¿Cuál es el planeta más grande del sistema solar?",
-    opciones: ["Marte", "Júpiter", "Saturno"],
-    correcta: 1
-  }
+  { pregunta: "¿Cuántas patas tiene una araña?", opciones: ["6", "8", "10"], correcta: 1 },
+  { pregunta: "¿De qué color es la sangre de un pulpo?", opciones: ["Roja", "Azul", "Verde"], correcta: 1 },
+  { pregunta: "¿Cuál es el planeta más grande del sistema solar?", opciones: ["Marte", "Júpiter", "Saturno"], correcta: 1 }
 ];
 
 function mostrarTrivia(indice) {
-  // Ya respondió todas las preguntas -> seguimos con la pista UV
   if (indice >= PREGUNTAS_TRIVIA.length) {
     mostrarPantalla('acto1_uv');
     return;
   }
-
   const q = PREGUNTAS_TRIVIA[indice];
-
   contenedor.innerHTML = `
-    <h1>Trivia de Verity (${indice + 1}/${PREGUNTAS_TRIVIA.length})</h1>
-    <p>${q.pregunta}</p>
-    <div class="botones">
-      ${q.opciones.map((op, i) => `<button onclick="responderTrivia(${indice}, ${i})">${op}</button>`).join('')}
+    <div class="panel">
+      <h1>Trivia de Verity (${indice + 1}/${PREGUNTAS_TRIVIA.length})</h1>
+      <p>${q.pregunta}</p>
+      <div class="botones">
+        ${q.opciones.map((op, i) => `<button onclick="responderTrivia(${indice}, ${i})">${op}</button>`).join('')}
+      </div>
     </div>
   `;
 }
@@ -258,19 +387,45 @@ function mostrarTrivia(indice) {
 function responderTrivia(indicePregunta, indiceOpcion) {
   const q = PREGUNTAS_TRIVIA[indicePregunta];
   const esCorrecta = indiceOpcion === q.correcta;
-
   enviarEvento(esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto");
-
   mostrarTrivia(indicePregunta + 1);
+}
+
+function mostrarPantalla(id, opciones = {}) {
+  if (id === 'acto1_trivia') {
+    mostrarTrivia(0);
+    return;
+  }
+
+  document.body.style.backgroundImage = 'none';
+
+  const p = PANTALLAS[id];
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>${p.titulo}</h1>
+      <p>${p.texto}</p>
+      <div class="botones">
+        ${p.botones.map((b, i) => `<button onclick="clicBoton('${id}', ${i})">${b.texto}</button>`).join('')}
+      </div>
+    </div>
+  `;
+
+  if (p.eventoAuto && !opciones.saltarEventoAuto) enviarEvento(p.eventoAuto);
 }
 
 function clicBoton(idPantallaActual, indiceBoton) {
   const boton = PANTALLAS[idPantallaActual].botones[indiceBoton];
   if (boton.evento) enviarEvento(boton.evento);
-  mostrarPantalla(boton.siguiente);
+  if (boton.desbloquear) desbloquearNoche(boton.desbloquear);
+  irA(boton.siguiente);
 }
 
-mostrarPantalla('inicio');
+function irA(destino) {
+  if (destino === 'mapa') { mostrarMapa(); return; }
+  mostrarPantalla(destino);
+}
+
+mostrarCaja();
 </script>
 </body>
 </html>
