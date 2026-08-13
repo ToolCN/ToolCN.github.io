@@ -151,6 +151,7 @@
     width: 80%; text-align: center; text-transform: uppercase; letter-spacing: 2px;
   }
   .clave-error { color: #e74c3c; font-size: 0.9rem; margin-top: 10px; display: none; }
+  .imagen-objeto { width: 140px; height: 140px; object-fit: contain; margin: 12px 0; }
 
   /* --- Tala de árboles --- */
   .bosque { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 16px; }
@@ -177,6 +178,7 @@
 <div id="marco-respuesta"></div>
 <div id="emoji-respuesta"></div>
 <img id="verity-esquina" src="" alt="Verity">
+<audio id="musica-fondo" loop></audio>
 <div id="popup-verity" onclick="saltarPopup()">
   <img id="popup-verity-img" src="" alt="Verity activa">
   <p class="toca-continuar">Toca para continuar</p>
@@ -223,6 +225,20 @@ async function enviarEvento(nombreEvento) {
   }
 }
 
+// Sonidos que SOLO suenan en la tablet — no se mandan al Tablero,
+// no los escuchan ni el celular ni la TV.
+function reproducirSonidoLocal(nombreArchivo) {
+  const audio = new Audio(`sonidos/${nombreArchivo}`);
+  audio.play().catch(err => console.error("No se pudo reproducir sonido local:", err));
+}
+
+function iniciarMusicaFondo() {
+  const musica = document.getElementById('musica-fondo');
+  musica.src = 'sonidos/musica_fondo.mp3';
+  musica.volume = 0.15;
+  musica.play().catch(err => console.error("No se pudo iniciar la música:", err));
+}
+
 const contenedor = document.getElementById('contenedor');
 
 // =========================================================
@@ -260,6 +276,8 @@ function mostrarCaja() {
 
 function abrirCaja() {
   enviarEvento('caja_abierta');
+  reproducirSonidoLocal('caja_abierta.mp3');
+  iniciarMusicaFondo();
   const flash = document.getElementById('flash');
   flash.style.opacity = '1';
   setTimeout(() => {
@@ -370,13 +388,6 @@ const PANTALLAS = {
     titulo: "Un secreto que pocos ven",
     texto: 'Verity: "Ya te conozco un poco mejor, Bruno. Ahora yo también quiero enseñarte algo que casi nadie puede ver." Busca la lámpara UV que tienes preparada y recorre la casa con ella — hay una nota escondida que solo se revela con esa luz.',
     botones: [{ texto: "Ya encontré la nota", siguiente: "acto1_clave" }]
-  },
-
-  acto1_hacha: {
-    titulo: "¡Obtuviste un hacha!",
-    texto: 'Verity: "Con esto podrás talar madera y construir una barda para protegerte." 🪓',
-    eventoAuto: "acto1_hacha_obtenida",
-    botones: [{ texto: "Comenzar a talar", siguiente: "acto1_tala" }]
   },
 
   acto1_cierre: {
@@ -523,6 +534,8 @@ function mostrarEfectoRespuesta(esCorrecta) {
   marco.classList.add(esCorrecta ? 'correcta' : 'incorrecta');
   emoji.textContent = esCorrecta ? '✅' : '❌';
   emoji.classList.add('mostrar');
+
+  reproducirSonidoLocal(esCorrecta ? 'acto1_trivia_correcto.mp3' : 'acto1_trivia_incorrecto.mp3');
 }
 
 function responderTrivia(indicePregunta, indiceOpcion) {
@@ -539,6 +552,27 @@ function responderTrivia(indicePregunta, indiceOpcion) {
 // =========================================================
 // Clave secreta (de la nota UV)
 // =========================================================
+function mostrarHacha() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>¡Encontraste un hacha!</h1>
+      <img src="imagenes/hacha.png" alt="Hacha" class="imagen-objeto">
+      <p>Con esto podrás talar madera y construir una barda para protegerte.</p>
+      <div class="botones">
+        <button onclick="agarrarHacha()">Agarrar el hacha</button>
+      </div>
+    </div>
+  `;
+}
+
+function agarrarHacha() {
+  reproducirSonidoLocal('acto1_hacha_obtenida.mp3');
+  enviarEvento('acto1_hacha_obtenida');
+  mostrarPantalla('acto1_tala');
+}
+
 function mostrarClave() {
   contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = 'none';
@@ -601,6 +635,7 @@ function golpearArbol(indice) {
   if (estadoArboles[indice] >= GOLPES_POR_ARBOL) return;
   if (maderaRecolectada >= MADERA_OBJETIVO) return;
 
+  reproducirSonidoLocal('tala_golpe.mp3');
   estadoArboles[indice]++;
   if (estadoArboles[indice] >= GOLPES_POR_ARBOL) {
     maderaRecolectada++;
@@ -617,6 +652,7 @@ function golpearArbol(indice) {
 // Construcción de la barda
 // =========================================================
 function mostrarBarda() {
+  reproducirSonidoLocal('barda_construccion.mp3');
   contenedor.classList.remove('mapa-contenedor');
   contenedor.innerHTML = `
     <div class="panel">
@@ -644,6 +680,7 @@ function mostrarBarda() {
 // =========================================================
 function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto1_trivia') { iniciarTrivia(); return; }
+  if (id === 'acto1_hacha') { mostrarHacha(); return; }
   if (id === 'acto1_clave') { mostrarClave(); return; }
   if (id === 'acto1_tala') { iniciarTala(); return; }
   if (id === 'acto1_barda') { mostrarBarda(); return; }
