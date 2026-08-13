@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verity - Ventana</title>
+<style>
+  body { margin: 0; background: #000; overflow: hidden; }
+  video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+  }
+  #btnIniciar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 24px 48px;
+    font-size: 1.5rem;
+    border-radius: 12px;
+    border: none;
+    background: #444;
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<button id="btnIniciar">Toca para iniciar</button>
+<video id="ventana" muted playsinline></video>
+
+<script src="verity-polling.js"></script>
+<script>
+  const boton = document.getElementById('btnIniciar');
+  const video = document.getElementById('ventana');
+
+  const EVENTOS_UNA_VEZ = ["acto3_transformacion", "acto3_reto_final_exito"];
+
+  boton.addEventListener('click', () => {
+    video.src = "videos/noche_tranquila.mp4";
+    video.muted = false;
+    video.loop = true;
+    video.play().catch(() => {});
+
+    boton.style.display = 'none';
+
+    iniciarSondeo((evento) => {
+      video.src = `videos/${evento}.mp4`;
+      video.loop = !EVENTOS_UNA_VEZ.includes(evento);
+      video.play().catch(err => console.error("No se pudo reproducir:", err));
+    });
+  });
+
+  video.addEventListener('ended', () => {
+    if (!video.loop) {
+      video.src = "videos/noche_tranquila.mp4";
+      video.loop = true;
+      video.play().catch(() => {});
+    }
+  });
+</script>
+</body>
+</html>
