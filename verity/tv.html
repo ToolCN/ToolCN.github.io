@@ -7,12 +7,27 @@
 <style>
   body { margin: 0; background: #000; overflow: hidden; }
   video {
+    position: fixed;
+    inset: 0;
     width: 100vw;
     height: 100vh;
     object-fit: cover;
   }
+  #fondo-tv { z-index: 1; }
+  #efecto-tv {
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.2s;
+    mix-blend-mode: screen; /* el negro del clip se vuelve transparente */
+  }
+  #cinematica-tv {
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: #000;
+  }
   #btnIniciar {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -22,48 +37,75 @@
     border: none;
     background: #444;
     color: white;
+    z-index: 10;
   }
 </style>
 </head>
 <body>
 
 <button id="btnIniciar">Toca para iniciar</button>
-<video id="ventana" muted playsinline></video>
+
+<video id="fondo-tv" playsinline loop></video>
+<video id="efecto-tv" playsinline></video>
+<video id="cinematica-tv" playsinline></video>
 
 <script src="polling.js"></script>
 <script>
   const boton = document.getElementById('btnIniciar');
-  const video = document.getElementById('ventana');
+  const fondo = document.getElementById('fondo-tv');
+  const efecto = document.getElementById('efecto-tv');
+  const cinematica = document.getElementById('cinematica-tv');
 
-  const EVENTOS_UNA_VEZ = [
+  // Efectos cortos que aparecen ENCIMA del fondo (no lo reemplazan).
+  // El clip debe tener fondo NEGRO — se vuelve transparente solo.
+  // Puede llevar su propio sonido (chispas, estática, etc.)
+  const EVENTOS_EFECTO = {
+    "acto1_trivia_correcto":   "efectos/acto1_trivia_correcto.mp4",
+    "acto1_trivia_incorrecto": "efectos/acto1_trivia_incorrecto.mp4",
+    "acto1_pista_uv":          "efectos/acto1_pista_uv.mp4"
+  };
+
+  // Momentos grandes de una sola vez que sí tapan toda la pantalla
+  const EVENTOS_CINEMATICA = [
     "acto3_transformacion",
-    "acto3_reto_final_exito",
-    "acto1_trivia_correcto",
-    "acto1_trivia_incorrecto",
-    "acto1_pista_uv"
+    "acto3_reto_final_exito"
   ];
 
   boton.addEventListener('click', () => {
-    video.src = "videos/noche_tranquila.mp4";
-    video.muted = false;
-    video.loop = true;
-    video.play().catch(() => {});
+    fondo.src = "videos/fondo-noche1.mp4";
+    fondo.play().catch(() => {});
 
     boton.style.display = 'none';
 
     iniciarSondeo((evento) => {
-      video.src = `videos/${evento}.mp4`;
-      video.loop = !EVENTOS_UNA_VEZ.includes(evento);
-      video.play().catch(err => console.error("No se pudo reproducir:", err));
+      if (EVENTOS_CINEMATICA.includes(evento)) {
+        reproducirCinematica(evento);
+      } else if (EVENTOS_EFECTO[evento]) {
+        reproducirEfecto(EVENTOS_EFECTO[evento]);
+      }
     });
   });
 
-  video.addEventListener('ended', () => {
-    if (!video.loop) {
-      video.src = "videos/noche_tranquila.mp4";
-      video.loop = true;
-      video.play().catch(() => {});
-    }
+  function reproducirEfecto(ruta) {
+    efecto.src = ruta;
+    efecto.currentTime = 0;
+    efecto.style.opacity = '1';
+    efecto.play().catch(() => {});
+  }
+
+  efecto.addEventListener('ended', () => {
+    efecto.style.opacity = '0';
+  });
+
+  function reproducirCinematica(evento) {
+    cinematica.src = `videos/${evento}.mp4`;
+    cinematica.currentTime = 0;
+    cinematica.style.opacity = '1';
+    cinematica.play().catch(() => {});
+  }
+
+  cinematica.addEventListener('ended', () => {
+    cinematica.style.opacity = '0';
   });
 </script>
 </body>
