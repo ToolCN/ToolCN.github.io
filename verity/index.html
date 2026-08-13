@@ -24,10 +24,13 @@
     max-width: 480px;
     text-align: center;
   }
+  #contenedor.mapa-contenedor { max-width: 900px; }
+
   .panel {
     background: rgba(0, 0, 0, 0.55);
     padding: 24px;
     border-radius: 16px;
+    animation: apareceSuave 0.4s ease;
   }
   h1 { font-size: 1.4rem; margin-bottom: 16px; }
   p { font-size: 1.05rem; line-height: 1.5; color: #ddd; margin-bottom: 28px; }
@@ -42,6 +45,26 @@
   }
   button:active { background: #555; }
 
+  @keyframes apareceSuave {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Botón reiniciar --- */
+  #btn-reiniciar {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 60;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: rgba(0,0,0,0.5);
+    color: #ccc;
+  }
+
+  /* --- Flash blanco al abrir la caja --- */
   #flash {
     position: fixed;
     inset: 0;
@@ -52,6 +75,7 @@
     z-index: 200;
   }
 
+  /* --- Verity fija en la esquina --- */
   #verity-esquina {
     position: fixed;
     bottom: 14px;
@@ -65,6 +89,7 @@
     display: none;
   }
 
+  /* --- Popup de "Verity activa" al iniciar cada noche --- */
   #popup-verity {
     position: fixed;
     inset: 0;
@@ -92,40 +117,89 @@
     margin: 0;
   }
 
+  /* --- Mapa de noches --- */
   .mapa-noches {
     display: flex;
-    flex-direction: row-reverse;
-    gap: 28px;
-    justify-content: flex-end;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: flex-start;
     padding: 10px;
   }
   .noche-nodo {
-    width: 90px;
-    height: 90px;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
-    background: #333;
+    background: #2a2a2a;
+    border: 3px solid #4a4a6a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+  }
+  .noche-nodo .emoji { font-size: 2.2rem; margin-bottom: 6px; }
+  .noche-nodo .etiqueta { font-size: 1rem; }
+  .noche-nodo:active { background: #444; }
+
+  .noche-nodo.completada {
+    background: #1a1a1a;
+    border-color: #333;
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .badge-superado {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: #2e7d32;
+    color: #fff;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .85rem;
-    color: #fff;
-    cursor: pointer;
+    font-size: 1.1rem;
+    opacity: 1;
   }
-  .noche-nodo:active { background: #555; }
+  .badge-superado.recien {
+    animation: apareceBadge 0.8s ease-out;
+  }
 
-  @keyframes apareceTemblor {
-    0%   { opacity: 0; transform: translateX(20px) rotate(0deg); }
-    20%  { opacity: 1; transform: translateX(0) rotate(-4deg); }
-    40%  { transform: rotate(4deg); }
-    60%  { transform: rotate(-3deg); }
-    80%  { transform: rotate(2deg); }
-    100% { transform: rotate(0deg); }
+  @keyframes apareceBadge {
+    0%   { opacity: 0; transform: scale(0.3); }
+    60%  { opacity: 1; transform: scale(1.25); }
+    100% { opacity: 1; transform: scale(1); }
   }
-  .noche-nueva { animation: apareceTemblor 0.6s ease-out; }
+
+  @keyframes crecerDesvanecido {
+    0%   { opacity: 0;    transform: scale(0.25); filter: blur(8px); }
+    20%  { opacity: 0.2;  transform: scale(0.4);  filter: blur(7px); }
+    40%  { opacity: 0.45; transform: scale(0.65); filter: blur(5px); }
+    60%  { opacity: 0.7;  transform: scale(0.85); filter: blur(3px); }
+    80%  { opacity: 0.9;  transform: scale(1.05); filter: blur(1px); }
+    92%  { opacity: 1;    transform: scale(0.97); filter: blur(0); }
+    100% { opacity: 1;    transform: scale(1); }
+  }
+  .noche-nodo.aparece-nueva {
+    animation: crecerDesvanecido 3.2s ease-out;
+  }
+
+  /* --- Trivia --- */
+  .resumen-trivia {
+    font-size: 1.3rem;
+    letter-spacing: 6px;
+    margin-bottom: 14px;
+  }
 </style>
 </head>
 <body>
 
+<button id="btn-reiniciar" onclick="reiniciarJuego()">↺ Reiniciar</button>
 <div id="flash"></div>
 <img id="verity-esquina" src="" alt="Verity">
 <div id="popup-verity" onclick="saltarPopup()">
@@ -136,13 +210,21 @@
 <div id="contenedor"></div>
 
 <script>
+// =========================================================
+// CONFIGURACIÓN
+// =========================================================
 const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
 const CLAVE = "bruno2026";
 
-let nochesDesbloqueadas = 0;
-let ultimaNocheDesbloqueadaAnimar = null;
+// =========================================================
+// Estado de las noches: 'bloqueada' | 'activa' | 'completada'
+// =========================================================
+let estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
+let nocheEntrandoPendiente = null;   // noche que se revelará tras la pausa
+let nocheSuperadaPendiente = null;   // noche que muestra la palomita esta vez
 let nocheActual = null;
 let temporizadorPopup = null;
+let resultadosTrivia = [];
 
 const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
@@ -163,7 +245,29 @@ async function enviarEvento(nombreEvento) {
 
 const contenedor = document.getElementById('contenedor');
 
+// =========================================================
+// Reiniciar toda la aventura
+// =========================================================
+function reiniciarJuego() {
+  if (!confirm('¿Reiniciar toda la aventura desde el principio?')) return;
+
+  estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
+  nocheEntrandoPendiente = null;
+  nocheSuperadaPendiente = null;
+  resultadosTrivia = [];
+
+  document.getElementById('verity-esquina').style.display = 'none';
+  document.body.style.backgroundImage = 'none';
+  contenedor.classList.remove('mapa-contenedor');
+
+  mostrarCaja();
+}
+
+// =========================================================
+// PANTALLA 1 — La caja (inicio)
+// =========================================================
 function mostrarCaja() {
+  contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = "url('imagenes/fondo-caja.png')";
   contenedor.innerHTML = `
     <div class="panel">
@@ -182,34 +286,73 @@ function abrirCaja() {
   flash.style.opacity = '1';
 
   setTimeout(() => {
-    nochesDesbloqueadas = 1;
+    estadoNoches[1] = 'activa';
     mostrarMapa();
     setTimeout(() => { flash.style.opacity = '0'; }, 50);
   }, 300);
 }
 
+// =========================================================
+// PANTALLA 2 — El mapa (menú principal)
+// =========================================================
 function mostrarMapa() {
   document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
 
-  let nodos = '';
-  for (let n = 1; n <= nochesDesbloqueadas; n++) {
-    const esNueva = (n === ultimaNocheDesbloqueadaAnimar);
-    nodos += `
-      <div class="noche-nodo ${esNueva ? 'noche-nueva' : ''}" onclick="iniciarNoche(${n})">
-        Noche ${n}
+  dibujarMapa({ nocheSuperada: nocheSuperadaPendiente });
+
+  if (nocheEntrandoPendiente) {
+    const entrante = nocheEntrandoPendiente;
+    nocheSuperadaPendiente = null;
+    nocheEntrandoPendiente = null;
+
+    // Pausa deliberada: deja que se vea la palomita de "superada"
+    // antes de revelar la noche nueva. Aquí es donde entra el
+    // sonido de 2-5s que vas a agregar.
+    setTimeout(() => {
+      estadoNoches[entrante] = 'activa';
+      dibujarMapa({ nocheNueva: entrante });
+    }, 1300);
+  } else {
+    nocheSuperadaPendiente = null;
+  }
+}
+
+function dibujarMapa({ nocheNueva = null, nocheSuperada = null } = {}) {
+  contenedor.classList.add('mapa-contenedor');
+
+  let html = '';
+  for (let n = 1; n <= 3; n++) {
+    const estado = estadoNoches[n];
+    if (estado === 'bloqueada') continue;
+
+    const clases = ['noche-nodo'];
+    if (estado === 'completada') clases.push('completada');
+    if (n === nocheNueva) clases.push('aparece-nueva');
+
+    const clickable = estado === 'activa';
+    const badgeRecien = (estado === 'completada' && n === nocheSuperada) ? ' recien' : '';
+
+    html += `
+      <div class="${clases.join(' ')}" ${clickable ? `onclick="iniciarNoche(${n})"` : ''}>
+        <span class="emoji">🌙☁️</span>
+        <span class="etiqueta">Noche ${n}</span>
+        ${estado === 'completada' ? `<span class="badge-superado${badgeRecien}">✅</span>` : ''}
       </div>
     `;
   }
 
-  contenedor.innerHTML = `<div class="mapa-noches">${nodos}</div>`;
-  ultimaNocheDesbloqueadaAnimar = null;
+  contenedor.innerHTML = `<div class="mapa-noches">${html}</div>`;
 }
 
-function desbloquearNoche(n) {
-  nochesDesbloqueadas = n;
-  ultimaNocheDesbloqueadaAnimar = n;
+function completarNocheYDesbloquear(nTerminada, nSiguiente) {
+  estadoNoches[nTerminada] = 'completada';
+  nocheSuperadaPendiente = nTerminada;
+  nocheEntrandoPendiente = nSiguiente;
 }
 
+// =========================================================
+// Popup "Verity activa" al iniciar una noche
+// =========================================================
 function iniciarNoche(n) {
   nocheActual = n;
 
@@ -228,6 +371,7 @@ function cerrarPopupNoche() {
   clearTimeout(temporizadorPopup);
   document.getElementById('popup-verity').classList.remove('activo');
   document.body.style.backgroundImage = 'none';
+  contenedor.classList.remove('mapa-contenedor');
   mostrarPantalla(PANTALLA_INICIO_NOCHE[nocheActual], { saltarEventoAuto: true });
 }
 
@@ -235,6 +379,9 @@ function saltarPopup() {
   cerrarPopupNoche();
 }
 
+// =========================================================
+// PANTALLAS — contenido de cada noche
+// =========================================================
 const PANTALLAS = {
 
   acto1_inicio: {
@@ -247,11 +394,11 @@ const PANTALLAS = {
   },
 
   acto1_uv: {
-    titulo: "La luz especial",
-    texto: "Hay algo escondido en esta casa que no todos pueden ver.",
+    titulo: "Un secreto que pocos ven",
+    texto: 'Verity: "Ya te conozco un poco mejor, Bruno. Ahora yo también quiero enseñarte algo que casi nadie puede ver." Busca la lámpara UV que tienes preparada y recorre la casa con ella — hay una nota escondida que solo se revela con esa luz. Cuando la encuentres, toca el botón.',
     eventoAuto: "acto1_pista_uv",
     botones: [
-      { texto: "Encontré la nota", siguiente: "acto1_cierre" }
+      { texto: "Ya encontré la nota", siguiente: "acto1_cierre" }
     ]
   },
 
@@ -260,7 +407,7 @@ const PANTALLAS = {
     texto: "Verity dice algo que no debería saber sobre ti...",
     eventoAuto: "acto1_cierre",
     botones: [
-      { texto: "Continuar", desbloquear: 2, siguiente: "mapa" }
+      { texto: "Continuar", completaNoche: 1, siguienteNoche: 2, siguiente: "mapa" }
     ]
   },
 
@@ -275,7 +422,7 @@ const PANTALLAS = {
 
   acto2_inconsistencia: {
     titulo: "¿Qué cambió?",
-    texto: "[PLACEHOLDER: aquí va el reto de comparar fotos/objetos]",
+    texto: "[PLACEHOLDER: aquí va el reto de comparar fotos/objetos — falta el mismo trabajo de contexto que le dimos a la nota UV]",
     botones: [
       { texto: "La encontré", evento: "acto2_inconsistencia_hallada", siguiente: "acto2_mentira" },
       { texto: "No la encuentro (intentar de nuevo)", evento: "acto2_inconsistencia_fallada", siguiente: "acto2_inconsistencia" }
@@ -284,7 +431,7 @@ const PANTALLAS = {
 
   acto2_mentira: {
     titulo: "El detector de mentiras",
-    texto: "[PLACEHOLDER: aquí va el reto físico con el probador de continuidad]",
+    texto: "[PLACEHOLDER: aquí va el reto físico con el probador de continuidad — falta el mismo trabajo de contexto]",
     botones: [
       { texto: "Detecté la mentira", evento: "acto2_mentira_detectada", siguiente: "acto2_cierre" }
     ]
@@ -295,7 +442,7 @@ const PANTALLAS = {
     texto: "Mañana es la última noche. Verity suena distinta al despedirse.",
     eventoAuto: "acto2_cierre",
     botones: [
-      { texto: "Continuar", desbloquear: 3, siguiente: "mapa" }
+      { texto: "Continuar", completaNoche: 2, siguienteNoche: 3, siguiente: "mapa" }
     ]
   },
 
@@ -328,7 +475,7 @@ const PANTALLAS = {
 
   acto3_arma: {
     titulo: "Construye tu arma",
-    texto: "[PLACEHOLDER: aquí va el checklist del reto físico de armar]",
+    texto: "[PLACEHOLDER: aquí va el checklist del reto físico de armar — falta el mismo trabajo de contexto]",
     eventoAuto: "acto3_construir_arma",
     botones: [
       { texto: "Ya terminé mi arma", evento: "acto3_arma_lista", siguiente: "acto3_final_reto" }
@@ -361,20 +508,45 @@ const PANTALLAS = {
 
 };
 
+// =========================================================
+// TRIVIA — 6 preguntas fáciles para un niño de 7 años
+// =========================================================
 const PREGUNTAS_TRIVIA = [
-  { pregunta: "¿Cuántas patas tiene una araña?", opciones: ["6", "8", "10"], correcta: 1 },
-  { pregunta: "¿De qué color es la sangre de un pulpo?", opciones: ["Roja", "Azul", "Verde"], correcta: 1 },
-  { pregunta: "¿Cuál es el planeta más grande del sistema solar?", opciones: ["Marte", "Júpiter", "Saturno"], correcta: 1 }
+  { pregunta: "¿Cuántos días tiene una semana?", opciones: ["5", "7", "10"], correcta: 1 },
+  { pregunta: '¿Qué animal dice "muu"?', opciones: ["Perro", "Vaca", "Gato"], correcta: 1 },
+  { pregunta: "¿De qué color es el pasto?", opciones: ["Azul", "Verde", "Morado"], correcta: 1 },
+  { pregunta: "¿Cuántos dedos tienes en una mano?", opciones: ["4", "5", "6"], correcta: 1 },
+  { pregunta: "¿Qué les gusta comer a los conejos?", opciones: ["Carne", "Zanahorias", "Piedras"], correcta: 1 },
+  { pregunta: "¿En qué estación hace más frío?", opciones: ["Verano", "Invierno", "Primavera"], correcta: 1 }
 ];
+
+function iniciarTrivia() {
+  resultadosTrivia = [];
+  contenedor.innerHTML = `
+    <div class="panel">
+      <p>Verity está preparando sus preguntas...</p>
+    </div>
+  `;
+  setTimeout(() => mostrarTrivia(0), 1400);
+}
 
 function mostrarTrivia(indice) {
   if (indice >= PREGUNTAS_TRIVIA.length) {
     mostrarPantalla('acto1_uv');
     return;
   }
+
   const q = PREGUNTAS_TRIVIA[indice];
+
+  const resumen = PREGUNTAS_TRIVIA.map((_, i) => {
+    if (resultadosTrivia[i] === 'correcta') return '✅';
+    if (resultadosTrivia[i] === 'incorrecta') return '❌';
+    return '⚪';
+  }).join(' ');
+
   contenedor.innerHTML = `
     <div class="panel">
+      <div class="resumen-trivia">${resumen}</div>
       <h1>Trivia de Verity (${indice + 1}/${PREGUNTAS_TRIVIA.length})</h1>
       <p>${q.pregunta}</p>
       <div class="botones">
@@ -387,16 +559,21 @@ function mostrarTrivia(indice) {
 function responderTrivia(indicePregunta, indiceOpcion) {
   const q = PREGUNTAS_TRIVIA[indicePregunta];
   const esCorrecta = indiceOpcion === q.correcta;
+  resultadosTrivia[indicePregunta] = esCorrecta ? 'correcta' : 'incorrecta';
   enviarEvento(esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto");
   mostrarTrivia(indicePregunta + 1);
 }
 
+// =========================================================
+// Motor de navegación general
+// =========================================================
 function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto1_trivia') {
-    mostrarTrivia(0);
+    iniciarTrivia();
     return;
   }
 
+  contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = 'none';
 
   const p = PANTALLAS[id];
@@ -416,7 +593,7 @@ function mostrarPantalla(id, opciones = {}) {
 function clicBoton(idPantallaActual, indiceBoton) {
   const boton = PANTALLAS[idPantallaActual].botones[indiceBoton];
   if (boton.evento) enviarEvento(boton.evento);
-  if (boton.desbloquear) desbloquearNoche(boton.desbloquear);
+  if (boton.completaNoche) completarNocheYDesbloquear(boton.completaNoche, boton.siguienteNoche);
   irA(boton.siguiente);
 }
 
@@ -425,6 +602,7 @@ function irA(destino) {
   mostrarPantalla(destino);
 }
 
+// Arrancar en la pantalla de la caja
 mostrarCaja();
 </script>
 </body>
