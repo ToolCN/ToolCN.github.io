@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Caja de Verity</title>
+<style>
+  body {
+    background: #0a0a0a;
+    color: #eee;
+    font-family: sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  #contenedor {
+    max-width: 480px;
+    text-align: center;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 16px; }
+  p { font-size: 1.05rem; line-height: 1.5; color: #ccc; margin-bottom: 28px; }
+  .botones { display: flex; flex-direction: column; gap: 12px; }
+  button {
+    padding: 16px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    background: #333;
+    color: white;
+  }
+  button:active { background: #555; }
+</style>
+</head>
+<body>
+
+<div id="contenedor"></div>
+
+<script>
+const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
+const CLAVE = "bruno2026";
+
+async function enviarEvento(nombreEvento) {
+  if (!nombreEvento) return;
+  try {
+    await fetch(`${TABLERO_URL}?clave=${CLAVE}`, {
+      method: "POST",
+      body: JSON.stringify({ evento: nombreEvento })
+    });
+    console.log("Evento enviado:", nombreEvento);
+  } catch (error) {
+    console.error("No se pudo enviar el evento:", error);
+  }
+}
+
+const PANTALLAS = {
+
+  inicio: {
+    titulo: "La Caja de Verity",
+    texto: "Encontraste una caja extraña frente a la puerta. Adentro hay algo que parpadea suavemente.",
+    botones: [
+      { texto: "Abrir la caja", evento: "caja_abierta", siguiente: "acto1_inicio" }
+    ]
+  },
+
+  acto1_inicio: {
+    titulo: "Noche 1 — Conociendo a Verity",
+    texto: "Verity quiere conocerte mejor antes de seguir.",
+    eventoAuto: "acto1_inicio",
+    botones: [
+      { texto: "Comenzar", siguiente: "acto1_trivia" }
+    ]
+  },
+
+  acto1_trivia: {
+    titulo: "Trivia de Verity",
+    texto: "[PLACEHOLDER: aquí va la pregunta real de trivia]",
+    botones: [
+      { texto: "Respuesta correcta (prueba)", evento: "acto1_trivia_correcto", siguiente: "acto1_uv" },
+      { texto: "Respuesta incorrecta (prueba)", evento: "acto1_trivia_incorrecto", siguiente: "acto1_uv" }
+    ]
+  },
+
+  acto1_uv: {
+    titulo: "La luz especial",
+    texto: "Hay algo escondido en esta casa que no todos pueden ver.",
+    eventoAuto: "acto1_pista_uv",
+    botones: [
+      { texto: "Encontré la nota", siguiente: "acto1_cierre" }
+    ]
+  },
+
+  acto1_cierre: {
+    titulo: "Fin de la Noche 1",
+    texto: "Verity dice algo que no debería saber sobre ti...",
+    eventoAuto: "acto1_cierre",
+    botones: [
+      { texto: "Continuar a la Noche 2", siguiente: "acto2_inicio" }
+    ]
+  },
+
+  acto2_inicio: {
+    titulo: "Noche 2 — Las grietas",
+    texto: "Algo en la casa se siente diferente hoy.",
+    eventoAuto: "acto2_inicio",
+    botones: [
+      { texto: "Buscar qué cambió", siguiente: "acto2_inconsistencia" }
+    ]
+  },
+
+  acto2_inconsistencia: {
+    titulo: "¿Qué cambió?",
+    texto: "[PLACEHOLDER: aquí va el reto de comparar fotos/objetos]",
+    botones: [
+      { texto: "La encontré", evento: "acto2_inconsistencia_hallada", siguiente: "acto2_mentira" },
+      { texto: "No la encuentro (intentar de nuevo)", evento: "acto2_inconsistencia_fallada", siguiente: "acto2_inconsistencia" }
+    ]
+  },
+
+  acto2_mentira: {
+    titulo: "El detector de mentiras",
+    texto: "[PLACEHOLDER: aquí va el reto físico con el probador de continuidad]",
+    botones: [
+      { texto: "Detecté la mentira", evento: "acto2_mentira_detectada", siguiente: "acto2_cierre" }
+    ]
+  },
+
+  acto2_cierre: {
+    titulo: "Fin de la Noche 2",
+    texto: "Mañana es la última noche. Verity suena distinta al despedirse.",
+    eventoAuto: "acto2_cierre",
+    botones: [
+      { texto: "Continuar a la Noche Final", siguiente: "acto3_inicio" }
+    ]
+  },
+
+  acto3_inicio: {
+    titulo: "Noche 3 — La Transformación",
+    texto: "Es esta noche. Verity ya no puede detenerlo.",
+    eventoAuto: "acto3_inicio",
+    botones: [
+      { texto: "Comenzar", siguiente: "acto3_cuenta" }
+    ]
+  },
+
+  acto3_cuenta: {
+    titulo: "Cuenta regresiva",
+    texto: "El tiempo corre. Algo se acerca a la ventana.",
+    eventoAuto: "acto3_cuenta_regresiva_inicio",
+    botones: [
+      { texto: "Algo está pasando...", siguiente: "acto3_transformacion" }
+    ]
+  },
+
+  acto3_transformacion: {
+    titulo: "ALGO QUIERE ENTRAR",
+    texto: "Verity ya no suena como Verity.",
+    eventoAuto: "acto3_transformacion",
+    botones: [
+      { texto: "Buscar piezas para el arma", siguiente: "acto3_arma" }
+    ]
+  },
+
+  acto3_arma: {
+    titulo: "Construye tu arma",
+    texto: "[PLACEHOLDER: aquí va el checklist del reto físico de armar]",
+    eventoAuto: "acto3_construir_arma",
+    botones: [
+      { texto: "Ya terminé mi arma", evento: "acto3_arma_lista", siguiente: "acto3_final_reto" }
+    ]
+  },
+
+  acto3_final_reto: {
+    titulo: "El enfrentamiento",
+    texto: "[PLACEHOLDER: aquí va el minijuego final de la batalla]",
+    botones: [
+      { texto: "¡Atacar!", evento: "acto3_reto_final_exito", siguiente: "acto3_resolucion" }
+    ]
+  },
+
+  acto3_resolucion: {
+    titulo: "¿Bruno? ¿Sigues ahí?",
+    texto: "La ventana vuelve a la calma. La tormenta se aleja.",
+    eventoAuto: "acto3_resolucion",
+    botones: [
+      { texto: "Continuar", siguiente: "acto3_final" }
+    ]
+  },
+
+  acto3_final: {
+    titulo: "Fin del Capítulo 1",
+    texto: "Todo está bien ahora, Bruno. De verdad... ¿o eso creemos? 👀",
+    eventoAuto: "acto3_final",
+    botones: []
+  }
+
+};
+
+const contenedor = document.getElementById('contenedor');
+
+function mostrarPantalla(id) {
+  const p = PANTALLAS[id];
+
+  contenedor.innerHTML = `
+    <h1>${p.titulo}</h1>
+    <p>${p.texto}</p>
+    <div class="botones">
+      ${p.botones.map((b, i) => `<button onclick="clicBoton('${id}', ${i})">${b.texto}</button>`).join('')}
+    </div>
+  `;
+
+  if (p.eventoAuto) enviarEvento(p.eventoAuto);
+}
+
+function clicBoton(idPantallaActual, indiceBoton) {
+  const boton = PANTALLAS[idPantallaActual].botones[indiceBoton];
+  if (boton.evento) enviarEvento(boton.evento);
+  mostrarPantalla(boton.siguiente);
+}
+
+mostrarPantalla('inicio');
+</script>
+</body>
+</html>
