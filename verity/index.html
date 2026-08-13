@@ -75,14 +75,6 @@ const PANTALLAS = {
     ]
   },
 
-  acto1_trivia: {
-    titulo: "Trivia de Verity",
-    texto: "[PLACEHOLDER: aquí va la pregunta real de trivia]",
-    botones: [
-      { texto: "Respuesta correcta (prueba)", evento: "acto1_trivia_correcto", siguiente: "acto1_uv" },
-      { texto: "Respuesta incorrecta (prueba)", evento: "acto1_trivia_incorrecto", siguiente: "acto1_uv" }
-    ]
-  },
 
   acto1_uv: {
     titulo: "La luz especial",
@@ -202,6 +194,13 @@ const PANTALLAS = {
 const contenedor = document.getElementById('contenedor');
 
 function mostrarPantalla(id) {
+  // La trivia tiene su propio flujo de varias preguntas,
+  // así que no usa el renderizador genérico de PANTALLAS.
+  if (id === 'acto1_trivia') {
+    mostrarTrivia(0);
+    return;
+  }
+
   const p = PANTALLAS[id];
 
   contenedor.innerHTML = `
@@ -213,6 +212,56 @@ function mostrarPantalla(id) {
   `;
 
   if (p.eventoAuto) enviarEvento(p.eventoAuto);
+}
+
+// =========================================================
+// TRIVIA — preguntas reales de Verity (Acto 1)
+// Edita este arreglo para cambiar las preguntas cuando quieras.
+// "correcta" es el índice (0, 1, 2...) de la opción correcta.
+// =========================================================
+const PREGUNTAS_TRIVIA = [
+  {
+    pregunta: "¿Cuántas patas tiene una araña?",
+    opciones: ["6", "8", "10"],
+    correcta: 1
+  },
+  {
+    pregunta: "¿De qué color es la sangre de un pulpo?",
+    opciones: ["Roja", "Azul", "Verde"],
+    correcta: 1
+  },
+  {
+    pregunta: "¿Cuál es el planeta más grande del sistema solar?",
+    opciones: ["Marte", "Júpiter", "Saturno"],
+    correcta: 1
+  }
+];
+
+function mostrarTrivia(indice) {
+  // Ya respondió todas las preguntas -> seguimos con la pista UV
+  if (indice >= PREGUNTAS_TRIVIA.length) {
+    mostrarPantalla('acto1_uv');
+    return;
+  }
+
+  const q = PREGUNTAS_TRIVIA[indice];
+
+  contenedor.innerHTML = `
+    <h1>Trivia de Verity (${indice + 1}/${PREGUNTAS_TRIVIA.length})</h1>
+    <p>${q.pregunta}</p>
+    <div class="botones">
+      ${q.opciones.map((op, i) => `<button onclick="responderTrivia(${indice}, ${i})">${op}</button>`).join('')}
+    </div>
+  `;
+}
+
+function responderTrivia(indicePregunta, indiceOpcion) {
+  const q = PREGUNTAS_TRIVIA[indicePregunta];
+  const esCorrecta = indiceOpcion === q.correcta;
+
+  enviarEvento(esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto");
+
+  mostrarTrivia(indicePregunta + 1);
 }
 
 function clicBoton(idPantallaActual, indiceBoton) {

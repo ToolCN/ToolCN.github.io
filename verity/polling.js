@@ -11,13 +11,15 @@ const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9
 const CLAVE = "bruno2026"; // debe coincidir con CLAVE_SECRETA del Tablero
 const INTERVALO_MS = 1500;
 
-let ultimoEventoVisto = null;
+let ultimoTsVisto = 0;
 
 /**
  * Empieza a preguntarle al Tablero cada 1.5s.
  * @param {function(string)} alRecibirEvento - función que tú defines,
- *        se ejecuta solo cuando llega un evento NUEVO (no se repite
- *        aunque el Tablero siga contestando lo mismo).
+ *        se ejecuta cada vez que hay un evento NUEVO. Usamos el
+ *        timestamp (ts) para detectar "nuevo", no el nombre del
+ *        evento — así, si el mismo evento se repite (ej. varias
+ *        preguntas de trivia seguidas), sí vuelve a reaccionar.
  */
 function iniciarSondeo(alRecibirEvento) {
   setInterval(async () => {
@@ -28,9 +30,9 @@ function iniciarSondeo(alRecibirEvento) {
       if (
         datos.evento &&
         datos.evento !== "ninguno" &&
-        datos.evento !== ultimoEventoVisto
+        datos.ts !== ultimoTsVisto
       ) {
-        ultimoEventoVisto = datos.evento;
+        ultimoTsVisto = datos.ts;
         alRecibirEvento(datos.evento);
       }
     } catch (error) {
