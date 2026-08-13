@@ -71,6 +71,12 @@
     "acto3_reto_final_exito"
   ];
 
+  // Eventos que cambian el fondo de forma PERMANENTE (a diferencia
+  // de los efectos y cinemáticas, este no vuelve al fondo anterior)
+  const EVENTOS_CAMBIO_FONDO = {
+    "acto1_cierre": "videos/amanecer-noche1.mp4"
+  };
+
   boton.addEventListener('click', () => {
     fondo.src = "videos/fondo-noche1.mp4";
     fondo.play().catch(() => {});
@@ -78,13 +84,20 @@
     boton.style.display = 'none';
 
     iniciarSondeo((evento) => {
-      if (EVENTOS_CINEMATICA.includes(evento)) {
+      if (EVENTOS_CAMBIO_FONDO[evento]) {
+        cambiarFondo(EVENTOS_CAMBIO_FONDO[evento]);
+      } else if (EVENTOS_CINEMATICA.includes(evento)) {
         reproducirCinematica(evento);
       } else if (EVENTOS_EFECTO[evento]) {
         reproducirEfecto(EVENTOS_EFECTO[evento]);
       }
     });
   });
+
+  function cambiarFondo(ruta) {
+    fondo.src = ruta;
+    fondo.play().catch(() => {});
+  }
 
   function reproducirEfecto(ruta) {
     efecto.src = ruta;
