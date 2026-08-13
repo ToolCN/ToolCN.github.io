@@ -35,7 +35,13 @@
   const boton = document.getElementById('btnIniciar');
   const video = document.getElementById('ventana');
 
-  const EVENTOS_UNA_VEZ = ["acto3_transformacion", "acto3_reto_final_exito"];
+  const EVENTOS_UNA_VEZ = [
+    "acto3_transformacion",
+    "acto3_reto_final_exito",
+    "acto1_trivia_correcto",
+    "acto1_trivia_incorrecto",
+    "acto1_pista_uv"
+  ];
 
   boton.addEventListener('click', () => {
     video.src = "videos/noche_tranquila.mp4";

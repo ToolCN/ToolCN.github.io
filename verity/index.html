@@ -20,10 +20,7 @@
     box-sizing: border-box;
     position: relative;
   }
-  #contenedor {
-    max-width: 480px;
-    text-align: center;
-  }
+  #contenedor { max-width: 480px; text-align: center; }
   #contenedor.mapa-contenedor { max-width: 900px; }
 
   .panel {
@@ -50,125 +47,53 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* --- Botón reiniciar --- */
   #btn-reiniciar {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 60;
-    padding: 8px 12px;
-    font-size: 0.75rem;
-    border-radius: 8px;
-    border: 1px solid #444;
-    background: rgba(0,0,0,0.5);
-    color: #ccc;
+    position: fixed; top: 12px; right: 12px; z-index: 60;
+    padding: 8px 12px; font-size: 0.75rem; border-radius: 8px;
+    border: 1px solid #444; background: rgba(0,0,0,0.5); color: #ccc;
   }
 
-  /* --- Flash blanco al abrir la caja --- */
   #flash {
-    position: fixed;
-    inset: 0;
-    background: #fff;
-    opacity: 0;
-    transition: opacity 0.25s;
-    pointer-events: none;
-    z-index: 200;
+    position: fixed; inset: 0; background: #fff; opacity: 0;
+    transition: opacity 0.25s; pointer-events: none; z-index: 200;
   }
 
-  /* --- Verity fija en la esquina --- */
   #verity-esquina {
-    position: fixed;
-    bottom: 14px;
-    right: 14px;
-    width: 84px;
-    height: 84px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 0 14px rgba(0,0,0,.7);
-    z-index: 50;
-    display: none;
+    position: fixed; bottom: 14px; right: 14px; width: 84px; height: 84px;
+    border-radius: 50%; object-fit: cover; box-shadow: 0 0 14px rgba(0,0,0,.7);
+    z-index: 50; display: none;
   }
 
-  /* --- Popup de "Verity activa" al iniciar cada noche --- */
   #popup-verity {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.88);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    z-index: 150;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
+    position: fixed; inset: 0; background: rgba(0,0,0,.88);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s;
   }
   #popup-verity.activo { opacity: 1; pointer-events: auto; }
-  #popup-verity img {
-    width: 220px;
-    height: 220px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-  #popup-verity .toca-continuar {
-    font-size: 0.85rem;
-    color: #999;
-    margin: 0;
-  }
+  #popup-verity img { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; }
+  #popup-verity .toca-continuar { font-size: 0.85rem; color: #999; margin: 0; }
 
-  /* --- Mapa de noches --- */
   .mapa-noches {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 32px;
-    justify-content: flex-start;
-    padding: 10px;
+    display: flex; flex-direction: row; flex-wrap: wrap;
+    gap: 32px; justify-content: flex-start; padding: 10px;
   }
   .noche-nodo {
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: #2a2a2a;
-    border: 3px solid #4a4a6a;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    cursor: pointer;
-    position: relative;
+    width: 180px; height: 180px; border-radius: 50%;
+    background: #2a2a2a; border: 3px solid #4a4a6a;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; cursor: pointer; position: relative;
   }
   .noche-nodo .emoji { font-size: 2.2rem; margin-bottom: 6px; }
   .noche-nodo .etiqueta { font-size: 1rem; }
   .noche-nodo:active { background: #444; }
-
-  .noche-nodo.completada {
-    background: #1a1a1a;
-    border-color: #333;
-    cursor: default;
-    opacity: 0.5;
-  }
+  .noche-nodo.completada { background: #1a1a1a; border-color: #333; cursor: default; opacity: 0.5; }
 
   .badge-superado {
-    position: absolute;
-    top: -12px;
-    right: -12px;
-    background: #2e7d32;
-    color: #fff;
-    border-radius: 50%;
-    width: 38px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    opacity: 1;
+    position: absolute; top: -12px; right: -12px; background: #2e7d32; color: #fff;
+    border-radius: 50%; width: 38px; height: 38px; display: flex;
+    align-items: center; justify-content: center; font-size: 1.1rem; opacity: 1;
   }
-  .badge-superado.recien {
-    animation: apareceBadge 0.8s ease-out;
-  }
+  .badge-superado.recien { animation: apareceBadge 0.8s ease-out; }
 
   @keyframes apareceBadge {
     0%   { opacity: 0; transform: scale(0.3); }
@@ -185,15 +110,63 @@
     92%  { opacity: 1;    transform: scale(0.97); filter: blur(0); }
     100% { opacity: 1;    transform: scale(1); }
   }
-  .noche-nodo.aparece-nueva {
-    animation: crecerDesvanecido 3.2s ease-out;
+  .noche-nodo.aparece-nueva { animation: crecerDesvanecido 3.2s ease-out; }
+
+  .resumen-trivia { font-size: 1.3rem; letter-spacing: 6px; margin-bottom: 14px; }
+
+  /* --- Feedback visual de respuesta (marco + emoji) --- */
+  #marco-respuesta {
+    position: fixed; inset: 0; border: 16px solid transparent;
+    z-index: 90; pointer-events: none; opacity: 0;
+  }
+  #marco-respuesta.correcta { border-color: #2ecc71; animation: parpadeoMarco 1.4s ease-in-out; }
+  #marco-respuesta.incorrecta { border-color: #e74c3c; animation: parpadeoMarco 1.4s ease-in-out; }
+  @keyframes parpadeoMarco {
+    0%   { opacity: 0; }
+    10%  { opacity: 1; }
+    25%  { opacity: 0.25; }
+    40%  { opacity: 1; }
+    55%  { opacity: 0.25; }
+    70%  { opacity: 1; }
+    100% { opacity: 0; }
   }
 
-  /* --- Trivia --- */
-  .resumen-trivia {
-    font-size: 1.3rem;
-    letter-spacing: 6px;
-    margin-bottom: 14px;
+  #emoji-respuesta {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 6rem; z-index: 95; pointer-events: none; opacity: 0;
+  }
+  #emoji-respuesta.mostrar { animation: emojiRespuesta 1.4s ease-out; }
+  @keyframes emojiRespuesta {
+    0%   { transform: translate(-50%, -50%) scale(0);   opacity: 0; }
+    30%  { transform: translate(-50%, -50%) scale(1.6); opacity: 1; }
+    55%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  }
+
+  /* --- Clave secreta --- */
+  .input-clave {
+    padding: 12px; font-size: 1.1rem; border-radius: 8px;
+    border: 2px solid #555; background: #1a1a1a; color: #fff;
+    width: 80%; text-align: center; text-transform: uppercase; letter-spacing: 2px;
+  }
+  .clave-error { color: #e74c3c; font-size: 0.9rem; margin-top: 10px; display: none; }
+
+  /* --- Tala de árboles --- */
+  .bosque { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 16px; }
+  .arbol { font-size: 2.8rem; cursor: pointer; user-select: none; transition: transform 0.15s; }
+  .arbol:active { transform: scale(0.85); }
+  .arbol.talado { opacity: 0.4; cursor: default; }
+
+  /* --- Construcción de la barda --- */
+  .barda { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+  .barda span {
+    font-size: 2.2rem; display: inline-block; opacity: 0;
+    animation: apareceTronco 0.5s ease-out forwards;
+  }
+  @keyframes apareceTronco {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 </style>
 </head>
@@ -201,6 +174,8 @@
 
 <button id="btn-reiniciar" onclick="reiniciarJuego()">↺ Reiniciar</button>
 <div id="flash"></div>
+<div id="marco-respuesta"></div>
+<div id="emoji-respuesta"></div>
 <img id="verity-esquina" src="" alt="Verity">
 <div id="popup-verity" onclick="saltarPopup()">
   <img id="popup-verity-img" src="" alt="Verity activa">
@@ -216,19 +191,24 @@
 const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
 const CLAVE = "bruno2026";
 
+// Cámbiala por la palabra que vayas a escribir en la nota física con luz UV
+const CLAVE_SECRETA_NOCHE1 = "BOSQUE";
+
 // =========================================================
-// Estado de las noches: 'bloqueada' | 'activa' | 'completada'
+// Estado general
 // =========================================================
 let estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
-let nocheEntrandoPendiente = null;   // noche que se revelará tras la pausa
-let nocheSuperadaPendiente = null;   // noche que muestra la palomita esta vez
+let nocheEntrandoPendiente = null;
+let nocheSuperadaPendiente = null;
 let nocheActual = null;
 let temporizadorPopup = null;
+let alCerrarPopupActual = null;
 let resultadosTrivia = [];
 
 const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 const DURACION_POPUP_MS = { 1: 5000, 2: 5000, 3: 5000 };
+const DURACION_POPUP_UV_MS = 5000;
 
 async function enviarEvento(nombreEvento) {
   if (!nombreEvento) return;
@@ -246,7 +226,7 @@ async function enviarEvento(nombreEvento) {
 const contenedor = document.getElementById('contenedor');
 
 // =========================================================
-// Reiniciar toda la aventura
+// Reiniciar
 // =========================================================
 function reiniciarJuego() {
   if (!confirm('¿Reiniciar toda la aventura desde el principio?')) return;
@@ -264,7 +244,7 @@ function reiniciarJuego() {
 }
 
 // =========================================================
-// PANTALLA 1 — La caja (inicio)
+// PANTALLA 1 — La caja
 // =========================================================
 function mostrarCaja() {
   contenedor.classList.remove('mapa-contenedor');
@@ -273,9 +253,7 @@ function mostrarCaja() {
     <div class="panel">
       <h1>La Caja Misteriosa</h1>
       <p>Encontraste una caja extraña frente a la puerta. Parece que dentro se escuchan sonidos raros.</p>
-      <div class="botones">
-        <button onclick="abrirCaja()">Abrir la caja</button>
-      </div>
+      <div class="botones"><button onclick="abrirCaja()">Abrir la caja</button></div>
     </div>
   `;
 }
@@ -284,7 +262,6 @@ function abrirCaja() {
   enviarEvento('caja_abierta');
   const flash = document.getElementById('flash');
   flash.style.opacity = '1';
-
   setTimeout(() => {
     estadoNoches[1] = 'activa';
     mostrarMapa();
@@ -293,21 +270,16 @@ function abrirCaja() {
 }
 
 // =========================================================
-// PANTALLA 2 — El mapa (menú principal)
+// PANTALLA 2 — El mapa
 // =========================================================
 function mostrarMapa() {
   document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
-
   dibujarMapa({ nocheSuperada: nocheSuperadaPendiente });
 
   if (nocheEntrandoPendiente) {
     const entrante = nocheEntrandoPendiente;
     nocheSuperadaPendiente = null;
     nocheEntrandoPendiente = null;
-
-    // Pausa deliberada: deja que se vea la palomita de "superada"
-    // antes de revelar la noche nueva. Aquí es donde entra el
-    // sonido de 2-5s que vas a agregar.
     setTimeout(() => {
       estadoNoches[entrante] = 'activa';
       dibujarMapa({ nocheNueva: entrante });
@@ -319,19 +291,15 @@ function mostrarMapa() {
 
 function dibujarMapa({ nocheNueva = null, nocheSuperada = null } = {}) {
   contenedor.classList.add('mapa-contenedor');
-
   let html = '';
   for (let n = 1; n <= 3; n++) {
     const estado = estadoNoches[n];
     if (estado === 'bloqueada') continue;
-
     const clases = ['noche-nodo'];
     if (estado === 'completada') clases.push('completada');
     if (n === nocheNueva) clases.push('aparece-nueva');
-
     const clickable = estado === 'activa';
     const badgeRecien = (estado === 'completada' && n === nocheSuperada) ? ' recien' : '';
-
     html += `
       <div class="${clases.join(' ')}" ${clickable ? `onclick="iniciarNoche(${n})"` : ''}>
         <span class="emoji">🌙☁️</span>
@@ -340,7 +308,6 @@ function dibujarMapa({ nocheNueva = null, nocheSuperada = null } = {}) {
       </div>
     `;
   }
-
   contenedor.innerHTML = `<div class="mapa-noches">${html}</div>`;
 }
 
@@ -351,32 +318,40 @@ function completarNocheYDesbloquear(nTerminada, nSiguiente) {
 }
 
 // =========================================================
-// Popup "Verity activa" al iniciar una noche
+// Popup reutilizable de Verity (inicio de noche Y grandes
+// revelaciones a mitad de la noche, como la nota UV)
 // =========================================================
-function iniciarNoche(n) {
-  nocheActual = n;
-
-  document.getElementById('popup-verity-img').src = `imagenes/verity-noche${n}.png`;
-  document.getElementById('verity-esquina').src = `imagenes/verity-noche${n}.png`;
-  document.getElementById('verity-esquina').style.display = 'block';
+function mostrarPopupVerity(evento, duracionMs, alCerrar) {
   document.getElementById('popup-verity').classList.add('activo');
-
-  enviarEvento(EVENTOS_INICIO_NOCHE[n]);
-
+  enviarEvento(evento);
+  alCerrarPopupActual = alCerrar;
   clearTimeout(temporizadorPopup);
-  temporizadorPopup = setTimeout(cerrarPopupNoche, DURACION_POPUP_MS[n]);
+  temporizadorPopup = setTimeout(cerrarPopupVerity, duracionMs);
 }
 
-function cerrarPopupNoche() {
+function cerrarPopupVerity() {
   clearTimeout(temporizadorPopup);
   document.getElementById('popup-verity').classList.remove('activo');
-  document.body.style.backgroundImage = 'none';
-  contenedor.classList.remove('mapa-contenedor');
-  mostrarPantalla(PANTALLA_INICIO_NOCHE[nocheActual], { saltarEventoAuto: true });
+  const callback = alCerrarPopupActual;
+  alCerrarPopupActual = null;
+  if (callback) callback();
 }
 
 function saltarPopup() {
-  cerrarPopupNoche();
+  cerrarPopupVerity();
+}
+
+function iniciarNoche(n) {
+  nocheActual = n;
+  document.getElementById('popup-verity-img').src = `imagenes/verity-noche${n}.png`;
+  document.getElementById('verity-esquina').src = `imagenes/verity-noche${n}.png`;
+  document.getElementById('verity-esquina').style.display = 'block';
+
+  mostrarPopupVerity(EVENTOS_INICIO_NOCHE[n], DURACION_POPUP_MS[n], () => {
+    document.body.style.backgroundImage = 'none';
+    contenedor.classList.remove('mapa-contenedor');
+    mostrarPantalla(PANTALLA_INICIO_NOCHE[n], { saltarEventoAuto: true });
+  });
 }
 
 // =========================================================
@@ -388,41 +363,39 @@ const PANTALLAS = {
     titulo: "Noche 1 — Conociendo a Verity",
     texto: "Verity quiere conocerte mejor antes de seguir.",
     eventoAuto: "acto1_inicio",
-    botones: [
-      { texto: "Comenzar", siguiente: "acto1_trivia" }
-    ]
+    botones: [{ texto: "Comenzar", siguiente: "acto1_trivia" }]
   },
 
   acto1_uv: {
     titulo: "Un secreto que pocos ven",
-    texto: 'Verity: "Ya te conozco un poco mejor, Bruno. Ahora yo también quiero enseñarte algo que casi nadie puede ver." Busca la lámpara UV que tienes preparada y recorre la casa con ella — hay una nota escondida que solo se revela con esa luz. Cuando la encuentres, toca el botón.',
-    eventoAuto: "acto1_pista_uv",
-    botones: [
-      { texto: "Ya encontré la nota", siguiente: "acto1_cierre" }
-    ]
+    texto: 'Verity: "Ya te conozco un poco mejor, Bruno. Ahora yo también quiero enseñarte algo que casi nadie puede ver." Busca la lámpara UV que tienes preparada y recorre la casa con ella — hay una nota escondida que solo se revela con esa luz.',
+    botones: [{ texto: "Ya encontré la nota", siguiente: "acto1_clave" }]
+  },
+
+  acto1_hacha: {
+    titulo: "¡Obtuviste un hacha!",
+    texto: 'Verity: "Con esto podrás talar madera y construir una barda para protegerte." 🪓',
+    eventoAuto: "acto1_hacha_obtenida",
+    botones: [{ texto: "Comenzar a talar", siguiente: "acto1_tala" }]
   },
 
   acto1_cierre: {
     titulo: "Fin de la Noche 1",
     texto: "Verity dice algo que no debería saber sobre ti...",
     eventoAuto: "acto1_cierre",
-    botones: [
-      { texto: "Continuar", completaNoche: 1, siguienteNoche: 2, siguiente: "mapa" }
-    ]
+    botones: [{ texto: "Continuar", completaNoche: 1, siguienteNoche: 2, siguiente: "mapa" }]
   },
 
   acto2_inicio: {
     titulo: "Noche 2 — Las grietas",
     texto: "Algo en la casa se siente diferente hoy.",
     eventoAuto: "acto2_inicio",
-    botones: [
-      { texto: "Buscar qué cambió", siguiente: "acto2_inconsistencia" }
-    ]
+    botones: [{ texto: "Buscar qué cambió", siguiente: "acto2_inconsistencia" }]
   },
 
   acto2_inconsistencia: {
     titulo: "¿Qué cambió?",
-    texto: "[PLACEHOLDER: aquí va el reto de comparar fotos/objetos — falta el mismo trabajo de contexto que le dimos a la nota UV]",
+    texto: "[PLACEHOLDER: aquí va el reto de comparar fotos/objetos]",
     botones: [
       { texto: "La encontré", evento: "acto2_inconsistencia_hallada", siguiente: "acto2_mentira" },
       { texto: "No la encuentro (intentar de nuevo)", evento: "acto2_inconsistencia_fallada", siguiente: "acto2_inconsistencia" }
@@ -431,72 +404,56 @@ const PANTALLAS = {
 
   acto2_mentira: {
     titulo: "El detector de mentiras",
-    texto: "[PLACEHOLDER: aquí va el reto físico con el probador de continuidad — falta el mismo trabajo de contexto]",
-    botones: [
-      { texto: "Detecté la mentira", evento: "acto2_mentira_detectada", siguiente: "acto2_cierre" }
-    ]
+    texto: "[PLACEHOLDER: aquí va el reto físico con el probador de continuidad]",
+    botones: [{ texto: "Detecté la mentira", evento: "acto2_mentira_detectada", siguiente: "acto2_cierre" }]
   },
 
   acto2_cierre: {
     titulo: "Fin de la Noche 2",
     texto: "Mañana es la última noche. Verity suena distinta al despedirse.",
     eventoAuto: "acto2_cierre",
-    botones: [
-      { texto: "Continuar", completaNoche: 2, siguienteNoche: 3, siguiente: "mapa" }
-    ]
+    botones: [{ texto: "Continuar", completaNoche: 2, siguienteNoche: 3, siguiente: "mapa" }]
   },
 
   acto3_inicio: {
     titulo: "Noche 3 — La Transformación",
     texto: "Es esta noche. Verity ya no puede detenerlo.",
     eventoAuto: "acto3_inicio",
-    botones: [
-      { texto: "Comenzar", siguiente: "acto3_cuenta" }
-    ]
+    botones: [{ texto: "Comenzar", siguiente: "acto3_cuenta" }]
   },
 
   acto3_cuenta: {
     titulo: "Cuenta regresiva",
     texto: "El tiempo corre. Algo se acerca a la ventana.",
     eventoAuto: "acto3_cuenta_regresiva_inicio",
-    botones: [
-      { texto: "Algo está pasando...", siguiente: "acto3_transformacion" }
-    ]
+    botones: [{ texto: "Algo está pasando...", siguiente: "acto3_transformacion" }]
   },
 
   acto3_transformacion: {
     titulo: "ALGO QUIERE ENTRAR",
     texto: "Verity ya no suena como Verity.",
     eventoAuto: "acto3_transformacion",
-    botones: [
-      { texto: "Buscar piezas para el arma", siguiente: "acto3_arma" }
-    ]
+    botones: [{ texto: "Buscar piezas para el arma", siguiente: "acto3_arma" }]
   },
 
   acto3_arma: {
     titulo: "Construye tu arma",
-    texto: "[PLACEHOLDER: aquí va el checklist del reto físico de armar — falta el mismo trabajo de contexto]",
+    texto: "[PLACEHOLDER: aquí va el checklist del reto físico de armar]",
     eventoAuto: "acto3_construir_arma",
-    botones: [
-      { texto: "Ya terminé mi arma", evento: "acto3_arma_lista", siguiente: "acto3_final_reto" }
-    ]
+    botones: [{ texto: "Ya terminé mi arma", evento: "acto3_arma_lista", siguiente: "acto3_final_reto" }]
   },
 
   acto3_final_reto: {
     titulo: "El enfrentamiento",
     texto: "[PLACEHOLDER: aquí va el minijuego final de la batalla]",
-    botones: [
-      { texto: "¡Atacar!", evento: "acto3_reto_final_exito", siguiente: "acto3_resolucion" }
-    ]
+    botones: [{ texto: "¡Atacar!", evento: "acto3_reto_final_exito", siguiente: "acto3_resolucion" }]
   },
 
   acto3_resolucion: {
     titulo: "¿Bruno? ¿Sigues ahí?",
     texto: "La ventana vuelve a la calma. La tormenta se aleja.",
     eventoAuto: "acto3_resolucion",
-    botones: [
-      { texto: "Continuar", siguiente: "acto3_final" }
-    ]
+    botones: [{ texto: "Continuar", siguiente: "acto3_final" }]
   },
 
   acto3_final: {
@@ -509,7 +466,7 @@ const PANTALLAS = {
 };
 
 // =========================================================
-// TRIVIA — 6 preguntas fáciles para un niño de 7 años
+// TRIVIA (6 preguntas) + feedback visual
 // =========================================================
 const PREGUNTAS_TRIVIA = [
   { pregunta: "¿Cuántos días tiene una semana?", opciones: ["5", "7", "10"], correcta: 1 },
@@ -522,22 +479,20 @@ const PREGUNTAS_TRIVIA = [
 
 function iniciarTrivia() {
   resultadosTrivia = [];
-  contenedor.innerHTML = `
-    <div class="panel">
-      <p>Verity está preparando sus preguntas...</p>
-    </div>
-  `;
+  contenedor.innerHTML = `<div class="panel"><p>Verity está preparando sus preguntas...</p></div>`;
   setTimeout(() => mostrarTrivia(0), 1400);
 }
 
 function mostrarTrivia(indice) {
   if (indice >= PREGUNTAS_TRIVIA.length) {
-    mostrarPantalla('acto1_uv');
+    mostrarPopupVerity('acto1_pista_uv', DURACION_POPUP_UV_MS, () => {
+      document.body.style.backgroundImage = 'none';
+      mostrarPantalla('acto1_uv', { saltarEventoAuto: true });
+    });
     return;
   }
 
   const q = PREGUNTAS_TRIVIA[indice];
-
   const resumen = PREGUNTAS_TRIVIA.map((_, i) => {
     if (resultadosTrivia[i] === 'correcta') return '✅';
     if (resultadosTrivia[i] === 'incorrecta') return '❌';
@@ -556,22 +511,142 @@ function mostrarTrivia(indice) {
   `;
 }
 
+function mostrarEfectoRespuesta(esCorrecta) {
+  const marco = document.getElementById('marco-respuesta');
+  const emoji = document.getElementById('emoji-respuesta');
+
+  marco.className = '';
+  emoji.className = '';
+  void marco.offsetWidth;
+  void emoji.offsetWidth;
+
+  marco.classList.add(esCorrecta ? 'correcta' : 'incorrecta');
+  emoji.textContent = esCorrecta ? '✅' : '❌';
+  emoji.classList.add('mostrar');
+}
+
 function responderTrivia(indicePregunta, indiceOpcion) {
   const q = PREGUNTAS_TRIVIA[indicePregunta];
   const esCorrecta = indiceOpcion === q.correcta;
   resultadosTrivia[indicePregunta] = esCorrecta ? 'correcta' : 'incorrecta';
+
   enviarEvento(esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto");
-  mostrarTrivia(indicePregunta + 1);
+  mostrarEfectoRespuesta(esCorrecta);
+
+  setTimeout(() => mostrarTrivia(indicePregunta + 1), 1500);
+}
+
+// =========================================================
+// Clave secreta (de la nota UV)
+// =========================================================
+function mostrarClave() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>La clave oculta</h1>
+      <p>La nota tiene una palabra extraña escrita con luz UV. Escríbela aquí:</p>
+      <input type="text" id="input-clave" class="input-clave" autocomplete="off">
+      <div class="botones" style="margin-top:16px;">
+        <button onclick="verificarClave()">Confirmar</button>
+      </div>
+      <p id="clave-error" class="clave-error">Esa no es la clave... intenta de nuevo.</p>
+    </div>
+  `;
+}
+
+function verificarClave() {
+  const valor = document.getElementById('input-clave').value.trim().toUpperCase();
+  if (valor === CLAVE_SECRETA_NOCHE1) {
+    mostrarPantalla('acto1_hacha');
+  } else {
+    document.getElementById('clave-error').style.display = 'block';
+  }
+}
+
+// =========================================================
+// Tala de árboles (recolectar madera para la barda)
+// =========================================================
+const TOTAL_ARBOLES = 8;
+const GOLPES_POR_ARBOL = 3;
+const MADERA_OBJETIVO = 5;
+
+let estadoArboles = [];
+let maderaRecolectada = 0;
+
+function iniciarTala() {
+  estadoArboles = Array(TOTAL_ARBOLES).fill(0);
+  maderaRecolectada = 0;
+  dibujarTala();
+}
+
+function dibujarTala() {
+  contenedor.classList.remove('mapa-contenedor');
+  let arbolesHtml = '';
+  for (let i = 0; i < TOTAL_ARBOLES; i++) {
+    const talado = estadoArboles[i] >= GOLPES_POR_ARBOL;
+    arbolesHtml += `<span class="arbol ${talado ? 'talado' : ''}" onclick="golpearArbol(${i})">${talado ? '🪵' : '🌳'}</span>`;
+  }
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>Construye tu barda</h1>
+      <p>Toca los árboles varias veces para talarlos. Necesitas ${MADERA_OBJETIVO} troncos de madera.</p>
+      <p style="font-size:1.2rem;">🪵 Madera: ${maderaRecolectada} / ${MADERA_OBJETIVO}</p>
+      <div class="bosque">${arbolesHtml}</div>
+    </div>
+  `;
+}
+
+function golpearArbol(indice) {
+  if (estadoArboles[indice] >= GOLPES_POR_ARBOL) return;
+  if (maderaRecolectada >= MADERA_OBJETIVO) return;
+
+  estadoArboles[indice]++;
+  if (estadoArboles[indice] >= GOLPES_POR_ARBOL) {
+    maderaRecolectada++;
+  }
+
+  if (maderaRecolectada >= MADERA_OBJETIVO) {
+    setTimeout(() => mostrarPantalla('acto1_barda'), 500);
+  } else {
+    dibujarTala();
+  }
+}
+
+// =========================================================
+// Construcción de la barda
+// =========================================================
+function mostrarBarda() {
+  contenedor.classList.remove('mapa-contenedor');
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>Construyendo la barda</h1>
+      <p>Con la madera que recolectaste, Verity te ayuda a levantar una barda alrededor de la casa.</p>
+      <div class="barda">
+        <span style="animation-delay:0s">🪵</span>
+        <span style="animation-delay:0.3s">🪵</span>
+        <span style="animation-delay:0.6s">🪵</span>
+        <span style="animation-delay:0.9s">🪵</span>
+        <span style="animation-delay:1.2s">🪵</span>
+      </div>
+      <div class="botones" id="botones-barda" style="opacity:0; transition: opacity 0.5s;">
+        <button onclick="mostrarPantalla('acto1_cierre')">Continuar</button>
+      </div>
+    </div>
+  `;
+  setTimeout(() => {
+    document.getElementById('botones-barda').style.opacity = '1';
+  }, 1800);
 }
 
 // =========================================================
 // Motor de navegación general
 // =========================================================
 function mostrarPantalla(id, opciones = {}) {
-  if (id === 'acto1_trivia') {
-    iniciarTrivia();
-    return;
-  }
+  if (id === 'acto1_trivia') { iniciarTrivia(); return; }
+  if (id === 'acto1_clave') { mostrarClave(); return; }
+  if (id === 'acto1_tala') { iniciarTala(); return; }
+  if (id === 'acto1_barda') { mostrarBarda(); return; }
 
   contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = 'none';
@@ -602,7 +677,6 @@ function irA(destino) {
   mostrarPantalla(destino);
 }
 
-// Arrancar en la pantalla de la caja
 mostrarCaja();
 </script>
 </body>

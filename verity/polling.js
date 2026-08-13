@@ -9,7 +9,7 @@
 
 const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
 const CLAVE = "bruno2026"; // debe coincidir con CLAVE_SECRETA del Tablero
-const INTERVALO_MS = 1500;
+const INTERVALO_MS = 1000;
 
 let ultimoTsVisto = 0;
 
