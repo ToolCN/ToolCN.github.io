@@ -30,22 +30,12 @@
     font-size: 0.8rem;
     color: #555;
   }
-  #img-verity {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 20;
-    display: none;
-  }
 </style>
 </head>
 <body>
 
 <button id="btnIniciar">Toca para iniciar (conecta primero la bocina bluetooth)</button>
 <audio id="reproductor"></audio>
-<img id="img-verity" alt="Verity">
 <div id="estado">esperando...</div>
 
 <script src="polling.js"></script>
@@ -54,23 +44,16 @@
   const audio = document.getElementById('reproductor');
   const estado = document.getElementById('estado');
 
-  const imgVerity = document.getElementById('img-verity');
-
-  // Antes de que empiece cualquier noche, la cara "por defecto" es la de la Noche 1
-  let imagenVerityActual = 'imagenes/verity-noche1.png';
-
-  const EVENTOS_CAMBIO_IMAGEN = {
-    "acto1_inicio": "imagenes/verity-noche1.png",
-    "acto2_inicio": "imagenes/verity-noche2.png",
-    "acto3_inicio": "imagenes/verity-noche3.png"
-  };
-
-  // En estos eventos NO se muestra la imagen (son las reacciones
-  // rápidas de trivia, muy seguidas entre sí — se vería mal parpadeando)
-  const EVENTOS_SIN_IMAGEN = ["acto1_trivia_correcto", "acto1_trivia_incorrecto"];
+  // Recordamos qué evento se está reproduciendo para avisarle al
+  // Tablero exactamente cuándo termina ese audio.
+  let ultimoEventoReproducido = null;
 
   audio.addEventListener('ended', () => {
-    imgVerity.style.display = 'none';
+    if (!ultimoEventoReproducido) return;
+    fetch(`${TABLERO_URL}?clave=${CLAVE}`, {
+      method: "POST",
+      body: JSON.stringify({ tipo: 'audio_terminado', evento: ultimoEventoReproducido })
+    }).catch(err => console.error("No se pudo avisar fin de audio:", err));
   });
 
   boton.addEventListener('click', () => {
@@ -81,18 +64,17 @@
     estado.textContent = 'conectado, esperando eventos...';
 
     iniciarSondeo((evento) => {
-      if (EVENTOS_CAMBIO_IMAGEN[evento]) {
-        imagenVerityActual = EVENTOS_CAMBIO_IMAGEN[evento];
+      if (evento === 'reiniciar_todo') {
+        audio.pause();
+        audio.currentTime = 0;
+        ultimoEventoReproducido = null;
+        estado.textContent = 'reiniciado, esperando eventos...';
+        return;
       }
 
       estado.textContent = `reproduciendo: ${evento}`;
+      ultimoEventoReproducido = evento;
       audio.src = `audios/${evento}.mp3`;
-
-      if (!EVENTOS_SIN_IMAGEN.includes(evento)) {
-        imgVerity.src = imagenVerityActual;
-        imgVerity.style.display = 'block';
-      }
-
       audio.play().catch(err => console.error("No se pudo reproducir:", err));
     });
   });

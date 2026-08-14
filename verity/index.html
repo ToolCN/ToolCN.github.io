@@ -203,15 +203,16 @@ let estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
 let nocheEntrandoPendiente = null;
 let nocheSuperadaPendiente = null;
 let nocheActual = null;
-let temporizadorPopup = null;
 let alCerrarPopupActual = null;
+let cancelarEsperaActual = null;
 let resultadosTrivia = [];
 
 const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
-const DURACION_POPUP_MS = { 1: 5000, 2: 5000, 3: 5000 };
-const DURACION_POPUP_UV_MS = 5000;
-const DURACION_APERTURA_MS = 8000; // ajusta cuando tengas el audio real de caja_abierta.mp3
+
+// Tiempo máximo que espera el popup por si el celular no avisa
+// que terminó el audio (celular apagado, sin conexión, etc.)
+const ESPERA_MAXIMA_MS = 20000;
 
 async function enviarEvento(nombreEvento) {
   if (!nombreEvento) return;
@@ -248,7 +249,7 @@ const contenedor = document.getElementById('contenedor');
 function reiniciarJuego() {
   if (!confirm('¿Reiniciar toda la aventura desde el principio?')) return;
 
-  enviarEvento('ninguno'); // avisa al Tablero para que celular/TV no revivan un evento viejo
+  enviarEvento('reiniciar_todo'); // avisa a celular y TV para que también reinicien
 
   estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
   nocheEntrandoPendiente = null;
@@ -287,7 +288,7 @@ function abrirCaja() {
     flash.style.opacity = '0';
     document.getElementById('popup-verity-img').src = 'imagenes/verity-noche1.png';
 
-    mostrarPopupVerity('caja_abierta', DURACION_APERTURA_MS, () => {
+    mostrarPopupVerity('caja_abierta', () => {
       estadoNoches[1] = 'activa';
       mostrarMapa();
     });
@@ -346,16 +347,46 @@ function completarNocheYDesbloquear(nTerminada, nSiguiente) {
 // Popup reutilizable de Verity (inicio de noche Y grandes
 // revelaciones a mitad de la noche, como la nota UV)
 // =========================================================
-function mostrarPopupVerity(evento, duracionMs, alCerrar) {
+function mostrarPopupVerity(evento, alCerrar) {
   document.getElementById('popup-verity').classList.add('activo');
   enviarEvento(evento);
   alCerrarPopupActual = alCerrar;
-  clearTimeout(temporizadorPopup);
-  temporizadorPopup = setTimeout(cerrarPopupVerity, duracionMs);
+  esperarFinDeAudio(evento);
+}
+
+// Pregunta cada 0.5s si el celular ya avisó que terminó ese audio.
+// Si no avisa en ESPERA_MAXIMA_MS, cierra el popup de todos modos.
+function esperarFinDeAudio(eventoEsperado) {
+  let yaTermino = false;
+
+  const intervalo = setInterval(async () => {
+    if (yaTermino) return;
+    try {
+      const resp = await fetch(`${TABLERO_URL}?clave=${CLAVE}`);
+      const datos = await resp.json();
+      if (datos.audioTerminado === eventoEsperado) {
+        terminarEspera();
+      }
+    } catch (err) {
+      console.error("Error esperando fin de audio:", err);
+    }
+  }, 500);
+
+  const limiteSeguridad = setTimeout(terminarEspera, ESPERA_MAXIMA_MS);
+
+  function terminarEspera() {
+    if (yaTermino) return;
+    yaTermino = true;
+    clearInterval(intervalo);
+    clearTimeout(limiteSeguridad);
+    cancelarEsperaActual = null;
+    cerrarPopupVerity();
+  }
+
+  cancelarEsperaActual = terminarEspera;
 }
 
 function cerrarPopupVerity() {
-  clearTimeout(temporizadorPopup);
   document.getElementById('popup-verity').classList.remove('activo');
   const callback = alCerrarPopupActual;
   alCerrarPopupActual = null;
@@ -363,7 +394,11 @@ function cerrarPopupVerity() {
 }
 
 function saltarPopup() {
-  cerrarPopupVerity();
+  if (cancelarEsperaActual) {
+    cancelarEsperaActual();
+  } else {
+    cerrarPopupVerity();
+  }
 }
 
 function iniciarNoche(n) {
@@ -372,7 +407,7 @@ function iniciarNoche(n) {
   document.getElementById('verity-esquina').src = `imagenes/verity-noche${n}.png`;
   document.getElementById('verity-esquina').style.display = 'block';
 
-  mostrarPopupVerity(EVENTOS_INICIO_NOCHE[n], DURACION_POPUP_MS[n], () => {
+  mostrarPopupVerity(EVENTOS_INICIO_NOCHE[n], () => {
     document.body.style.backgroundImage = 'none';
     contenedor.classList.remove('mapa-contenedor');
     mostrarPantalla(PANTALLA_INICIO_NOCHE[n], { saltarEventoAuto: true });
@@ -503,7 +538,7 @@ function iniciarTrivia() {
 
 function mostrarTrivia(indice) {
   if (indice >= PREGUNTAS_TRIVIA.length) {
-    mostrarPopupVerity('acto1_pista_uv', DURACION_POPUP_UV_MS, () => {
+    mostrarPopupVerity('acto1_pista_uv', () => {
       document.body.style.backgroundImage = 'none';
       mostrarPantalla('acto1_uv', { saltarEventoAuto: true });
     });
