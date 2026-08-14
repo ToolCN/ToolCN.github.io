@@ -1,752 +1,1307 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ToolCN — Portal de Aplicaciones</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Caja de Verity</title>
+<style>
+  body {
+    background: #0a0a0a;
+    background-size: cover;
+    background-position: center;
+    color: #eee;
+    font-family: sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+  }
+  #contenedor { max-width: 480px; text-align: center; }
+  #contenedor.mapa-contenedor { max-width: 900px; }
 
-  <link rel="manifest" href='data:application/manifest+json,{"name":"ToolCN","short_name":"ToolCN","display":"standalone","background_color":"#0a0f1e","theme_color":"#00d4ff","icons":[{"src":"https://i.imgur.com/OgCXcvt.png","sizes":"512x512","type":"image/png"}]}'>
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="ToolCN">
-  <meta name="theme-color" content="#00d4ff">
-  <link rel="apple-touch-icon" href="https://i.imgur.com/OgCXcvt.png">
-  <link rel="icon" type="image/png" href="https://i.imgur.com/OgCXcvt.png">
+  .panel {
+    background: rgba(0, 0, 0, 0.55);
+    padding: 24px;
+    border-radius: 16px;
+    animation: apareceSuave 0.4s ease;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 16px; }
+  p { font-size: 1.05rem; line-height: 1.5; color: #ddd; margin-bottom: 28px; }
+  .botones { display: flex; flex-direction: column; gap: 12px; }
+  button {
+    padding: 16px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    background: #333;
+    color: white;
+  }
+  button:active { background: #555; }
+  .botones button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+  @keyframes apareceSuave {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-  <style>
-    :root {
-      --bg:      #0a0f1e;
-      --border:  #1a2a4a;
-      --accent:  #00d4ff;
-      --accent2: #ff6b35;
-      --text:    #c8d8f0;
-      --dim:     #5a7a9a;
-      --success: #00ff9d;
-      --card-bg: #0f1a30;
-    }
+  #btn-reiniciar {
+    position: fixed; top: 12px; right: 12px; z-index: 60;
+    padding: 8px 12px; font-size: 0.75rem; border-radius: 8px;
+    border: 1px solid #444; background: rgba(0,0,0,0.5); color: #ccc;
+  }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  #flash {
+    position: fixed; inset: 0; background: #fff; opacity: 0;
+    transition: opacity 0.25s; pointer-events: none; z-index: 200;
+  }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Exo 2', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+  #verity-esquina {
+    position: fixed; bottom: 14px; right: 14px; width: 84px; height: 84px;
+    border-radius: 50%; object-fit: cover; box-shadow: 0 0 14px rgba(0,0,0,.7);
+    z-index: 50; display: none;
+  }
 
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background:
-        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0,212,255,0.07) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 60%);
-      pointer-events: none; z-index: 0;
-    }
+  #popup-verity {
+    position: fixed; inset: 0; background: rgba(0,0,0,.88);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  #popup-verity.activo { opacity: 1; }
+  #popup-verity img { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; }
 
-    body::after {
-      content: '';
-      position: fixed; inset: 0;
-      background-image:
-        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none; z-index: 0;
-      animation: gridPulse 8s ease-in-out infinite;
-    }
+  .mapa-noches {
+    display: flex; flex-direction: row; flex-wrap: wrap;
+    gap: 32px; justify-content: flex-start; padding: 10px;
+  }
+  .noche-nodo {
+    width: 180px; height: 180px; border-radius: 50%;
+    background: #2a2a2a; border: 3px solid #4a4a6a;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; cursor: pointer; position: relative;
+  }
+  .noche-nodo .emoji { font-size: 2.2rem; margin-bottom: 6px; }
+  .noche-nodo .etiqueta { font-size: 1rem; }
+  .noche-nodo:active { background: #444; }
+  .noche-nodo.completada { background: #1a1a1a; border-color: #333; cursor: default; opacity: 0.5; }
 
-    @keyframes gridPulse {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.4; }
-    }
+  .badge-superado {
+    position: absolute; top: -12px; right: -12px; background: #2e7d32; color: #fff;
+    border-radius: 50%; width: 38px; height: 38px; display: flex;
+    align-items: center; justify-content: center; font-size: 1.1rem; opacity: 1;
+  }
+  .badge-superado.recien { animation: apareceBadge 0.8s ease-out; }
 
-    .particle {
-      position: fixed;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      animation: floatUp linear infinite;
-      opacity: 0;
-    }
+  @keyframes apareceBadge {
+    0%   { opacity: 0; transform: scale(0.3); }
+    60%  { opacity: 1; transform: scale(1.25); }
+    100% { opacity: 1; transform: scale(1); }
+  }
 
-    @keyframes floatUp {
-      0%   { transform: translateY(100vh); opacity: 0; }
-      10%  { opacity: 0.7; }
-      90%  { opacity: 0.2; }
-      100% { transform: translateY(-80px); opacity: 0; }
-    }
+  @keyframes crecerDesvanecido {
+    0%   { opacity: 0;    transform: scale(0.25); filter: blur(8px); }
+    20%  { opacity: 0.2;  transform: scale(0.4);  filter: blur(7px); }
+    40%  { opacity: 0.45; transform: scale(0.65); filter: blur(5px); }
+    60%  { opacity: 0.7;  transform: scale(0.85); filter: blur(3px); }
+    80%  { opacity: 0.9;  transform: scale(1.05); filter: blur(1px); }
+    92%  { opacity: 1;    transform: scale(0.97); filter: blur(0); }
+    100% { opacity: 1;    transform: scale(1); }
+  }
+  .noche-nodo.aparece-nueva { animation: crecerDesvanecido 3.2s ease-out; }
 
-    .bubble {
-      position: fixed;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0;
-      overflow: hidden;
-      animation: bubbleFloat linear infinite;
-    }
+  .resumen-trivia { font-size: 1.3rem; letter-spacing: 6px; margin-bottom: 14px; }
 
-    @keyframes bubbleFloat {
-      0%   { transform: translateY(110vh); opacity: 0; }
-      7%   { opacity: 0.15; }
-      50%  { opacity: 0.12; }
-      88%  { opacity: 0.06; }
-      100% { transform: translateY(-360px); opacity: 0; }
-    }
+  #marco-respuesta {
+    position: fixed; inset: 0; border: 16px solid transparent;
+    z-index: 90; pointer-events: none; opacity: 0;
+  }
+  #marco-respuesta.correcta { border-color: #2ecc71; animation: parpadeoMarco 1.4s ease-in-out; }
+  #marco-respuesta.incorrecta { border-color: #e74c3c; animation: parpadeoMarco 1.4s ease-in-out; }
+  @keyframes parpadeoMarco {
+    0%   { opacity: 0; }
+    10%  { opacity: 1; }
+    25%  { opacity: 0.25; }
+    40%  { opacity: 1; }
+    55%  { opacity: 0.25; }
+    70%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
 
-    .wrap {
-      position: relative; z-index: 1;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 20px 60px;
-    }
+  #emoji-respuesta {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 6rem; z-index: 95; pointer-events: none; opacity: 0;
+  }
+  #emoji-respuesta.mostrar { animation: emojiRespuesta 1.4s ease-out; }
+  @keyframes emojiRespuesta {
+    0%   { transform: translate(-50%, -50%) scale(0);   opacity: 0; }
+    30%  { transform: translate(-50%, -50%) scale(1.6); opacity: 1; }
+    55%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  }
 
-    header {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 32px 0 24px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 52px;
-      animation: fadeDown 0.7s ease both;
-    }
+  .input-clave {
+    padding: 12px; font-size: 1.1rem; border-radius: 8px;
+    border: 2px solid #555; background: #1a1a1a; color: #fff;
+    width: 80%; text-align: center; text-transform: uppercase; letter-spacing: 2px;
+  }
+  .clave-error { color: #e74c3c; font-size: 0.9rem; margin-top: 10px; display: none; }
+  .imagen-objeto { width: 140px; height: 140px; object-fit: contain; margin: 12px 0; }
 
-    .logo-box {
-      position: relative;
-      flex-shrink: 0;
-      padding: 3px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), #0a0f1e, var(--accent2));
-      background-size: 300% 300%;
-      animation: gradShift 4s ease infinite;
-    }
+  .panel-crafteo {
+    position: relative; z-index: 10;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 24px; border-radius: 16px;
+    max-width: 700px; margin: 0 auto; text-align: center;
+  }
+  .crafteo-contenido {
+    display: flex; align-items: center; justify-content: center;
+    gap: 24px; margin-top: 16px; flex-wrap: wrap;
+  }
+  .cuadricula-crafteo {
+    display: grid;
+    grid-template-columns: repeat(3, 96px);
+    grid-template-rows: repeat(3, 96px);
+    gap: 10px;
+  }
+  .celda-crafteo {
+    width: 96px; height: 96px;
+    background: #222; border: 2px solid #444; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.2rem; cursor: pointer;
+  }
+  .celda-crafteo.llena { background: #3a3a1a; border-color: #6a6a2a; }
+  .cuadricula-crafteo.patron .celda-patron {
+    width: 96px; height: 96px;
+    background: #1a1a1a; border: 2px dashed #555; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.2rem; opacity: 0.85;
+  }
+  .flecha-crafteo { font-size: 2rem; }
 
-    @keyframes gradShift {
-      0%,100% { background-position: 0% 50%; }
-      50%      { background-position: 100% 50%; }
-    }
+  .panel-tala {
+    position: relative; z-index: 10;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 20px; border-radius: 16px;
+    max-width: 420px; margin: 0 auto; text-align: center;
+  }
+  .bosque-pantalla { position: fixed; inset: 0; z-index: 5; }
+  .arbol {
+    position: absolute; font-size: 5.6rem; cursor: pointer;
+    user-select: none; transition: transform 0.15s;
+    transform: translate(-50%, -50%);
+  }
+  .arbol:active { transform: translate(-50%, -50%) scale(0.85); }
+  .arbol.talado { opacity: 0.4; cursor: default; }
 
-    .logo-box img {
-      display: block;
-      height: 68px;
-      width: auto;
-      border-radius: 12px;
-      object-fit: contain;
-      background: #0a0f1e;
-    }
+  .barda { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+  .barda span {
+    font-size: 2.2rem; display: inline-block; opacity: 0;
+    animation: apareceTronco 0.5s ease-out forwards;
+  }
+  @keyframes apareceTronco {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-    .header-text h1 {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 2.6rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: #fff;
-      text-transform: uppercase;
-      line-height: 1;
-    }
+  .fila-simbolos {
+    display: flex; justify-content: center; gap: 14px; margin: 16px 0;
+  }
+  .simbolo-objetivo, .simbolo-opcion {
+    width: 60px; height: 60px;
+    background: #222; border: 2px solid #444; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+  }
+  .simbolo-objetivo.hecho { background: #1a3a1a; border-color: #2e7d32; }
+  .simbolo-opcion { cursor: pointer; }
+  .simbolo-opcion:active { transform: scale(0.9); }
 
-    @keyframes glitchOut {
-      0%   { filter: blur(0px)  brightness(1);   transform: translateX(0)   skewX(0deg);   opacity: 1; }
-      10%  { filter: blur(1px)  brightness(1.4); transform: translateX(-4px) skewX(-3deg); opacity: 1; }
-      20%  { filter: blur(0px)  brightness(0.8); transform: translateX(5px)  skewX(3deg);  opacity: 1; }
-      30%  { filter: blur(2px)  brightness(1.6); transform: translateX(-3px) skewX(-2deg); opacity: 0.9; }
-      40%  { filter: blur(0px)  brightness(1);   transform: translateX(4px)  skewX(2deg);  opacity: 0.8; }
-      55%  { filter: blur(4px)  brightness(2);   transform: translateX(-6px) skewX(-5deg); opacity: 0.6;
-             text-shadow: 6px 0 #00d4ff, -6px 0 #ff6b35; }
-      70%  { filter: blur(8px)  brightness(1.2); transform: translateX(3px)  skewX(4deg);  opacity: 0.4; }
-      85%  { filter: blur(16px) brightness(0.5); transform: translateX(0)   skewX(0deg);  opacity: 0.2; }
-      100% { filter: blur(24px) brightness(0);   transform: scale(1.05);                  opacity: 0; }
-    }
-
-    @keyframes glitchIn {
-      0%   { filter: blur(24px) brightness(0);   transform: scale(0.95) skewX(0deg);  opacity: 0; }
-      15%  { filter: blur(16px) brightness(0.5); transform: scale(1)    skewX(4deg);  opacity: 0.2; }
-      30%  { filter: blur(8px)  brightness(1.8); transform: scale(1.02) skewX(-3deg); opacity: 0.5;
-             text-shadow: -5px 0 #ff6b35, 5px 0 #00d4ff; }
-      45%  { filter: blur(4px)  brightness(1.4); transform: scale(1)    skewX(2deg);  opacity: 0.7; }
-      58%  { filter: blur(2px)  brightness(1.2); transform: translateX(-3px) skewX(-1deg); opacity: 0.85; }
-      70%  { filter: blur(1px)  brightness(1.1); transform: translateX(2px)  skewX(1deg);  opacity: 0.9; }
-      82%  { filter: blur(0px)  brightness(1.3); transform: translateX(-1px) skewX(0deg);  opacity: 0.95; }
-      91%  { filter: blur(0px)  brightness(1.05); transform: translateX(1px);               opacity: 1; }
-      100% { filter: blur(0px)  brightness(1);   transform: translateX(0) skewX(0deg);     opacity: 1; }
-    }
-
-    @keyframes logoOut {
-      0%   { filter: blur(0px)  brightness(1) saturate(1);  transform: scale(1)    rotate(0deg);   opacity: 1; }
-      25%  { filter: blur(2px)  brightness(1.5) saturate(2); transform: scale(1.05) rotate(-2deg); opacity: 0.8; }
-      50%  { filter: blur(6px)  brightness(2) saturate(3);  transform: scale(0.95) rotate(3deg);   opacity: 0.5; }
-      75%  { filter: blur(14px) brightness(0.8) saturate(0); transform: scale(1.1) rotate(-1deg);   opacity: 0.2; }
-      100% { filter: blur(20px) brightness(0);               transform: scale(0.9) rotate(0deg);    opacity: 0; }
-    }
-
-    @keyframes logoIn {
-      0%   { filter: blur(20px) brightness(0);               transform: scale(1.1) rotate(0deg);   opacity: 0; }
-      25%  { filter: blur(10px) brightness(1.8) saturate(3); transform: scale(0.95) rotate(2deg);  opacity: 0.3; }
-      50%  { filter: blur(4px)  brightness(1.4) saturate(2); transform: scale(1.04) rotate(-1deg); opacity: 0.6; }
-      75%  { filter: blur(1px)  brightness(1.1) saturate(1); transform: scale(1.01) rotate(0deg);  opacity: 0.9; }
-      100% { filter: blur(0px)  brightness(1)   saturate(1); transform: scale(1)    rotate(0deg);  opacity: 1; }
-    }
-
-    .header-text h1 span { color: var(--accent); }
-    .ac { color: var(--accent); }
-
-    .header-text p {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--dim);
-      letter-spacing: 0.2em;
-      margin-top: 6px;
-      text-transform: uppercase;
-    }
-
-    .status-pill {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(0,255,157,0.08);
-      border: 1px solid rgba(0,255,157,0.25);
-      padding: 7px 16px;
-      border-radius: 20px;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--success);
-      letter-spacing: 0.15em;
-      white-space: nowrap;
-    }
-
-    .status-pill::before {
-      content: '';
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 8px var(--success);
-      animation: blink 2s ease infinite;
-    }
-
-    .section-label {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.65rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: #fff;
-      text-transform: uppercase;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .label-bar {
-      width: 5px; height: 28px;
-      border-radius: 3px;
-      flex-shrink: 0;
-    }
-
-    .section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, var(--border), transparent);
-      margin-left: 8px;
-    }
-
-    .apps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: 16px;
-      margin-bottom: 50px;
-    }
-
-    .app-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px 20px;
-      cursor: pointer;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    .app-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--c, var(--accent)), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .app-card::after {
-      content: '';
-      position: absolute;
-      top: -100%; left: 0; right: 0;
-      height: 50%;
-      background: linear-gradient(180deg, transparent, rgba(255,255,255,0.03), transparent);
-      transition: top 0.6s ease;
-    }
-
-    .app-card:hover { transform: translateY(-5px) scale(1.015); }
-    .app-card:hover::before { opacity: 1; }
-    .app-card:hover::after  { top: 160%; }
-
-    .cat-quick  { --c: #e2e8f0; }
-    .cat-report { --c: #f59e0b; }
-    .cat-prod   { --c: #00d4ff; }
-    .cat-mant   { --c: #ff6b35; }
-    .cat-rrhh   { --c: #a855f7; }
-    .cat-comp   { --c: #22c55e; }
-    .cat-admin  { --c: #6366f1; }
-    .cat-bita   { --c: #14b8a6; }
-    .cat-pend   { --c: #64748b; opacity: 0.5; cursor: not-allowed; }
-
-    .app-card:hover { border-color: var(--c, var(--accent)); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px color-mix(in srgb, var(--c, var(--accent)) 20%, transparent); }
-
-    .app-card:nth-child(1){animation-delay:.05s}
-    .app-card:nth-child(2){animation-delay:.10s}
-    .app-card:nth-child(3){animation-delay:.15s}
-    .app-card:nth-child(4){animation-delay:.20s}
-    .app-card:nth-child(5){animation-delay:.25s}
-    .app-card:nth-child(6){animation-delay:.30s}
-
-    .app-icon {
-      width: 54px; height: 54px;
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.7rem;
-      flex-shrink: 0;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
-      transition: transform 0.3s ease;
-    }
-
-    .app-card:hover .app-icon { transform: scale(1.18) rotate(-6deg); }
-
-    .app-info { flex: 1; min-width: 0; }
-
-    .app-name {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #fff;
-      letter-spacing: 0.05em;
-    }
-
-    .app-desc {
-      font-size: 0.75rem;
-      color: var(--dim);
-      margin-top: 3px;
-    }
-
-    .app-arrow {
-      font-size: 1.2rem;
-      color: var(--dim);
-      transition: transform 0.3s, color 0.3s;
-      flex-shrink: 0;
-    }
-
-    .app-card:hover .app-arrow { transform: translateX(6px); color: var(--c, var(--accent)); }
-
-    #monito {
-      position: fixed;
-      width: 100px;
-      z-index: 9999;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
-
-    #monito img {
-      width: 100%;
-      border-radius: 14px;
-      filter: drop-shadow(0 4px 20px rgba(0,212,255,0.5));
-    }
-
-    #monito.visible { opacity: 1; }
-
-    @keyframes bounce {
-      0%,100% { transform: translateY(0) rotate(-4deg) scale(1); }
-      50%      { transform: translateY(-14px) rotate(4deg) scale(1.05); }
-    }
-
-    #monito.visible img { animation: bounce 0.7s ease-in-out infinite; }
-
-    footer {
-      border-top: 1px solid var(--border);
-      padding-top: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    footer span {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--dim);
-      letter-spacing: 0.15em;
-    }
-
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes blink {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.2; }
-    }
-
-    @media (max-width: 560px) {
-      .header-text h1 { font-size: 1.9rem; }
-      .status-pill { display: none; }
-      .apps-grid { grid-template-columns: 1fr; }
-      .section-label { font-size: 1.2rem; }
-    }
-
-    #wa-float {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: #25D366;
-      color: #fff;
-      text-decoration: none;
-      padding: 10px 20px 10px 14px;
-      border-radius: 30px;
-      font-family: 'Exo 2', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      box-shadow: 0 4px 18px rgba(37,211,102,0.45);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    #wa-float:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(37,211,102,0.65);
-    }
-  </style>
+  .grid-laberinto {
+    display: grid;
+    grid-template-columns: repeat(5, 52px);
+    grid-template-rows: repeat(5, 52px);
+    gap: 4px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .celda-laberinto {
+    width: 52px; height: 52px;
+    background: #222; border: 1px solid #444;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; cursor: pointer;
+  }
+  .celda-laberinto.andado { background: #1a3a1a; }
+</style>
 </head>
 <body>
 
-<div id="particles"></div>
-<div id="monito"><img src="https://i.imgur.com/7zY7EUQ.jpeg" alt="sorpresa"></div>
-
-<div class="wrap">
-
-  <header>
-    <div class="logo-box" id="logoBox">
-      <img id="logoImg" src="https://i.imgur.com/OgCXcvt.png" alt="ToolCN">
-    </div>
-    <div class="header-text">
-      <h1 id="mainTitle"><span id="titleText">Tool<span class="ac">CN</span></span></h1>
-      <p>Planta Querétaro</p>
-    </div>
-    <div class="status-pill">Sistemas en línea</div>
-  </header>
-
-  <!-- ACCESOS RÁPIDOS -->
-  <div class="section-label">
-    <div class="label-bar" style="background:#e2e8f0;box-shadow:0 0 12px #e2e8f0"></div>
-    ⚡ Accesos Rápidos
-  </div>
-  <div class="apps-grid">
-    <a class="app-card cat-comp" href="https://script.google.com/macros/s/AKfycbwfFeYJH_yTFekAaSrwdzSlZt10gLfu2cVEb00V5gQ5U1lT1QGs1h8FQHYdTJZ3KY9Zlw/exec?v=existencia" target="_blank" rel="noopener">
-      <div class="app-icon">🌀</div>
-      <div class="app-info"><div class="app-name">Materia Prima</div><div class="app-desc">Existencias e inventario de alambrón</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-mant" href="https://script.google.com/macros/s/AKfycbx273ySyjkgZQLWbdutrI_ugrc9Qeb7MPfFEQHqvxrjq6KqCICFZeTa6xLjudTos7qcOw/exec?v=mantenimiento" target="_blank" rel="noopener">
-      <div class="app-icon">📝</div>
-      <div class="app-info"><div class="app-name">Generar Orden</div><div class="app-desc">Crear nueva orden de trabajo</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-comp" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=requisicion" target="_blank" rel="noopener">
-      <div class="app-icon">📋</div>
-      <div class="app-info"><div class="app-name">Generar Requisición</div><div class="app-desc">Generación de requisiciones</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-pend">
-      <div class="app-icon">📦</div>
-      <div class="app-info"><div class="app-name">Rastreo de Pedidos</div><div class="app-desc">URL pendiente de configurar</div></div>
-      <div class="app-arrow">⏳</div>
-    </a>
-    <a class="app-card cat-prod" href="https://script.google.com/macros/s/AKfycbyDxTSHPygL1Ba93kHFisiInmZZf6zHM63jOHfqPGv45bdbOJ1Av2lg-DigAGjH50Co1w/exec?page=lotemaster" target="_blank" rel="noopener">
-      <div class="app-icon">🖨️</div>
-      <div class="app-info"><div class="app-name">Impresión Documentos</div><div class="app-desc">Impresión de documentos de producción</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-prod" href="https://script.google.com/macros/s/AKfycbwfFeYJH_yTFekAaSrwdzSlZt10gLfu2cVEb00V5gQ5U1lT1QGs1h8FQHYdTJZ3KY9Zlw/exec?v=salidacajas" target="_blank" rel="noopener">
-      <div class="app-icon">📤</div>
-      <div class="app-info"><div class="app-name">Salida Insumos</div><div class="app-desc">Registro de salida de insumos</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-  </div>
-
-  <!-- BITÁCORAS -->
-  <div class="section-label">
-    <div class="label-bar" style="background:#14b8a6;box-shadow:0 0 12px #14b8a6"></div>
-    📓 Bitácoras
-  </div>
-  <div class="apps-grid">
-    <a class="app-card cat-bita" href="https://script.google.com/macros/s/AKfycbx273ySyjkgZQLWbdutrI_ugrc9Qeb7MPfFEQHqvxrjq6KqCICFZeTa6xLjudTos7qcOw/exec?v=bitacoras_mantto" target="_blank" rel="noopener">
-      <div class="app-icon">⚙️</div>
-      <div class="app-info"><div class="app-name">Bitácoras Mantto</div><div class="app-desc">Registro de bitácoras de mantenimiento</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-bita" href="https://script.google.com/macros/s/AKfycbx273ySyjkgZQLWbdutrI_ugrc9Qeb7MPfFEQHqvxrjq6KqCICFZeTa6xLjudTos7qcOw/exec?v=bitacoras_prod" target="_blank" rel="noopener">
-      <div class="app-icon">🔩</div>
-      <div class="app-info"><div class="app-name">Bitácoras Producción</div><div class="app-desc">Registro de bitácoras de producción</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-bita" href="https://script.google.com/macros/s/AKfycbx273ySyjkgZQLWbdutrI_ugrc9Qeb7MPfFEQHqvxrjq6KqCICFZeTa6xLjudTos7qcOw/exec?v=bitacoras_calidad" target="_blank" rel="noopener">
-      <div class="app-icon">✅</div>
-      <div class="app-info"><div class="app-name">Bitácoras Calidad</div><div class="app-desc">Registro de bitácoras de calidad</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-comp" href="https://script.google.com/macros/s/AKfycbwfFeYJH_yTFekAaSrwdzSlZt10gLfu2cVEb00V5gQ5U1lT1QGs1h8FQHYdTJZ3KY9Zlw/exec?v=liberacion" target="_blank" rel="noopener">
-      <div class="app-icon">🔗</div>
-      <div class="app-info"><div class="app-name">Liberación Alambrón</div><div class="app-desc">Liberación y validación de materia prima</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-  </div>
-
-  <!-- PRODUCCIÓN & INGENIERÍA -->
-  <div class="section-label">
-    <div class="label-bar" style="background:#00d4ff;box-shadow:0 0 12px #00d4ff"></div>
-    🏭 Producción &amp; Ingeniería
-  </div>
-  <div class="apps-grid">
-    <a class="app-card cat-prod" href="https://script.google.com/macros/s/AKfycbyDxTSHPygL1Ba93kHFisiInmZZf6zHM63jOHfqPGv45bdbOJ1Av2lg-DigAGjH50Co1w/exec" target="_blank" rel="noopener">
-      <div class="app-icon">🏭</div>
-      <div class="app-info"><div class="app-name">Producción</div><div class="app-desc">Control y planeación de producción</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-comp" href="https://script.google.com/macros/s/AKfycbwfFeYJH_yTFekAaSrwdzSlZt10gLfu2cVEb00V5gQ5U1lT1QGs1h8FQHYdTJZ3KY9Zlw/exec" target="_blank" rel="noopener">
-      <div class="app-icon">🚚</div>
-      <div class="app-info"><div class="app-name">Embarques</div><div class="app-desc">Gestión de embarques y envíos</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-prod" href="https://script.google.com/macros/s/AKfycbywih1maNFojqbvJEIzTTOf9lNVnrqG2xYTN9fyO56BrS6HQ6w5AkSMu2i2VZ3O8DTO/exec" target="_blank" rel="noopener">
-      <div class="app-icon">📁</div>
-      <div class="app-info"><div class="app-name">Control Documental</div><div class="app-desc">Gestión de documentos e instructivos</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-  </div>
-
-  <!-- MANTENIMIENTO -->
-  <div class="section-label">
-    <div class="label-bar" style="background:#ff6b35;box-shadow:0 0 12px #ff6b35"></div>
-    🔧 Mantenimiento
-  </div>
-  <div class="apps-grid">
-    <a class="app-card cat-mant" href="https://script.google.com/macros/s/AKfycbx273ySyjkgZQLWbdutrI_ugrc9Qeb7MPfFEQHqvxrjq6KqCICFZeTa6xLjudTos7qcOw/exec?v=main_app" target="_blank" rel="noopener">
-      <div class="app-icon">🔧</div>
-      <div class="app-info"><div class="app-name">Mantenimiento</div><div class="app-desc">Sistema principal CMMS</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-mant" href="https://script.google.com/macros/s/AKfycbx273ySyjkgZQLWbdutrI_ugrc9Qeb7MPfFEQHqvxrjq6KqCICFZeTa6xLjudTos7qcOw/exec?v=gestionordenes" target="_blank" rel="noopener">
-      <div class="app-icon">📊</div>
-      <div class="app-info"><div class="app-name">Gestionar Órdenes</div><div class="app-desc">Ver y administrar órdenes activas</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-mant" href="https://script.google.com/macros/s/AKfycbx273ySyjkgZQLWbdutrI_ugrc9Qeb7MPfFEQHqvxrjq6KqCICFZeTa6xLjudTos7qcOw/exec?v=portal_tecnico" target="_blank" rel="noopener">
-      <div class="app-icon">🖥️</div>
-      <div class="app-info"><div class="app-name">Portal Técnico</div><div class="app-desc">Acceso al portal técnico de mantenimiento</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-  </div>
-
-  <!-- PROCESOS ADMINISTRATIVOS -->
-  <div class="section-label">
-    <div class="label-bar" style="background:#6366f1;box-shadow:0 0 12px #6366f1"></div>
-    🗂️ Procesos Administrativos
-  </div>
-  <div class="apps-grid">
-    <a class="app-card cat-admin" href="https://script.google.com/macros/s/AKfycbzZcStBdIBWL6Zmot6u8uBD3X-tST7uCe6hJ1Iqqrv1FLZsH7HtyFjGz1J3GvfCiO8CBQ/exec?v=main_compras" target="_blank" rel="noopener">
-      <div class="app-icon">🛒</div>
-      <div class="app-info"><div class="app-name">Compras</div><div class="app-desc">Gestión de compras y proveedores</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-admin" href="https://script.google.com/macros/s/AKfycbwVRAgJccVKU6TgYD3NN2KZjX1zwxwIYUuG9FiVTmJRPoW4SkIThAPbH5w408oBb73l/exec" target="_blank" rel="noopener">
-      <div class="app-icon">👥</div>
-      <div class="app-info"><div class="app-name">Recursos Humanos</div><div class="app-desc">Gestión de personal</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-    <a class="app-card cat-admin" href="https://script.google.com/macros/s/AKfycbwVRAgJccVKU6TgYD3NN2KZjX1zwxwIYUuG9FiVTmJRPoW4SkIThAPbH5w408oBb73l/exec?app=cursos" target="_blank" rel="noopener">
-      <div class="app-icon">🎓</div>
-      <div class="app-info"><div class="app-name">Capacitación</div><div class="app-desc">Cursos y formación del personal</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-  </div>
-
-  <!-- REPORTES -->
-  <div class="section-label">
-    <div class="label-bar" style="background:#f59e0b;box-shadow:0 0 12px #f59e0b"></div>
-    📊 Reportes
-  </div>
-  <div class="apps-grid">
-    <a class="app-card cat-report" href="https://toolcn.github.io/pantalla_OM.html" target="_blank" rel="noopener">
-      <div class="app-icon">📋</div>
-      <div class="app-info"><div class="app-name">Pantalla OM</div><div class="app-desc">Reporte de órdenes de mantenimiento</div></div>
-      <div class="app-arrow">→</div>
-    </a>
-  </div>
-
-  <footer>
-    <span>© 2026 ToolCN — Sistemas Industriales</span>
-    <a id="wa-float" href="https://wa.me/524427069281" target="_blank" rel="noopener" aria-label="Chatea por WhatsApp">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="22" height="22" fill="white">
-        <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
-      </svg>
-      Chatea con nosotros
-    </a>
-    <span id="clock">--:--:--</span>
-  </footer>
-
+<button id="btn-reiniciar" onclick="reiniciarJuego()">↺ Reiniciar</button>
+<div id="flash"></div>
+<div id="marco-respuesta"></div>
+<div id="emoji-respuesta"></div>
+<img id="verity-esquina" src="" alt="Verity">
+<audio id="musica-fondo" loop></audio>
+<div id="popup-verity">
+  <img id="popup-verity-img" src="" alt="Verity activa">
 </div>
 
+<div id="contenedor"></div>
+
 <script>
-  function tick() {
-    document.getElementById('clock').textContent =
-      new Date().toLocaleTimeString('es-MX', { hour12: false });
+const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
+const CLAVE = "bruno2026";
+const CLAVE_SECRETA_NOCHE1 = "BOSQUE";
+
+let estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
+let nocheEntrandoPendiente = null;
+let nocheSuperadaPendiente = null;
+let nocheActual = null;
+let alCerrarPopupActual = null;
+let cancelarEsperaActual = null;
+let resultadosTrivia = [];
+let procesandoRespuestaTrivia = false;
+
+const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
+const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
+const ESPERA_MAXIMA_MS = 20000;
+
+async function enviarEvento(nombreEvento) {
+  if (!nombreEvento) return;
+  try {
+    await fetch(`${TABLERO_URL}?clave=${CLAVE}`, {
+      method: "POST",
+      body: JSON.stringify({ evento: nombreEvento })
+    });
+    console.log("Evento enviado:", nombreEvento);
+  } catch (error) {
+    console.error("No se pudo enviar el evento:", error);
   }
-  tick(); setInterval(tick, 1000);
+}
 
-  const titleEl = document.getElementById('titleText');
-  const logoImg = document.getElementById('logoImg');
-  const stateA  = { html: 'Tool<span class="ac">CN</span>',               logo: 'https://i.imgur.com/OgCXcvt.png'   };
-  const stateB  = { html: 'Clavos Nacionales <span class="ac">CN</span>', logo: 'https://i.imgur.com/YeWmNff.jpeg'  };
-  let current = 'A';
-  const OUT_DUR = 900;
-  const IN_DUR  = 1000;
+function reproducirSonidoLocal(nombreArchivo) {
+  const audio = new Audio(`sonidos/${nombreArchivo}`);
+  audio.play().catch(err => console.error("No se pudo reproducir sonido local:", err));
+}
 
-  function switchTitle() {
-    const next = current === 'A' ? stateB : stateA;
-    titleEl.style.animation = 'none';
-    logoImg.style.animation  = 'none';
-    void titleEl.offsetWidth;
-    titleEl.style.animation = `glitchOut ${OUT_DUR}ms ease forwards`;
-    logoImg.style.animation  = `logoOut ${OUT_DUR}ms ease forwards`;
+function iniciarMusicaFondo() {
+  const musica = document.getElementById('musica-fondo');
+  musica.src = 'sonidos/musica_fondo.mp3';
+  musica.volume = 0.15;
+  musica.play().catch(err => console.error("No se pudo iniciar la música:", err));
+}
+
+const contenedor = document.getElementById('contenedor');
+
+function barajar(arr) {
+  const copia = [...arr];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+function esperarFinDeAudio(eventoEsperado, alTerminar) {
+  let yaTermino = false;
+  const tiempoInicioEspera = new Date().getTime();
+
+  const intervalo = setInterval(async () => {
+    if (yaTermino) return;
+    try {
+      const resp = await fetch(`${TABLERO_URL}?clave=${CLAVE}`);
+      const datos = await resp.json();
+      if (datos.audioTerminado === eventoEsperado && datos.audioTerminadoTs >= tiempoInicioEspera) {
+        terminar();
+      }
+    } catch (err) {
+      console.error("Error esperando fin de audio:", err);
+    }
+  }, 500);
+
+  const limiteSeguridad = setTimeout(terminar, ESPERA_MAXIMA_MS);
+
+  function terminar() {
+    if (yaTermino) return;
+    yaTermino = true;
+    clearInterval(intervalo);
+    clearTimeout(limiteSeguridad);
+    alTerminar();
+  }
+
+  return terminar;
+}
+
+function reiniciarJuego() {
+  if (!confirm('¿Reiniciar toda la aventura desde el principio?')) return;
+
+  enviarEvento('reiniciar_todo');
+
+  estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
+  nocheEntrandoPendiente = null;
+  nocheSuperadaPendiente = null;
+  resultadosTrivia = [];
+  procesandoRespuestaTrivia = false;
+
+  document.getElementById('verity-esquina').style.display = 'none';
+  document.body.style.backgroundImage = 'none';
+  contenedor.classList.remove('mapa-contenedor');
+
+  mostrarCaja();
+}
+
+function mostrarCaja() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = "url('imagenes/fondo-caja.png')";
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>La Caja Misteriosa</h1>
+      <p>Encontraste una caja extraña frente a la puerta. Parece que dentro se escuchan sonidos raros.</p>
+      <div class="botones"><button onclick="abrirCaja()">Abrir la caja</button></div>
+    </div>
+  `;
+}
+
+function abrirCaja() {
+  reproducirSonidoLocal('caja_abierta.mp3');
+  iniciarMusicaFondo();
+  const flash = document.getElementById('flash');
+  flash.style.opacity = '1';
+
+  setTimeout(() => {
+    flash.style.opacity = '0';
+    document.getElementById('popup-verity-img').src = 'imagenes/verity-noche1.png';
+
+    mostrarPopupVerity('caja_abierta', () => {
+      document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
+      contenedor.classList.add('mapa-contenedor');
+      contenedor.innerHTML = `<div class="mapa-noches"></div>`;
+
+      setTimeout(() => {
+        estadoNoches[1] = 'activa';
+        reproducirSonidoLocal('noche_nueva.mp3');
+        dibujarMapa({ nocheNueva: 1 });
+      }, 400);
+    });
+  }, 300);
+}
+
+function mostrarMapa() {
+  document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
+  dibujarMapa({ nocheSuperada: nocheSuperadaPendiente });
+
+  if (nocheSuperadaPendiente) {
+    reproducirSonidoLocal('noche_completada.mp3');
+  }
+
+  if (nocheEntrandoPendiente) {
+    const entrante = nocheEntrandoPendiente;
+    nocheSuperadaPendiente = null;
+    nocheEntrandoPendiente = null;
     setTimeout(() => {
-      titleEl.innerHTML = next.html;
-      logoImg.src       = next.logo;
-      current = current === 'A' ? 'B' : 'A';
-      titleEl.style.animation = 'none';
-      logoImg.style.animation  = 'none';
-      void titleEl.offsetWidth;
-      titleEl.style.animation = `glitchIn ${IN_DUR}ms ease forwards`;
-      logoImg.style.animation  = `logoIn ${IN_DUR}ms ease forwards`;
-    }, OUT_DUR + 80);
+      estadoNoches[entrante] = 'activa';
+      reproducirSonidoLocal('noche_nueva.mp3');
+      dibujarMapa({ nocheNueva: entrante });
+    }, 1300);
+  } else {
+    nocheSuperadaPendiente = null;
   }
+}
 
-  let iteration = 0;
-  const MAX_FAST = 3;
-  const FAST_MS  = 5000;
-  const SLOW_MS  = 60000;
-
-  function scheduleNext() {
-    iteration++;
-    const delay = iteration <= MAX_FAST ? FAST_MS : SLOW_MS;
-    setTimeout(() => { switchTitle(); scheduleNext(); }, delay);
-  }
-  scheduleNext();
-
-  document.querySelectorAll('.cat-pend').forEach(c =>
-    c.addEventListener('click', e => e.preventDefault())
-  );
-
-  for (let i = 0; i < 20; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.cssText = `
-      left: ${Math.random() * 100}vw;
-      width: ${2 + Math.random() * 3}px;
-      height: ${2 + Math.random() * 3}px;
-      animation-duration: ${9 + Math.random() * 12}s;
-      animation-delay: ${Math.random() * 12}s;
-      background: ${Math.random() > 0.5 ? '#00d4ff' : '#ff6b35'};
+function dibujarMapa({ nocheNueva = null, nocheSuperada = null } = {}) {
+  contenedor.classList.add('mapa-contenedor');
+  let html = '';
+  for (let n = 1; n <= 3; n++) {
+    const estado = estadoNoches[n];
+    if (estado === 'bloqueada') continue;
+    const clases = ['noche-nodo'];
+    if (estado === 'completada') clases.push('completada');
+    if (n === nocheNueva) clases.push('aparece-nueva');
+    const clickable = estado === 'activa';
+    const badgeRecien = (estado === 'completada' && n === nocheSuperada) ? ' recien' : '';
+    html += `
+      <div class="${clases.join(' ')}" ${clickable ? `onclick="iniciarNoche(${n})"` : ''}>
+        <span class="emoji">🌙☁️</span>
+        <span class="etiqueta">Noche ${n}</span>
+        ${estado === 'completada' ? `<span class="badge-superado${badgeRecien}">✅</span>` : ''}
+      </div>
     `;
-    document.getElementById('particles').appendChild(p);
+  }
+  contenedor.innerHTML = `<div class="mapa-noches">${html}</div>`;
+}
+
+function completarNocheYDesbloquear(nTerminada, nSiguiente) {
+  estadoNoches[nTerminada] = 'completada';
+  nocheSuperadaPendiente = nTerminada;
+  nocheEntrandoPendiente = nSiguiente;
+}
+
+function mostrarPopupVerity(evento, alCerrar) {
+  document.getElementById('popup-verity').classList.add('activo');
+  enviarEvento(evento);
+  alCerrarPopupActual = alCerrar;
+  cancelarEsperaActual = esperarFinDeAudio(evento, cerrarPopupVerity);
+}
+
+function cerrarPopupVerity() {
+  document.getElementById('popup-verity').classList.remove('activo');
+  cancelarEsperaActual = null;
+  const callback = alCerrarPopupActual;
+  alCerrarPopupActual = null;
+  if (callback) callback();
+}
+
+function iniciarNoche(n) {
+  nocheActual = n;
+  document.getElementById('popup-verity-img').src = `imagenes/verity-noche${n}.png`;
+  document.getElementById('verity-esquina').src = `imagenes/verity-noche${n}.png`;
+  document.getElementById('verity-esquina').style.display = 'block';
+
+  mostrarPopupVerity(EVENTOS_INICIO_NOCHE[n], () => {
+    document.body.style.backgroundImage = 'none';
+    contenedor.classList.remove('mapa-contenedor');
+    mostrarPantalla(PANTALLA_INICIO_NOCHE[n], { saltarEventoAuto: true });
+  });
+}
+
+const PANTALLAS = {
+
+  acto1_inicio: {
+    titulo: "Noche 1 — Conociendo a Verity",
+    texto: "Verity quiere conocerte mejor antes de seguir.",
+    eventoAuto: "acto1_inicio",
+    botones: [{ texto: "Comenzar", siguiente: "acto1_trivia" }]
+  },
+
+  acto1_uv: {
+    titulo: "Un secreto que pocos ven",
+    texto: 'Verity: "Ya te conozco un poco mejor, Bruno. Ahora yo también quiero enseñarte algo que casi nadie puede ver." Busca la lámpara UV que tienes preparada y recorre la casa con ella — hay una nota escondida que solo se revela con esa luz.',
+    botones: [{ texto: "Ya encontré la nota", siguiente: "acto1_clave" }]
+  },
+
+  acto1_cierre: {
+    titulo: "Fin de la Noche 1",
+    texto: "Verity dice algo que no debería saber sobre ti...",
+    eventoAuto: "acto1_cierre",
+    botones: [{ texto: "Continuar", completaNoche: 1, siguienteNoche: 2, siguiente: "mapa" }]
+  },
+
+  acto2_inicio: {
+    titulo: "Noche 2 — Fabricando el arma",
+    texto: "Verity te explica el plan de esta noche: fabricar la tablilla, los cables, las resistencias, el botón y las luces.",
+    eventoAuto: "acto2_inicio",
+    botones: [{ texto: "Comenzar", siguiente: "acto2_pico" }]
+  },
+
+  acto2_tablilla_lista: {
+    titulo: "¡Tablilla lista!",
+    texto: 'Verity: "Ahora sigamos picando piedra — esta vez busca también metal escondido dentro de algunas rocas."',
+    eventoAuto: "acto2_tablilla_lista",
+    botones: [{ texto: "Continuar", siguiente: "acto2_obstaculo2" }]
+  },
+
+  acto2_horno_listo: {
+    titulo: "¡Lingotes listos!",
+    texto: 'Verity: "Vamos a usarlos para hacer los cables."',
+    eventoAuto: "acto2_horno_listo",
+    botones: [{ texto: "Continuar", siguiente: "acto2_crafteo_cables" }]
+  },
+
+  acto2_cables_listos: {
+    titulo: "¡Cables listos!",
+    texto: 'Verity: "Ahora necesitamos resistencias, un botón, y luces — vamos a recolectar un poco de todo."',
+    eventoAuto: "acto2_cables_listos",
+    botones: [{ texto: "Continuar", siguiente: "acto2_obstaculo3" }]
+  },
+
+  acto2_ensamble: {
+    titulo: "El armazón está casi listo",
+    texto: 'Verity: "Con todo lo que fabricaste, arma la tablilla completa y colócala en el armazón. Ya casi está listo."',
+    eventoAuto: "acto2_ensamble",
+    botones: [{ texto: "Continuar", siguiente: "acto2_cierre" }]
+  },
+
+  acto2_cierre: {
+    titulo: "Fin de la Noche 2",
+    texto: "Mañana es la última noche. Verity suena distinta al despedirse.",
+    eventoAuto: "acto2_cierre",
+    botones: [{ texto: "Continuar", completaNoche: 2, siguienteNoche: 3, siguiente: "mapa" }]
+  },
+
+  acto3_inicio: {
+    titulo: "Noche 3 — La Transformación",
+    texto: "Es esta noche. Verity ya no puede detenerlo.",
+    eventoAuto: "acto3_inicio",
+    botones: [{ texto: "Comenzar", siguiente: "acto3_cuenta" }]
+  },
+
+  acto3_cuenta: {
+    titulo: "Cuenta regresiva",
+    texto: "El tiempo corre. Algo se acerca a la ventana.",
+    eventoAuto: "acto3_cuenta_regresiva_inicio",
+    botones: [{ texto: "Algo está pasando...", siguiente: "acto3_transformacion" }]
+  },
+
+  acto3_transformacion: {
+    titulo: "ALGO QUIERE ENTRAR",
+    texto: "Verity ya no suena como Verity.",
+    eventoAuto: "acto3_transformacion",
+    botones: [{ texto: "Buscar piezas para el arma", siguiente: "acto3_arma" }]
+  },
+
+  acto3_arma: {
+    titulo: "Construye tu arma",
+    texto: "[PLACEHOLDER: aquí va el checklist del reto físico de armar]",
+    eventoAuto: "acto3_construir_arma",
+    botones: [{ texto: "Ya terminé mi arma", evento: "acto3_arma_lista", siguiente: "acto3_final_reto" }]
+  },
+
+  acto3_final_reto: {
+    titulo: "El enfrentamiento",
+    texto: "[PLACEHOLDER: aquí va el minijuego final de la batalla]",
+    botones: [{ texto: "¡Atacar!", evento: "acto3_reto_final_exito", siguiente: "acto3_resolucion" }]
+  },
+
+  acto3_resolucion: {
+    titulo: "¿Bruno? ¿Sigues ahí?",
+    texto: "La ventana vuelve a la calma. La tormenta se aleja.",
+    eventoAuto: "acto3_resolucion",
+    botones: [{ texto: "Continuar", siguiente: "acto3_final" }]
+  },
+
+  acto3_final: {
+    titulo: "Fin del Capítulo 1",
+    texto: "Todo está bien ahora, Bruno. De verdad... ¿o eso creemos? 👀",
+    eventoAuto: "acto3_final",
+    botones: []
   }
 
-  const imgs = [
-    'https://i.imgur.com/P6NyVhs.jpeg','https://i.imgur.com/wvDbdwl.jpeg',
-    'https://i.imgur.com/km3R2N7.jpeg','https://i.imgur.com/9W2fbG7.jpeg',
-    'https://i.imgur.com/By3iqqq.png', 'https://i.imgur.com/dpeaVaY.png',
-    'https://i.imgur.com/Sj9S2BP.png', 'https://i.imgur.com/jmPqbrH.png',
-    'https://i.imgur.com/pmeSadp.png', 'https://i.imgur.com/esPtyu4.png',
-    'https://i.imgur.com/M8ldNqR.png', 'https://i.imgur.com/XpSdH8a.png',
-    'https://i.imgur.com/MHMzybp.jpeg','https://i.imgur.com/UrEynW7.png',
-    'https://i.imgur.com/0tCZ0Cx.png'
-  ];
+};
 
-  const SIZE = 288;
-  const COLS = 4;
-  const ROWS = 3;
-  const COL_DUR  = [96, 108, 90, 102];
-  const COL_XOFF = [1, -2, 2.5, -1.5];
-  const pContainer = document.getElementById('particles');
-  const colWidth = 100 / COLS;
+const PREGUNTAS_TRIVIA = [
+  { pregunta: "En el juego Mario Bros, ¿de qué color es la gorra de Mario?", opciones: ["Verde", "Azul", "Roja"], correcta: 2 },
+  { pregunta: "¿Qué herramienta usas en Minecraft para picar bloques de piedra de forma rápida?", opciones: ["Una espada", "Una pala", "Un pico"], correcta: 2 },
+  { pregunta: "¿Cuál es el animal del océano que tiene ocho brazos?", opciones: ["Pulpo", "Tiburón", "Cangrejo"], correcta: 0 },
+  { pregunta: "¿Qué figura geométrica tiene tres lados y tres esquinas?", opciones: ["Cuadrado", "Círculo", "Triángulo"], correcta: 2 },
+  { pregunta: "¿Qué parte de la computadora se mueve con la mano para dirigir la flecha en la pantalla?", opciones: ["Teclado", "Ratón (Mouse)", "Bocina"], correcta: 1 },
+  { pregunta: "¿Qué órgano de nuestro cuerpo se encarga de bombear la sangre a todas partes?", opciones: ["Cerebro", "Estómago", "Corazón"], correcta: 2 }
+];
 
-  for (let col = 0; col < COLS; col++) {
-    const dur = COL_DUR[col];
-    const spacing = dur / ROWS;
-    const leftVw  = colWidth * col + colWidth / 2 + COL_XOFF[col];
-    for (let row = 0; row < ROWS; row++) {
-      const colPhase = col * 7;
-      const delay = row * spacing + colPhase;
-      const zIdx = row + 1;
-      const b = document.createElement('div');
-      b.className = 'bubble';
-      b.style.cssText = `
-        left: calc(${leftVw}vw - ${SIZE/2}px);
-        width: ${SIZE}px; height: ${SIZE}px;
-        animation-duration: ${dur}s;
-        animation-delay: -${delay}s;
-        z-index: ${zIdx};
-      `;
-      const img = document.createElement('img');
-      img.src = imgs[(col * ROWS + row) % imgs.length];
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-      b.appendChild(img);
-      pContainer.appendChild(b);
+function iniciarTrivia() {
+  resultadosTrivia = [];
+  procesandoRespuestaTrivia = false;
+  contenedor.innerHTML = `<div class="panel"><p>Verity está preparando sus preguntas...</p></div>`;
+  setTimeout(() => mostrarTrivia(0), 1400);
+}
+
+function mostrarTrivia(indice) {
+  if (indice >= PREGUNTAS_TRIVIA.length) {
+    mostrarPopupVerity('acto1_pista_uv', () => {
+      document.body.style.backgroundImage = 'none';
+      mostrarPantalla('acto1_uv', { saltarEventoAuto: true });
+    });
+    return;
+  }
+
+  const q = PREGUNTAS_TRIVIA[indice];
+  const resumen = PREGUNTAS_TRIVIA.map((_, i) => {
+    if (resultadosTrivia[i] === 'correcta') return '✅';
+    if (resultadosTrivia[i] === 'incorrecta') return '❌';
+    return '⚪';
+  }).join(' ');
+
+  contenedor.innerHTML = `
+    <div class="panel">
+      <div class="resumen-trivia">${resumen}</div>
+      <h1>Trivia de Verity (${indice + 1}/${PREGUNTAS_TRIVIA.length})</h1>
+      <p>${q.pregunta}</p>
+      <div class="botones">
+        ${q.opciones.map((op, i) => `<button onclick="responderTrivia(${indice}, ${i})">${op}</button>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function mostrarEfectoRespuesta(esCorrecta) {
+  const marco = document.getElementById('marco-respuesta');
+  const emoji = document.getElementById('emoji-respuesta');
+
+  marco.className = '';
+  emoji.className = '';
+  void marco.offsetWidth;
+  void emoji.offsetWidth;
+
+  marco.classList.add(esCorrecta ? 'correcta' : 'incorrecta');
+  emoji.textContent = esCorrecta ? '✅' : '❌';
+  emoji.classList.add('mostrar');
+}
+
+function responderTrivia(indicePregunta, indiceOpcion) {
+  if (procesandoRespuestaTrivia) return;
+  procesandoRespuestaTrivia = true;
+
+  const q = PREGUNTAS_TRIVIA[indicePregunta];
+  const esCorrecta = indiceOpcion === q.correcta;
+  resultadosTrivia[indicePregunta] = esCorrecta ? 'correcta' : 'incorrecta';
+
+  const nombreEvento = esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto";
+  enviarEvento(nombreEvento);
+  reproducirSonidoLocal(esCorrecta ? 'acto1_trivia_correcto.mp3' : 'acto1_trivia_incorrecto.mp3');
+  mostrarEfectoRespuesta(esCorrecta);
+
+  esperarFinDeAudio(nombreEvento, () => {
+    procesandoRespuestaTrivia = false;
+    mostrarTrivia(indicePregunta + 1);
+  });
+}
+
+function mostrarHacha() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>¡Encontraste un hacha!</h1>
+      <img src="imagenes/hacha.png" alt="Hacha" class="imagen-objeto">
+      <p>¡Bien hecho, Bruno! Conseguiste el hacha. Necesitamos madera para construir el armazón de tu arma — recolecta la madera y ve a la mesa de crafteo.</p>
+      <div class="botones">
+        <button id="btn-agarrar-hacha" onclick="agarrarHacha()" disabled>Agarrar el hacha</button>
+      </div>
+    </div>
+  `;
+
+  enviarEvento('acto1_hacha_obtenida');
+  esperarFinDeAudio('acto1_hacha_obtenida', () => {
+    const boton = document.getElementById('btn-agarrar-hacha');
+    if (boton) boton.disabled = false;
+  });
+}
+
+function agarrarHacha() {
+  reproducirSonidoLocal('acto1_hacha_obtenida.mp3');
+  mostrarPantalla('acto1_tala');
+}
+
+function mostrarClave() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>La clave oculta</h1>
+      <p>La nota tiene una palabra extraña escrita con luz UV. Escríbela aquí:</p>
+      <input type="text" id="input-clave" class="input-clave" autocomplete="off">
+      <div class="botones" style="margin-top:16px;">
+        <button onclick="verificarClave()">Confirmar</button>
+      </div>
+      <p id="clave-error" class="clave-error">Esa no es la clave... intenta de nuevo.</p>
+    </div>
+  `;
+}
+
+function verificarClave() {
+  const valor = document.getElementById('input-clave').value.trim().toUpperCase();
+  if (valor === CLAVE_SECRETA_NOCHE1) {
+    mostrarPantalla('acto1_hacha');
+  } else {
+    document.getElementById('clave-error').style.display = 'block';
+  }
+}
+
+const TOTAL_ARBOLES = 8;
+const GOLPES_POR_ARBOL = 3;
+const MADERA_OBJETIVO = 5;
+
+let estadoArboles = [];
+let posicionesArboles = [];
+let maderaRecolectada = 0;
+
+function iniciarTala() {
+  estadoArboles = Array(TOTAL_ARBOLES).fill(0);
+  maderaRecolectada = 0;
+  posicionesArboles = Array.from({ length: TOTAL_ARBOLES }, () => ({
+    top: 12 + Math.random() * 70,
+    left: 8 + Math.random() * 84
+  }));
+  dibujarTala();
+}
+
+function dibujarTala() {
+  contenedor.classList.remove('mapa-contenedor');
+  let arbolesHtml = '';
+  for (let i = 0; i < TOTAL_ARBOLES; i++) {
+    const talado = estadoArboles[i] >= GOLPES_POR_ARBOL;
+    const pos = posicionesArboles[i];
+    arbolesHtml += `<span class="arbol ${talado ? 'talado' : ''}" style="top:${pos.top}%; left:${pos.left}%;" onclick="golpearArbol(${i})">${talado ? '🪵' : '🌳'}</span>`;
+  }
+  contenedor.innerHTML = `
+    <div class="panel-tala">
+      <h1>Recolecta madera para el armazón</h1>
+      <p>Toca los árboles varias veces para talarlos. Necesitas ${MADERA_OBJETIVO} troncos de madera.</p>
+      <p style="font-size:1.2rem; margin:0;">🪵 Madera: ${maderaRecolectada} / ${MADERA_OBJETIVO}</p>
+    </div>
+    <div class="bosque-pantalla">${arbolesHtml}</div>
+  `;
+}
+
+function golpearArbol(indice) {
+  if (estadoArboles[indice] >= GOLPES_POR_ARBOL) return;
+  if (maderaRecolectada >= MADERA_OBJETIVO) return;
+
+  reproducirSonidoLocal('tala_golpe.mp3');
+  estadoArboles[indice]++;
+  if (estadoArboles[indice] >= GOLPES_POR_ARBOL) {
+    maderaRecolectada++;
+  }
+
+  if (maderaRecolectada >= MADERA_OBJETIVO) {
+    setTimeout(() => mostrarPantalla('acto1_crafteo'), 500);
+  } else {
+    dibujarTala();
+  }
+}
+
+const PATRON_ARMAZON = [0, 1, 4, 5, 7];
+
+let celdasColocadas = [];
+
+function iniciarCrafteo() {
+  celdasColocadas = [];
+  dibujarCrafteo();
+}
+
+function dibujarCrafteo() {
+  contenedor.classList.remove('mapa-contenedor');
+
+  let celdasHtml = '';
+  for (let i = 0; i < 9; i++) {
+    const tieneMadera = celdasColocadas.includes(i);
+    celdasHtml += `<span class="celda-crafteo ${tieneMadera ? 'llena' : ''}" onclick="toggleCeldaCrafteo(${i})">${tieneMadera ? '🪵' : ''}</span>`;
+  }
+
+  let patronHtml = '';
+  for (let i = 0; i < 9; i++) {
+    const vaMadera = PATRON_ARMAZON.includes(i);
+    patronHtml += `<span class="celda-patron">${vaMadera ? '🪵' : ''}</span>`;
+  }
+
+  contenedor.innerHTML = `
+    <div class="panel-crafteo">
+      <h1>Mesa de crafteo</h1>
+      <p>Coloca la madera para formar el patrón del armazón.</p>
+      <div class="crafteo-contenido">
+        <div class="cuadricula-crafteo">${celdasHtml}</div>
+        <div class="flecha-crafteo">➡️</div>
+        <div class="cuadricula-crafteo patron">${patronHtml}</div>
+      </div>
+      <div class="botones" style="margin-top:16px;">
+        <button onclick="limpiarCrafteo()">Limpiar</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCeldaCrafteo(indice) {
+  const pos = celdasColocadas.indexOf(indice);
+  if (pos >= 0) {
+    celdasColocadas.splice(pos, 1);
+  } else {
+    if (celdasColocadas.length >= MADERA_OBJETIVO) return;
+    celdasColocadas.push(indice);
+  }
+  dibujarCrafteo();
+  verificarPatronArmazon();
+}
+
+function limpiarCrafteo() {
+  celdasColocadas = [];
+  dibujarCrafteo();
+}
+
+function verificarPatronArmazon() {
+  if (celdasColocadas.length !== PATRON_ARMAZON.length) return;
+  const coincide = PATRON_ARMAZON.every(i => celdasColocadas.includes(i));
+  if (coincide) {
+    setTimeout(() => mostrarPantalla('acto1_barda'), 400);
+  }
+}
+
+function mostrarBarda() {
+  reproducirSonidoLocal('barda_construccion.mp3');
+  contenedor.classList.remove('mapa-contenedor');
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>El armazón está listo</h1>
+      <img src="imagenes/arma-armazon.png" alt="Armazón del arma" class="imagen-objeto">
+      <p>Con la madera que recolectaste, Verity te ayuda a armar la base de tu arma. Todavía le falta mucho para funcionar... pero es un comienzo.</p>
+      <div class="botones" id="botones-barda" style="opacity:0; transition: opacity 0.5s;">
+        <button onclick="mostrarPantalla('acto1_cierre')">Continuar</button>
+      </div>
+    </div>
+  `;
+  setTimeout(() => {
+    document.getElementById('botones-barda').style.opacity = '1';
+  }, 1800);
+}
+
+const SIMBOLOS_BASE = ['🔺', '🔷', '⭐', '🔴'];
+let secuenciaObjetivo = [];
+let progresoSecuencia = 0;
+let obstaculoSiguientePantalla = null;
+
+function iniciarObstaculoSecuencia(pantallaSiguiente) {
+  secuenciaObjetivo = barajar(SIMBOLOS_BASE);
+  progresoSecuencia = 0;
+  obstaculoSiguientePantalla = pantallaSiguiente;
+  dibujarObstaculoSecuencia();
+}
+
+function dibujarObstaculoSecuencia() {
+  contenedor.classList.remove('mapa-contenedor');
+  const objetivoHtml = secuenciaObjetivo.map((s, i) =>
+    `<span class="simbolo-objetivo ${i < progresoSecuencia ? 'hecho' : ''}">${s}</span>`
+  ).join('');
+  const opciones = barajar(SIMBOLOS_BASE);
+  const opcionesHtml = opciones.map(s => `<span class="simbolo-opcion" onclick="tocarSimboloSecuencia('${s}')">${s}</span>`).join('');
+
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>Recuerda el orden</h1>
+      <p>Toca los símbolos en el mismo orden que se muestra arriba.</p>
+      <div class="fila-simbolos">${objetivoHtml}</div>
+      <div class="fila-simbolos">${opcionesHtml}</div>
+    </div>
+  `;
+}
+
+function tocarSimboloSecuencia(simbolo) {
+  if (simbolo === secuenciaObjetivo[progresoSecuencia]) {
+    progresoSecuencia++;
+    if (progresoSecuencia >= secuenciaObjetivo.length) {
+      setTimeout(() => mostrarPantalla(obstaculoSiguientePantalla), 400);
+      return;
+    }
+    dibujarObstaculoSecuencia();
+  } else {
+    progresoSecuencia = 0;
+    dibujarObstaculoSecuencia();
+  }
+}
+
+const CAMINO_LABERINTO = [2, 7, 6, 11, 16, 17, 22];
+let progresoLaberinto = 0;
+let obstaculoSiguientePantallaLab = null;
+
+function iniciarObstaculoLaberinto(pantallaSiguiente) {
+  progresoLaberinto = 0;
+  obstaculoSiguientePantallaLab = pantallaSiguiente;
+  dibujarLaberinto();
+}
+
+function dibujarLaberinto() {
+  contenedor.classList.remove('mapa-contenedor');
+  let celdas = '';
+  for (let i = 0; i < 25; i++) {
+    const posEnCamino = CAMINO_LABERINTO.indexOf(i);
+    const esInicio = i === CAMINO_LABERINTO[0];
+    const esFin = i === CAMINO_LABERINTO[CAMINO_LABERINTO.length - 1];
+    const yaAndado = posEnCamino >= 0 && posEnCamino < progresoLaberinto;
+    let contenido = '';
+    if (esInicio) contenido = '🚩';
+    else if (esFin) contenido = '🏁';
+    else if (yaAndado) contenido = '👣';
+    celdas += `<span class="celda-laberinto ${yaAndado ? 'andado' : ''}" onclick="tocarCeldaLaberinto(${i})">${contenido}</span>`;
+  }
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>Encuentra el camino</h1>
+      <p>Toca las celdas en orden para abrirte paso hasta la salida 🏁.</p>
+      <div class="grid-laberinto">${celdas}</div>
+    </div>
+  `;
+}
+
+function tocarCeldaLaberinto(indice) {
+  if (indice === CAMINO_LABERINTO[progresoLaberinto]) {
+    progresoLaberinto++;
+    if (progresoLaberinto >= CAMINO_LABERINTO.length) {
+      setTimeout(() => mostrarPantalla(obstaculoSiguientePantallaLab), 400);
+      return;
+    }
+    dibujarLaberinto();
+  } else {
+    progresoLaberinto = 0;
+    dibujarLaberinto();
+  }
+}
+
+function mostrarPico() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>¡Encontraste un pico!</h1>
+      <img src="imagenes/pico.png" alt="Pico" class="imagen-objeto">
+      <p>Con él vas a poder picar piedra — la necesitamos para la tablilla.</p>
+      <div class="botones">
+        <button id="btn-agarrar-pico" onclick="agarrarPico()" disabled>Agarrar el pico</button>
+      </div>
+    </div>
+  `;
+
+  enviarEvento('acto2_pico_obtenido');
+  esperarFinDeAudio('acto2_pico_obtenido', () => {
+    const boton = document.getElementById('btn-agarrar-pico');
+    if (boton) boton.disabled = false;
+  });
+}
+
+function agarrarPico() {
+  reproducirSonidoLocal('acto1_hacha_obtenida.mp3');
+  mostrarPantalla('acto2_obstaculo1');
+}
+
+const TOTAL_PIEDRAS = 8;
+const GOLPES_POR_PIEDRA = 3;
+const PIEDRA_OBJETIVO = 5;
+const METAL_OBJETIVO = 3;
+
+let estadoPiedras = [];
+let posicionesPiedras = [];
+let piedraRecolectada = 0;
+let metalRecolectado = 0;
+let piedrasConMetal = [];
+let rondaMineria = 1;
+
+function iniciarMineria(ronda) {
+  rondaMineria = ronda;
+  estadoPiedras = Array(TOTAL_PIEDRAS).fill(0);
+  posicionesPiedras = Array.from({ length: TOTAL_PIEDRAS }, () => ({
+    top: 12 + Math.random() * 70,
+    left: 8 + Math.random() * 84
+  }));
+  piedraRecolectada = 0;
+  metalRecolectado = 0;
+  if (ronda === 2) {
+    const indices = Array.from({ length: TOTAL_PIEDRAS }, (_, i) => i);
+    piedrasConMetal = barajar(indices).slice(0, METAL_OBJETIVO);
+  } else {
+    piedrasConMetal = [];
+  }
+  dibujarMineria();
+}
+
+function dibujarMineria() {
+  contenedor.classList.remove('mapa-contenedor');
+  let piedrasHtml = '';
+  for (let i = 0; i < TOTAL_PIEDRAS; i++) {
+    const picada = estadoPiedras[i] >= GOLPES_POR_PIEDRA;
+    const pos = posicionesPiedras[i];
+    piedrasHtml += `<span class="arbol ${picada ? 'talado' : ''}" style="top:${pos.top}%; left:${pos.left}%;" onclick="golpearPiedra(${i})">${picada ? '⚪' : '🪨'}</span>`;
+  }
+
+  const textoMetal = rondaMineria === 2
+    ? `<p style="font-size:1.1rem; margin:0;">🔩 Metal: ${metalRecolectado} / ${METAL_OBJETIVO}</p>`
+    : '';
+
+  contenedor.innerHTML = `
+    <div class="panel-tala">
+      <h1>${rondaMineria === 1 ? 'Pica piedra' : 'Sigue picando'}</h1>
+      <p>Toca las piedras varias veces para picarlas.${rondaMineria === 2 ? ' Algunas tienen metal escondido.' : ''}</p>
+      <p style="font-size:1.2rem; margin:0;">🪨 Piedra: ${piedraRecolectada} / ${PIEDRA_OBJETIVO}</p>
+      ${textoMetal}
+    </div>
+    <div class="bosque-pantalla">${piedrasHtml}</div>
+  `;
+}
+
+function golpearPiedra(indice) {
+  if (estadoPiedras[indice] >= GOLPES_POR_PIEDRA) return;
+
+  reproducirSonidoLocal('tala_golpe.mp3');
+  estadoPiedras[indice]++;
+
+  if (estadoPiedras[indice] >= GOLPES_POR_PIEDRA) {
+    piedraRecolectada++;
+    if (rondaMineria === 2 && piedrasConMetal.includes(indice)) {
+      metalRecolectado++;
     }
   }
 
-  const monito = document.getElementById('monito');
-  function showMonito() {
-    const lado = ['left','right','bottom'][Math.floor(Math.random() * 3)];
-    if (lado === 'left') {
-      monito.style.cssText = `left:12px; bottom:${10+Math.random()*50}vh; right:auto; top:auto;`;
-    } else if (lado === 'right') {
-      monito.style.cssText = `right:12px; bottom:${10+Math.random()*50}vh; left:auto; top:auto;`;
+  const metaCumplida = rondaMineria === 1
+    ? piedraRecolectada >= PIEDRA_OBJETIVO
+    : (piedraRecolectada >= PIEDRA_OBJETIVO && metalRecolectado >= METAL_OBJETIVO);
+
+  if (metaCumplida) {
+    const siguiente = rondaMineria === 1 ? 'acto2_crafteo_tablilla' : 'acto2_horno';
+    setTimeout(() => mostrarPantalla(siguiente), 500);
+  } else {
+    dibujarMineria();
+  }
+}
+
+let lingotesHechos = 0;
+
+function mostrarHorno() {
+  contenedor.classList.remove('mapa-contenedor');
+  lingotesHechos = 0;
+  dibujarHorno();
+}
+
+function dibujarHorno() {
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>El horno</h1>
+      <p>Mete el metal al horno para convertirlo en lingotes. Toca el horno para fundir una pieza.</p>
+      <p style="font-size:1.2rem;">🔥 Lingotes: ${lingotesHechos} / ${METAL_OBJETIVO}</p>
+      <div class="botones">
+        <button onclick="fundirMetal()" ${lingotesHechos >= METAL_OBJETIVO ? 'disabled' : ''}>🔥 Fundir metal</button>
+      </div>
+    </div>
+  `;
+}
+
+function fundirMetal() {
+  if (lingotesHechos >= METAL_OBJETIVO) return;
+  reproducirSonidoLocal('barda_construccion.mp3');
+  setTimeout(() => {
+    lingotesHechos++;
+    if (lingotesHechos >= METAL_OBJETIVO) {
+      setTimeout(() => mostrarPantalla('acto2_horno_listo'), 500);
     } else {
-      monito.style.cssText = `bottom:12px; left:${5+Math.random()*75}vw; right:auto; top:auto;`;
+      dibujarHorno();
     }
-    monito.classList.add('visible');
-    setTimeout(() => monito.classList.remove('visible'), 2800);
+  }, 800);
+}
+
+const TOTAL_MIXTO = 10;
+const MADERA_MIXTA_OBJETIVO = 3;
+const PIEDRA_MIXTA_OBJETIVO = 3;
+
+let estadoMixto = [];
+let tiposMixto = [];
+let posicionesMixto = [];
+let maderaMixta = 0;
+let piedraMixta = 0;
+
+function iniciarRecoleccionMixta() {
+  estadoMixto = Array(TOTAL_MIXTO).fill(0);
+  tiposMixto = Array.from({ length: TOTAL_MIXTO }, () => Math.random() < 0.5 ? 'madera' : 'piedra');
+  posicionesMixto = Array.from({ length: TOTAL_MIXTO }, () => ({
+    top: 12 + Math.random() * 70,
+    left: 8 + Math.random() * 84
+  }));
+  maderaMixta = 0;
+  piedraMixta = 0;
+  dibujarMixto();
+}
+
+function dibujarMixto() {
+  contenedor.classList.remove('mapa-contenedor');
+  let html = '';
+  for (let i = 0; i < TOTAL_MIXTO; i++) {
+    const listo = estadoMixto[i] >= GOLPES_POR_ARBOL;
+    const pos = posicionesMixto[i];
+    const emojiCrudo = tiposMixto[i] === 'madera' ? '🌳' : '🪨';
+    const emojiListo = tiposMixto[i] === 'madera' ? '🪵' : '⚪';
+    html += `<span class="arbol ${listo ? 'talado' : ''}" style="top:${pos.top}%; left:${pos.left}%;" onclick="golpearMixto(${i})">${listo ? emojiListo : emojiCrudo}</span>`;
   }
-  function loop() {
-    setTimeout(() => { showMonito(); loop(); }, 50000 + Math.random() * 20000);
+  contenedor.innerHTML = `
+    <div class="panel-tala">
+      <h1>Recolecta lo último</h1>
+      <p>Toca árboles y piedras — necesitamos ambos materiales.</p>
+      <p style="font-size:1.1rem; margin:0;">🪵 Madera: ${maderaMixta}/${MADERA_MIXTA_OBJETIVO} &nbsp; 🪨 Piedra: ${piedraMixta}/${PIEDRA_MIXTA_OBJETIVO}</p>
+    </div>
+    <div class="bosque-pantalla">${html}</div>
+  `;
+}
+
+function golpearMixto(indice) {
+  if (estadoMixto[indice] >= GOLPES_POR_ARBOL) return;
+
+  reproducirSonidoLocal('tala_golpe.mp3');
+  estadoMixto[indice]++;
+
+  if (estadoMixto[indice] >= GOLPES_POR_ARBOL) {
+    if (tiposMixto[indice] === 'madera') maderaMixta++;
+    else piedraMixta++;
   }
-  setTimeout(() => { showMonito(); loop(); }, 60000);
+
+  if (maderaMixta >= MADERA_MIXTA_OBJETIVO && piedraMixta >= PIEDRA_MIXTA_OBJETIVO) {
+    setTimeout(() => mostrarPantalla('acto2_crafteo_resistencias'), 500);
+  } else {
+    dibujarMixto();
+  }
+}
+
+const CRAFTEOS = {
+  tablilla: {
+    titulo: "Mesa de crafteo — Tablilla",
+    instruccion: "Coloca la piedra para formar el patrón de la tablilla.",
+    material: "🪨",
+    patron: [1, 3, 4, 5, 7],
+    siguiente: "acto2_tablilla_lista"
+  },
+  cables: {
+    titulo: "Mesa de crafteo — Cables",
+    instruccion: "Coloca los lingotes para formar el patrón de los cables.",
+    material: "🔘",
+    patron: [3, 4, 5],
+    siguiente: "acto2_cables_listos"
+  },
+  resistencias: {
+    titulo: "Mesa de crafteo — Resistencias",
+    instruccion: "Coloca los materiales para formar el patrón de las resistencias.",
+    material: "🧩",
+    patron: [0, 4, 8],
+    siguiente: "acto2_crafteo_boton"
+  },
+  boton: {
+    titulo: "Mesa de crafteo — Botón",
+    instruccion: "Coloca los materiales para formar el patrón del botón.",
+    material: "🧩",
+    patron: [4],
+    siguiente: "acto2_crafteo_leds"
+  },
+  leds: {
+    titulo: "Mesa de crafteo — LEDs",
+    instruccion: "Coloca los materiales para formar el patrón de los LEDs.",
+    material: "🧩",
+    patron: [1, 4, 7],
+    siguiente: "acto2_ensamble"
+  }
+};
+
+let crafteoConfigActual = null;
+let celdasCrafteoGenerico = [];
+
+function iniciarCrafteoGenerico(nombreReceta) {
+  crafteoConfigActual = CRAFTEOS[nombreReceta];
+  celdasCrafteoGenerico = [];
+  dibujarCrafteoGenerico();
+}
+
+function dibujarCrafteoGenerico() {
+  contenedor.classList.remove('mapa-contenedor');
+  const cfg = crafteoConfigActual;
+
+  let celdasHtml = '';
+  for (let i = 0; i < 9; i++) {
+    const tiene = celdasCrafteoGenerico.includes(i);
+    celdasHtml += `<span class="celda-crafteo ${tiene ? 'llena' : ''}" onclick="toggleCeldaCrafteoGenerico(${i})">${tiene ? cfg.material : ''}</span>`;
+  }
+  let patronHtml = '';
+  for (let i = 0; i < 9; i++) {
+    const va = cfg.patron.includes(i);
+    patronHtml += `<span class="celda-patron">${va ? cfg.material : ''}</span>`;
+  }
+
+  contenedor.innerHTML = `
+    <div class="panel-crafteo">
+      <h1>${cfg.titulo}</h1>
+      <p>${cfg.instruccion}</p>
+      <div class="crafteo-contenido">
+        <div class="cuadricula-crafteo">${celdasHtml}</div>
+        <div class="flecha-crafteo">➡️</div>
+        <div class="cuadricula-crafteo patron">${patronHtml}</div>
+      </div>
+      <div class="botones" style="margin-top:16px;">
+        <button onclick="limpiarCrafteoGenerico()">Limpiar</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCeldaCrafteoGenerico(indice) {
+  const cfg = crafteoConfigActual;
+  const pos = celdasCrafteoGenerico.indexOf(indice);
+  if (pos >= 0) {
+    celdasCrafteoGenerico.splice(pos, 1);
+  } else {
+    if (celdasCrafteoGenerico.length >= cfg.patron.length) return;
+    celdasCrafteoGenerico.push(indice);
+  }
+  dibujarCrafteoGenerico();
+  verificarPatronGenerico();
+}
+
+function limpiarCrafteoGenerico() {
+  celdasCrafteoGenerico = [];
+  dibujarCrafteoGenerico();
+}
+
+function verificarPatronGenerico() {
+  const cfg = crafteoConfigActual;
+  if (celdasCrafteoGenerico.length !== cfg.patron.length) return;
+  const coincide = cfg.patron.every(i => celdasCrafteoGenerico.includes(i));
+  if (coincide) {
+    reproducirSonidoLocal('barda_construccion.mp3');
+    setTimeout(() => mostrarPantalla(cfg.siguiente), 400);
+  }
+}
+
+function mostrarPantalla(id, opciones = {}) {
+  if (id === 'acto1_trivia') { iniciarTrivia(); return; }
+  if (id === 'acto1_hacha') { mostrarHacha(); return; }
+  if (id === 'acto1_clave') { mostrarClave(); return; }
+  if (id === 'acto1_tala') { iniciarTala(); return; }
+  if (id === 'acto1_crafteo') { iniciarCrafteo(); return; }
+  if (id === 'acto1_barda') { mostrarBarda(); return; }
+
+  if (id === 'acto2_pico') { mostrarPico(); return; }
+  if (id === 'acto2_obstaculo1') { iniciarObstaculoSecuencia('acto2_mineria1'); return; }
+  if (id === 'acto2_mineria1') { iniciarMineria(1); return; }
+  if (id === 'acto2_crafteo_tablilla') { iniciarCrafteoGenerico('tablilla'); return; }
+  if (id === 'acto2_obstaculo2') { iniciarObstaculoLaberinto('acto2_mineria2'); return; }
+  if (id === 'acto2_mineria2') { iniciarMineria(2); return; }
+  if (id === 'acto2_horno') { mostrarHorno(); return; }
+  if (id === 'acto2_crafteo_cables') { iniciarCrafteoGenerico('cables'); return; }
+  if (id === 'acto2_obstaculo3') { iniciarObstaculoSecuencia('acto2_recoleccion_mixta'); return; }
+  if (id === 'acto2_recoleccion_mixta') { iniciarRecoleccionMixta(); return; }
+  if (id === 'acto2_crafteo_resistencias') { iniciarCrafteoGenerico('resistencias'); return; }
+  if (id === 'acto2_crafteo_boton') { iniciarCrafteoGenerico('boton'); return; }
+  if (id === 'acto2_crafteo_leds') { iniciarCrafteoGenerico('leds'); return; }
+
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+
+  const p = PANTALLAS[id];
+  const debeEsperarAudio = !!(p.eventoAuto && !opciones.saltarEventoAuto);
+
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>${p.titulo}</h1>
+      <p>${p.texto}</p>
+      <div class="botones">
+        ${p.botones.map((b, i) => `<button onclick="clicBoton('${id}', ${i})" ${debeEsperarAudio ? 'disabled' : ''}>${b.texto}</button>`).join('')}
+      </div>
+    </div>
+  `;
+
+  if (debeEsperarAudio) {
+    enviarEvento(p.eventoAuto);
+    esperarFinDeAudio(p.eventoAuto, habilitarBotones);
+  }
+}
+
+function habilitarBotones() {
+  document.querySelectorAll('#contenedor .botones button').forEach(b => b.disabled = false);
+}
+
+function clicBoton(idPantallaActual, indiceBoton) {
+  const boton = PANTALLAS[idPantallaActual].botones[indiceBoton];
+  if (boton.evento) enviarEvento(boton.evento);
+  if (boton.completaNoche) completarNocheYDesbloquear(boton.completaNoche, boton.siguienteNoche);
+  irA(boton.siguiente);
+}
+
+function irA(destino) {
+  if (destino === 'mapa') { mostrarMapa(); return; }
+  mostrarPantalla(destino);
+}
+
+mostrarCaja();
 </script>
 </body>
 </html>
