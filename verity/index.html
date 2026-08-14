@@ -541,6 +541,7 @@ const PANTALLAS = {
   acto2_tablilla_lista: {
     titulo: "¡Tablilla lista!",
     texto: 'Verity: "Ahora sigamos picando piedra — esta vez busca también metal escondido dentro de algunas rocas."',
+    imagen: "imagenes/tablilla.png",
     eventoAuto: "acto2_tablilla_lista",
     botones: [{ texto: "Continuar", siguiente: "acto2_obstaculo2" }]
   },
@@ -555,8 +556,30 @@ const PANTALLAS = {
   acto2_cables_listos: {
     titulo: "¡Cables listos!",
     texto: 'Verity: "Ahora necesitamos resistencias, un botón, y luces — vamos a recolectar un poco de todo."',
+    imagen: "imagenes/cables.png",
     eventoAuto: "acto2_cables_listos",
     botones: [{ texto: "Continuar", siguiente: "acto2_obstaculo3" }]
+  },
+
+  acto2_resistencias_listas: {
+    titulo: "¡Resistencias listas!",
+    texto: "Un paso más cerca de terminar.",
+    imagen: "imagenes/resistencias.png",
+    botones: [{ texto: "Continuar", siguiente: "acto2_crafteo_boton" }]
+  },
+
+  acto2_boton_listo: {
+    titulo: "¡Botón listo!",
+    texto: "Ya casi tenemos todo.",
+    imagen: "imagenes/boton.png",
+    botones: [{ texto: "Continuar", siguiente: "acto2_crafteo_leds" }]
+  },
+
+  acto2_leds_listos: {
+    titulo: "¡Luces listas!",
+    texto: "Es la última pieza. Ahora sí, vamos al ensamble final.",
+    imagen: "imagenes/leds.png",
+    botones: [{ texto: "Continuar", siguiente: "acto2_ensamble" }]
   },
 
   acto2_cierre: {
@@ -844,6 +867,7 @@ function toggleCeldaCrafteo(indice) {
   } else {
     if (celdasColocadas.length >= MADERA_OBJETIVO) return;
     celdasColocadas.push(indice);
+    reproducirSonidoLocal('crafteo_colocar.mp3');
   }
   dibujarCrafteo();
   verificarPatronArmazon();
@@ -1054,13 +1078,14 @@ function dibujarMineria() {
 function golpearPiedra(indice) {
   if (estadoPiedras[indice] >= GOLPES_POR_PIEDRA) return;
 
-  reproducirSonidoLocal('tala_golpe.mp3');
+  reproducirSonidoLocal('piedra_golpe.mp3');
   estadoPiedras[indice]++;
 
   if (estadoPiedras[indice] >= GOLPES_POR_PIEDRA) {
     piedraRecolectada++;
     if (rondaMineria === 2 && piedrasConMetal.includes(indice)) {
       metalRecolectado++;
+      reproducirSonidoLocal('metal_encontrado.mp3');
     }
   }
 
@@ -1099,10 +1124,11 @@ function dibujarHorno() {
 
 function fundirMetal() {
   if (lingotesHechos >= METAL_OBJETIVO) return;
-  reproducirSonidoLocal('barda_construccion.mp3');
+  reproducirSonidoLocal('horno_cocinando.mp3');
   setTimeout(() => {
     lingotesHechos++;
     if (lingotesHechos >= METAL_OBJETIVO) {
+      reproducirSonidoLocal('lingotes_listos.mp3');
       setTimeout(() => mostrarPantalla('acto2_horno_listo'), 500);
     } else {
       dibujarHorno();
@@ -1229,7 +1255,7 @@ function dibujarMixto() {
 function golpearMixto(indice) {
   if (estadoMixto[indice] >= GOLPES_POR_ARBOL) return;
 
-  reproducirSonidoLocal('tala_golpe.mp3');
+  reproducirSonidoLocal(tiposMixto[indice] === 'madera' ? 'tala_golpe.mp3' : 'piedra_golpe.mp3');
   estadoMixto[indice]++;
 
   if (estadoMixto[indice] >= GOLPES_POR_ARBOL) {
@@ -1264,21 +1290,21 @@ const CRAFTEOS = {
     instruccion: "Coloca los materiales para formar el patrón de las resistencias.",
     material: "🧩",
     patron: [0, 4, 8],
-    siguiente: "acto2_crafteo_boton"
+    siguiente: "acto2_resistencias_listas"
   },
   boton: {
     titulo: "Mesa de crafteo — Botón",
     instruccion: "Coloca los materiales para formar el patrón del botón.",
     material: "🧩",
     patron: [4],
-    siguiente: "acto2_crafteo_leds"
+    siguiente: "acto2_boton_listo"
   },
   leds: {
     titulo: "Mesa de crafteo — LEDs",
     instruccion: "Coloca los materiales para formar el patrón de los LEDs.",
     material: "🧩",
     patron: [1, 4, 7],
-    siguiente: "acto2_ensamble"
+    siguiente: "acto2_leds_listos"
   }
 };
 
@@ -1330,6 +1356,7 @@ function toggleCeldaCrafteoGenerico(indice) {
   } else {
     if (celdasCrafteoGenerico.length >= cfg.patron.length) return;
     celdasCrafteoGenerico.push(indice);
+    reproducirSonidoLocal('crafteo_colocar.mp3');
   }
   dibujarCrafteoGenerico();
   verificarPatronGenerico();
@@ -1382,6 +1409,7 @@ function mostrarPantalla(id, opciones = {}) {
   contenedor.innerHTML = `
     <div class="panel">
       <h1>${p.titulo}</h1>
+      ${p.imagen ? `<img src="${p.imagen}" alt="${p.titulo}" class="imagen-objeto">` : ''}
       <p>${p.texto}</p>
       <div class="botones">
         ${p.botones.map((b, i) => `<button onclick="clicBoton('${id}', ${i})" ${debeEsperarAudio ? 'disabled' : ''}>${b.texto}</button>`).join('')}
