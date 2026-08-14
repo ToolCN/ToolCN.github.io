@@ -478,8 +478,15 @@ const PANTALLAS = {
 
   acto2_mentira: {
     titulo: "El detector de mentiras",
-    texto: "[PLACEHOLDER: aquí va el reto físico con el probador de continuidad]",
-    botones: [{ texto: "Detecté la mentira", evento: "acto2_mentira_detectada", siguiente: "acto2_cierre" }]
+    texto: 'Verity: "No todas mis notas dicen la verdad, Bruno. Puede que ni yo lo sepa ya." Tienes varias notas repartidas por la casa. Usa el probador de continuidad para revisar los circuitos — el que esté completo es la nota verdadera, y te va a decir dónde encontrar las piezas que faltan para tu arma. Cuando la encuentres, confírmalo aquí.',
+    eventoAuto: "acto2_mentira_detectada",
+    botones: [{ texto: "Ya la encontré", siguiente: "acto2_piezas" }]
+  },
+
+  acto2_piezas: {
+    titulo: "¡Encontraste las piezas!",
+    texto: "La nota verdadera tenía razón — ahí estaba escondida una caja con una tablilla de ensayo, cables y otras piezas. Guárdalas bien, las vas a necesitar la última noche.",
+    botones: [{ texto: "Continuar", siguiente: "acto2_cierre" }]
   },
 
   acto2_cierre: {
@@ -630,7 +637,7 @@ function mostrarHacha() {
     <div class="panel">
       <h1>¡Encontraste un hacha!</h1>
       <img src="imagenes/hacha.png" alt="Hacha" class="imagen-objeto">
-      <p>Con esto podrás talar madera y construir una barda para protegerte.</p>
+      <p>Con esto podrás conseguir la madera que necesitas para el armazón de tu arma.</p>
       <div class="botones">
         <button id="btn-agarrar-hacha" onclick="agarrarHacha()" disabled>Agarrar el hacha</button>
       </div>
@@ -705,7 +712,7 @@ function dibujarTala() {
   }
   contenedor.innerHTML = `
     <div class="panel-tala">
-      <h1>Construye tu barda</h1>
+      <h1>Recolecta madera para el armazón</h1>
       <p>Toca los árboles varias veces para talarlos. Necesitas ${MADERA_OBJETIVO} troncos de madera.</p>
       <p style="font-size:1.2rem; margin:0;">🪵 Madera: ${maderaRecolectada} / ${MADERA_OBJETIVO}</p>
     </div>
@@ -738,15 +745,9 @@ function mostrarBarda() {
   contenedor.classList.remove('mapa-contenedor');
   contenedor.innerHTML = `
     <div class="panel">
-      <h1>Construyendo la barda</h1>
-      <p>Con la madera que recolectaste, Verity te ayuda a levantar una barda alrededor de la casa.</p>
-      <div class="barda">
-        <span style="animation-delay:0s">🪵</span>
-        <span style="animation-delay:0.3s">🪵</span>
-        <span style="animation-delay:0.6s">🪵</span>
-        <span style="animation-delay:0.9s">🪵</span>
-        <span style="animation-delay:1.2s">🪵</span>
-      </div>
+      <h1>El armazón está listo</h1>
+      <img src="imagenes/arma-armazon.png" alt="Armazón del arma" class="imagen-objeto">
+      <p>Con la madera que recolectaste, Verity te ayuda a armar la base de tu arma. Todavía le falta mucho para funcionar... pero es un comienzo.</p>
       <div class="botones" id="botones-barda" style="opacity:0; transition: opacity 0.5s;">
         <button onclick="mostrarPantalla('acto1_cierre')">Continuar</button>
       </div>
