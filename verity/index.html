@@ -70,9 +70,8 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 20px; z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.3s;
   }
-  #popup-verity.activo { opacity: 1; pointer-events: auto; }
+  #popup-verity.activo { opacity: 1; }
   #popup-verity img { width: 220px; height: 220px; border-radius: 50%; object-fit: cover; }
-  #popup-verity .toca-continuar { font-size: 0.85rem; color: #999; margin: 0; }
 
   .mapa-noches {
     display: flex; flex-direction: row; flex-wrap: wrap;
@@ -152,9 +151,31 @@
   .clave-error { color: #e74c3c; font-size: 0.9rem; margin-top: 10px; display: none; }
   .imagen-objeto { width: 140px; height: 140px; object-fit: contain; margin: 12px 0; }
 
-  .bosque { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 16px; }
-  .arbol { font-size: 2.8rem; cursor: pointer; user-select: none; transition: transform 0.15s; }
-  .arbol:active { transform: scale(0.85); }
+  /* --- Tala de árboles: grandes, aleatorios, toda la pantalla --- */
+  .panel-tala {
+    position: relative;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 20px;
+    border-radius: 16px;
+    max-width: 420px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .bosque-pantalla {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+  }
+  .arbol {
+    position: absolute;
+    font-size: 5.6rem;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s;
+    transform: translate(-50%, -50%);
+  }
+  .arbol:active { transform: translate(-50%, -50%) scale(0.85); }
   .arbol.talado { opacity: 0.4; cursor: default; }
 
   .barda { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
@@ -176,9 +197,8 @@
 <div id="emoji-respuesta"></div>
 <img id="verity-esquina" src="" alt="Verity">
 <audio id="musica-fondo" loop></audio>
-<div id="popup-verity" onclick="saltarPopup()">
+<div id="popup-verity">
   <img id="popup-verity-img" src="" alt="Verity activa">
-  <p class="toca-continuar">Toca para continuar</p>
 </div>
 
 <div id="contenedor"></div>
@@ -205,9 +225,6 @@ let procesandoRespuestaTrivia = false;
 
 const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
-
-// Tiempo máximo que esperamos por si el celular no avisa que
-// terminó el audio (apagado, sin conexión, etc.)
 const ESPERA_MAXIMA_MS = 20000;
 
 async function enviarEvento(nombreEvento) {
@@ -238,8 +255,7 @@ function iniciarMusicaFondo() {
 const contenedor = document.getElementById('contenedor');
 
 // =========================================================
-// Espera genérica de "audio terminado" — la usan el popup,
-// la trivia, y cualquier pantalla que tenga eventoAuto.
+// Espera genérica de "audio terminado"
 // =========================================================
 function esperarFinDeAudio(eventoEsperado, alTerminar) {
   let yaTermino = false;
@@ -250,8 +266,6 @@ function esperarFinDeAudio(eventoEsperado, alTerminar) {
     try {
       const resp = await fetch(`${TABLERO_URL}?clave=${CLAVE}`);
       const datos = await resp.json();
-      // El timestamp evita que una señal VIEJA (de otra prueba)
-      // cierre esto antes de tiempo.
       if (datos.audioTerminado === eventoEsperado && datos.audioTerminadoTs >= tiempoInicioEspera) {
         terminar();
       }
@@ -320,8 +334,17 @@ function abrirCaja() {
     document.getElementById('popup-verity-img').src = 'imagenes/verity-noche1.png';
 
     mostrarPopupVerity('caja_abierta', () => {
-      estadoNoches[1] = 'activa';
-      mostrarMapa();
+      // Primera vez: no hay noche previa que "superar", solo
+      // aparece Noche 1 con su propio sonido.
+      document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
+      contenedor.classList.add('mapa-contenedor');
+      contenedor.innerHTML = `<div class="mapa-noches"></div>`;
+
+      setTimeout(() => {
+        estadoNoches[1] = 'activa';
+        reproducirSonidoLocal('noche_nueva.mp3');
+        dibujarMapa({ nocheNueva: 1 });
+      }, 400);
     });
   }, 300);
 }
@@ -333,12 +356,17 @@ function mostrarMapa() {
   document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
   dibujarMapa({ nocheSuperada: nocheSuperadaPendiente });
 
+  if (nocheSuperadaPendiente) {
+    reproducirSonidoLocal('noche_completada.mp3');
+  }
+
   if (nocheEntrandoPendiente) {
     const entrante = nocheEntrandoPendiente;
     nocheSuperadaPendiente = null;
     nocheEntrandoPendiente = null;
     setTimeout(() => {
       estadoNoches[entrante] = 'activa';
+      reproducirSonidoLocal('noche_nueva.mp3');
       dibujarMapa({ nocheNueva: entrante });
     }, 1300);
   } else {
@@ -375,7 +403,9 @@ function completarNocheYDesbloquear(nTerminada, nSiguiente) {
 }
 
 // =========================================================
-// Popup reutilizable de Verity
+// Popup de Verity — se cierra SOLO cuando el celular avisa que
+// terminó el audio (o por el límite de seguridad). Ya no se
+// puede saltar tocando la pantalla, para garantizar la sincronía.
 // =========================================================
 function mostrarPopupVerity(evento, alCerrar) {
   document.getElementById('popup-verity').classList.add('activo');
@@ -390,14 +420,6 @@ function cerrarPopupVerity() {
   const callback = alCerrarPopupActual;
   alCerrarPopupActual = null;
   if (callback) callback();
-}
-
-function saltarPopup() {
-  if (cancelarEsperaActual) {
-    cancelarEsperaActual();
-  } else {
-    cerrarPopupVerity();
-  }
 }
 
 function iniciarNoche(n) {
@@ -518,7 +540,7 @@ const PANTALLAS = {
 };
 
 // =========================================================
-// TRIVIA — ahora espera el audio real antes de avanzar
+// TRIVIA
 // =========================================================
 const PREGUNTAS_TRIVIA = [
   { pregunta: "¿Cuántos días tiene una semana?", opciones: ["5", "7", "10"], correcta: 1 },
@@ -581,7 +603,7 @@ function mostrarEfectoRespuesta(esCorrecta) {
 }
 
 function responderTrivia(indicePregunta, indiceOpcion) {
-  if (procesandoRespuestaTrivia) return; // evita doble clic mientras se espera el audio
+  if (procesandoRespuestaTrivia) return;
   procesandoRespuestaTrivia = true;
 
   const q = PREGUNTAS_TRIVIA[indicePregunta];
@@ -599,8 +621,7 @@ function responderTrivia(indicePregunta, indiceOpcion) {
 }
 
 // =========================================================
-// Hacha — ahora manda el evento al APARECER la pantalla, y el
-// botón de agarrar queda deshabilitado hasta que acabe el audio
+// Hacha
 // =========================================================
 function mostrarHacha() {
   contenedor.classList.remove('mapa-contenedor');
@@ -654,18 +675,23 @@ function verificarClave() {
 }
 
 // =========================================================
-// Tala de árboles
+// Tala de árboles — grandes, aleatorios, toda la pantalla
 // =========================================================
 const TOTAL_ARBOLES = 8;
 const GOLPES_POR_ARBOL = 3;
 const MADERA_OBJETIVO = 5;
 
 let estadoArboles = [];
+let posicionesArboles = [];
 let maderaRecolectada = 0;
 
 function iniciarTala() {
   estadoArboles = Array(TOTAL_ARBOLES).fill(0);
   maderaRecolectada = 0;
+  posicionesArboles = Array.from({ length: TOTAL_ARBOLES }, () => ({
+    top: 12 + Math.random() * 70,
+    left: 8 + Math.random() * 84
+  }));
   dibujarTala();
 }
 
@@ -674,15 +700,16 @@ function dibujarTala() {
   let arbolesHtml = '';
   for (let i = 0; i < TOTAL_ARBOLES; i++) {
     const talado = estadoArboles[i] >= GOLPES_POR_ARBOL;
-    arbolesHtml += `<span class="arbol ${talado ? 'talado' : ''}" onclick="golpearArbol(${i})">${talado ? '🪵' : '🌳'}</span>`;
+    const pos = posicionesArboles[i];
+    arbolesHtml += `<span class="arbol ${talado ? 'talado' : ''}" style="top:${pos.top}%; left:${pos.left}%;" onclick="golpearArbol(${i})">${talado ? '🪵' : '🌳'}</span>`;
   }
   contenedor.innerHTML = `
-    <div class="panel">
+    <div class="panel-tala">
       <h1>Construye tu barda</h1>
       <p>Toca los árboles varias veces para talarlos. Necesitas ${MADERA_OBJETIVO} troncos de madera.</p>
-      <p style="font-size:1.2rem;">🪵 Madera: ${maderaRecolectada} / ${MADERA_OBJETIVO}</p>
-      <div class="bosque">${arbolesHtml}</div>
+      <p style="font-size:1.2rem; margin:0;">🪵 Madera: ${maderaRecolectada} / ${MADERA_OBJETIVO}</p>
     </div>
+    <div class="bosque-pantalla">${arbolesHtml}</div>
   `;
 }
 
@@ -731,8 +758,7 @@ function mostrarBarda() {
 }
 
 // =========================================================
-// Motor de navegación general — ahora deshabilita los botones
-// de CUALQUIER pantalla con eventoAuto hasta que el audio acabe
+// Motor de navegación general
 // =========================================================
 function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto1_trivia') { iniciarTrivia(); return; }
