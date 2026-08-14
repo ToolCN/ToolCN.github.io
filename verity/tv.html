@@ -114,6 +114,13 @@
     boton.style.display = 'none';
 
     iniciarSondeo((evento) => {
+      if (evento === 'reiniciar_todo') {
+        efecto.style.opacity = '0';
+        cinematica.style.opacity = '0';
+        volverADia();
+        return;
+      }
+
       if (EVENTOS_INICIO_NOCHE_FONDO[evento]) {
         iniciarNocheFondo(EVENTOS_INICIO_NOCHE_FONDO[evento]);
       } else if (EVENTOS_CIERRE_NOCHE_FONDO[evento]) {
