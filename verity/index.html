@@ -384,9 +384,27 @@ function mostrarCaja() {
     <div class="panel">
       <h1>La Caja Misteriosa</h1>
       <p>Encontraste una caja extraña frente a la puerta. Parece que dentro se escuchan sonidos raros.</p>
-      <div class="botones"><button onclick="abrirCaja()">Abrir la caja</button></div>
+      <div class="botones">
+        <button onclick="abrirCaja()">Abrir la caja</button>
+        <button onclick="irADebugNoche(2)" style="background:#5a4a1a;">🐞 Ir directo a Noche 2 (prueba)</button>
+        <button onclick="irADebugNoche(3)" style="background:#5a4a1a;">🐞 Ir directo a Noche 3 (prueba)</button>
+      </div>
     </div>
   `;
+}
+
+// =========================================================
+// BOTONES DE PRUEBA — quitar junto con las 2 líneas de arriba
+// cuando termine el desarrollo, antes de la partida real.
+// =========================================================
+function irADebugNoche(n) {
+  for (let i = 1; i < n; i++) {
+    estadoNoches[i] = 'completada';
+  }
+  estadoNoches[n] = 'activa';
+  iniciarMusicaFondo();
+  contenedor.classList.remove('mapa-contenedor');
+  iniciarNoche(n);
 }
 
 function abrirCaja() {
