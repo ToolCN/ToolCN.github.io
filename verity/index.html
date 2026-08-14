@@ -211,6 +211,7 @@ const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_i
 const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 const DURACION_POPUP_MS = { 1: 5000, 2: 5000, 3: 5000 };
 const DURACION_POPUP_UV_MS = 5000;
+const DURACION_APERTURA_MS = 8000; // ajusta cuando tengas el audio real de caja_abierta.mp3
 
 async function enviarEvento(nombreEvento) {
   if (!nombreEvento) return;
@@ -247,6 +248,8 @@ const contenedor = document.getElementById('contenedor');
 function reiniciarJuego() {
   if (!confirm('¿Reiniciar toda la aventura desde el principio?')) return;
 
+  enviarEvento('ninguno'); // avisa al Tablero para que celular/TV no revivan un evento viejo
+
   estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
   nocheEntrandoPendiente = null;
   nocheSuperadaPendiente = null;
@@ -275,15 +278,19 @@ function mostrarCaja() {
 }
 
 function abrirCaja() {
-  enviarEvento('caja_abierta');
   reproducirSonidoLocal('caja_abierta.mp3');
   iniciarMusicaFondo();
   const flash = document.getElementById('flash');
   flash.style.opacity = '1';
+
   setTimeout(() => {
-    estadoNoches[1] = 'activa';
-    mostrarMapa();
-    setTimeout(() => { flash.style.opacity = '0'; }, 50);
+    flash.style.opacity = '0';
+    document.getElementById('popup-verity-img').src = 'imagenes/verity-noche1.png';
+
+    mostrarPopupVerity('caja_abierta', DURACION_APERTURA_MS, () => {
+      estadoNoches[1] = 'activa';
+      mostrarMapa();
+    });
   }, 300);
 }
 

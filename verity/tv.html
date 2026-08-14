@@ -18,7 +18,7 @@
     z-index: 2;
     opacity: 0;
     transition: opacity 0.2s;
-    mix-blend-mode: screen; /* el negro del clip se vuelve transparente */
+    mix-blend-mode: screen;
   }
   #cinematica-tv {
     z-index: 3;
@@ -56,9 +56,24 @@
   const efecto = document.getElementById('efecto-tv');
   const cinematica = document.getElementById('cinematica-tv');
 
+  const FONDO_DIA = "videos/dia.mp4";
+
+  // Al iniciar cada noche, el fondo cambia y se queda en loop
+  const EVENTOS_INICIO_NOCHE_FONDO = {
+    "acto1_inicio": "videos/fondo-noche1.mp4",
+    "acto2_inicio": "videos/fondo-noche2.mp4",
+    "acto3_inicio": "videos/fondo-noche3.mp4"
+  };
+
+  // Al cerrar cada noche, se reproduce el amanecer UNA VEZ y
+  // luego se regresa solo al video de día (ver 'ended' más abajo)
+  const EVENTOS_CIERRE_NOCHE_FONDO = {
+    "acto1_cierre": "videos/amanecer-noche1.mp4",
+    "acto2_cierre": "videos/amanecer-noche2.mp4"
+  };
+
   // Efectos cortos que aparecen ENCIMA del fondo (no lo reemplazan).
   // El clip debe tener fondo NEGRO — se vuelve transparente solo.
-  // Puede llevar su propio sonido (chispas, estática, etc.)
   const EVENTOS_EFECTO = {
     "acto1_trivia_correcto":   "efectos/acto1_trivia_correcto.mp4",
     "acto1_trivia_incorrecto": "efectos/acto1_trivia_incorrecto.mp4",
@@ -71,21 +86,38 @@
     "acto3_reto_final_exito"
   ];
 
-  // Eventos que cambian el fondo de forma PERMANENTE (a diferencia
-  // de los efectos y cinemáticas, este no vuelve al fondo anterior)
-  const EVENTOS_CAMBIO_FONDO = {
-    "acto1_cierre": "videos/amanecer-noche1.mp4"
-  };
+  function iniciarNocheFondo(ruta) {
+    fondo.loop = true;
+    fondo.src = ruta;
+    fondo.play().catch(() => {});
+  }
+
+  function iniciarAmanecer(ruta) {
+    fondo.loop = false;
+    fondo.src = ruta;
+    fondo.play().catch(() => {});
+  }
+
+  function volverADia() {
+    fondo.loop = true;
+    fondo.src = FONDO_DIA;
+    fondo.play().catch(() => {});
+  }
+
+  // Cuando el amanecer (que no está en loop) termina, regresa al día
+  fondo.addEventListener('ended', () => {
+    if (!fondo.loop) volverADia();
+  });
 
   boton.addEventListener('click', () => {
-    fondo.src = "videos/fondo-noche1.mp4";
-    fondo.play().catch(() => {});
-
+    volverADia();
     boton.style.display = 'none';
 
     iniciarSondeo((evento) => {
-      if (EVENTOS_CAMBIO_FONDO[evento]) {
-        cambiarFondo(EVENTOS_CAMBIO_FONDO[evento]);
+      if (EVENTOS_INICIO_NOCHE_FONDO[evento]) {
+        iniciarNocheFondo(EVENTOS_INICIO_NOCHE_FONDO[evento]);
+      } else if (EVENTOS_CIERRE_NOCHE_FONDO[evento]) {
+        iniciarAmanecer(EVENTOS_CIERRE_NOCHE_FONDO[evento]);
       } else if (EVENTOS_CINEMATICA.includes(evento)) {
         reproducirCinematica(evento);
       } else if (EVENTOS_EFECTO[evento]) {
@@ -93,11 +125,6 @@
       }
     });
   });
-
-  function cambiarFondo(ruta) {
-    fondo.src = ruta;
-    fondo.play().catch(() => {});
-  }
 
   function reproducirEfecto(ruta) {
     efecto.src = ruta;
