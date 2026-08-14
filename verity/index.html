@@ -151,28 +151,16 @@
   .clave-error { color: #e74c3c; font-size: 0.9rem; margin-top: 10px; display: none; }
   .imagen-objeto { width: 140px; height: 140px; object-fit: contain; margin: 12px 0; }
 
-  /* --- Tala de árboles: grandes, aleatorios, toda la pantalla --- */
   .panel-tala {
-    position: relative;
-    z-index: 10;
+    position: relative; z-index: 10;
     background: rgba(0, 0, 0, 0.55);
-    padding: 20px;
-    border-radius: 16px;
-    max-width: 420px;
-    margin: 0 auto;
-    text-align: center;
+    padding: 20px; border-radius: 16px;
+    max-width: 420px; margin: 0 auto; text-align: center;
   }
-  .bosque-pantalla {
-    position: fixed;
-    inset: 0;
-    z-index: 5;
-  }
+  .bosque-pantalla { position: fixed; inset: 0; z-index: 5; }
   .arbol {
-    position: absolute;
-    font-size: 5.6rem;
-    cursor: pointer;
-    user-select: none;
-    transition: transform 0.15s;
+    position: absolute; font-size: 5.6rem; cursor: pointer;
+    user-select: none; transition: transform 0.15s;
     transform: translate(-50%, -50%);
   }
   .arbol:active { transform: translate(-50%, -50%) scale(0.85); }
@@ -186,6 +174,19 @@
   @keyframes apareceTronco {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Comparar diferencias (Noche 2) --- */
+  .grid-casa {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 10px;
+  }
+  .objeto-casa {
+    font-size: 3rem;
+    cursor: pointer;
+    user-select: none;
   }
 </style>
 </head>
@@ -334,8 +335,6 @@ function abrirCaja() {
     document.getElementById('popup-verity-img').src = 'imagenes/verity-noche1.png';
 
     mostrarPopupVerity('caja_abierta', () => {
-      // Primera vez: no hay noche previa que "superar", solo
-      // aparece Noche 1 con su propio sonido.
       document.body.style.backgroundImage = "url('imagenes/fondo-mapa.png')";
       contenedor.classList.add('mapa-contenedor');
       contenedor.innerHTML = `<div class="mapa-noches"></div>`;
@@ -403,9 +402,7 @@ function completarNocheYDesbloquear(nTerminada, nSiguiente) {
 }
 
 // =========================================================
-// Popup de Verity — se cierra SOLO cuando el celular avisa que
-// terminó el audio (o por el límite de seguridad). Ya no se
-// puede saltar tocando la pantalla, para garantizar la sincronía.
+// Popup de Verity
 // =========================================================
 function mostrarPopupVerity(evento, alCerrar) {
   document.getElementById('popup-verity').classList.add('activo');
@@ -467,19 +464,11 @@ const PANTALLAS = {
     botones: [{ texto: "Buscar qué cambió", siguiente: "acto2_inconsistencia" }]
   },
 
-  acto2_inconsistencia: {
-    titulo: "¿Qué cambió?",
-    texto: "[PLACEHOLDER: aquí va el reto de comparar fotos/objetos]",
-    botones: [
-      { texto: "La encontré", evento: "acto2_inconsistencia_hallada", siguiente: "acto2_mentira" },
-      { texto: "No la encuentro (intentar de nuevo)", evento: "acto2_inconsistencia_fallada", siguiente: "acto2_inconsistencia" }
-    ]
-  },
-
   acto2_mentira: {
     titulo: "El detector de mentiras",
-    texto: "[PLACEHOLDER: aquí va el reto físico con el probador de continuidad]",
-    botones: [{ texto: "Detecté la mentira", evento: "acto2_mentira_detectada", siguiente: "acto2_cierre" }]
+    texto: 'Verity: "No todas mis notas dicen la verdad, Bruno. Puede que ni yo lo sepa ya." Tienes varias notas repartidas por la casa. Usa el probador de continuidad para revisar los circuitos — el que esté completo es la nota verdadera. Cuando la encuentres, confírmalo aquí.',
+    eventoAuto: "acto2_mentira_detectada",
+    botones: [{ texto: "Ya la encontré", siguiente: "acto2_cierre" }]
   },
 
   acto2_cierre: {
@@ -540,15 +529,15 @@ const PANTALLAS = {
 };
 
 // =========================================================
-// TRIVIA
+// TRIVIA (Noche 1) — preguntas actualizadas
 // =========================================================
 const PREGUNTAS_TRIVIA = [
-  { pregunta: "¿Cuántos días tiene una semana?", opciones: ["5", "7", "10"], correcta: 1 },
-  { pregunta: '¿Qué animal dice "muu"?', opciones: ["Perro", "Vaca", "Gato"], correcta: 1 },
-  { pregunta: "¿De qué color es el pasto?", opciones: ["Azul", "Verde", "Morado"], correcta: 1 },
-  { pregunta: "¿Cuántos dedos tienes en una mano?", opciones: ["4", "5", "6"], correcta: 1 },
-  { pregunta: "¿Qué les gusta comer a los conejos?", opciones: ["Carne", "Zanahorias", "Piedras"], correcta: 1 },
-  { pregunta: "¿En qué estación hace más frío?", opciones: ["Verano", "Invierno", "Primavera"], correcta: 1 }
+  { pregunta: "En el juego Mario Bros, ¿de qué color es la gorra de Mario?", opciones: ["Verde", "Azul", "Roja"], correcta: 2 },
+  { pregunta: "¿Qué herramienta usas en Minecraft para picar bloques de piedra de forma rápida?", opciones: ["Una espada", "Una pala", "Un pico"], correcta: 2 },
+  { pregunta: "¿Cuál es el animal del océano que tiene ocho brazos?", opciones: ["Pulpo", "Tiburón", "Cangrejo"], correcta: 0 },
+  { pregunta: "¿Qué figura geométrica tiene tres lados y tres esquinas?", opciones: ["Cuadrado", "Círculo", "Triángulo"], correcta: 2 },
+  { pregunta: "¿Qué parte de la computadora se mueve con la mano para dirigir la flecha en la pantalla?", opciones: ["Teclado", "Ratón (Mouse)", "Bocina"], correcta: 1 },
+  { pregunta: "¿Qué órgano de nuestro cuerpo se encarga de bombear la sangre a todas partes?", opciones: ["Cerebro", "Estómago", "Corazón"], correcta: 2 }
 ];
 
 function iniciarTrivia() {
@@ -598,8 +587,6 @@ function mostrarEfectoRespuesta(esCorrecta) {
   marco.classList.add(esCorrecta ? 'correcta' : 'incorrecta');
   emoji.textContent = esCorrecta ? '✅' : '❌';
   emoji.classList.add('mostrar');
-
-  reproducirSonidoLocal(esCorrecta ? 'acto1_trivia_correcto.mp3' : 'acto1_trivia_incorrecto.mp3');
 }
 
 function responderTrivia(indicePregunta, indiceOpcion) {
@@ -612,6 +599,7 @@ function responderTrivia(indicePregunta, indiceOpcion) {
 
   const nombreEvento = esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto";
   enviarEvento(nombreEvento);
+  reproducirSonidoLocal(esCorrecta ? 'acto1_trivia_correcto.mp3' : 'acto1_trivia_incorrecto.mp3');
   mostrarEfectoRespuesta(esCorrecta);
 
   esperarFinDeAudio(nombreEvento, () => {
@@ -621,7 +609,7 @@ function responderTrivia(indicePregunta, indiceOpcion) {
 }
 
 // =========================================================
-// Hacha
+// Hacha (Noche 1)
 // =========================================================
 function mostrarHacha() {
   contenedor.classList.remove('mapa-contenedor');
@@ -675,7 +663,7 @@ function verificarClave() {
 }
 
 // =========================================================
-// Tala de árboles — grandes, aleatorios, toda la pantalla
+// Tala de árboles (Noche 1)
 // =========================================================
 const TOTAL_ARBOLES = 8;
 const GOLPES_POR_ARBOL = 3;
@@ -730,9 +718,6 @@ function golpearArbol(indice) {
   }
 }
 
-// =========================================================
-// Construcción de la barda
-// =========================================================
 function mostrarBarda() {
   reproducirSonidoLocal('barda_construccion.mp3');
   contenedor.classList.remove('mapa-contenedor');
@@ -758,6 +743,70 @@ function mostrarBarda() {
 }
 
 // =========================================================
+// Comparar diferencias (Noche 2)
+// =========================================================
+const OBJETOS_CASA = ['🕯️', '📚', '🪴', '⏰', '🖼️', '🪑', '🗝️', '🎭'];
+const OBJETOS_REEMPLAZO = ['👻', '🕷️', '🦇', '🐈‍⬛'];
+
+let indiceCambiado = 0;
+let objetoNuevoCambiado = '';
+let procesandoComparar = false;
+
+function iniciarComparar() {
+  indiceCambiado = Math.floor(Math.random() * OBJETOS_CASA.length);
+  objetoNuevoCambiado = OBJETOS_REEMPLAZO[Math.floor(Math.random() * OBJETOS_REEMPLAZO.length)];
+  procesandoComparar = false;
+  mostrarCompararMemoriza();
+}
+
+function mostrarCompararMemoriza() {
+  contenedor.classList.remove('mapa-contenedor');
+  const celdas = OBJETOS_CASA.map(o => `<span class="objeto-casa">${o}</span>`).join('');
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>¿Qué cambió?</h1>
+      <p>Memoriza bien lo que ves en la casa...</p>
+      <div class="grid-casa">${celdas}</div>
+    </div>
+  `;
+  setTimeout(mostrarCompararPregunta, 4000);
+}
+
+function mostrarCompararPregunta() {
+  const celdas = OBJETOS_CASA.map((o, i) => {
+    const mostrar = i === indiceCambiado ? objetoNuevoCambiado : o;
+    return `<span class="objeto-casa" onclick="responderComparar(${i})">${mostrar}</span>`;
+  }).join('');
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>¿Qué cambió?</h1>
+      <p>Algo es diferente ahora. Toca lo que cambió.</p>
+      <div class="grid-casa">${celdas}</div>
+    </div>
+  `;
+}
+
+function responderComparar(indice) {
+  if (procesandoComparar) return;
+  procesandoComparar = true;
+
+  const esCorrecta = indice === indiceCambiado;
+  const nombreEvento = esCorrecta ? "acto2_inconsistencia_hallada" : "acto2_inconsistencia_fallada";
+  enviarEvento(nombreEvento);
+  reproducirSonidoLocal(esCorrecta ? 'acto1_trivia_correcto.mp3' : 'acto1_trivia_incorrecto.mp3');
+  mostrarEfectoRespuesta(esCorrecta);
+
+  esperarFinDeAudio(nombreEvento, () => {
+    procesandoComparar = false;
+    if (esCorrecta) {
+      mostrarPantalla('acto2_mentira');
+    } else {
+      mostrarCompararPregunta();
+    }
+  });
+}
+
+// =========================================================
 // Motor de navegación general
 // =========================================================
 function mostrarPantalla(id, opciones = {}) {
@@ -766,6 +815,7 @@ function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto1_clave') { mostrarClave(); return; }
   if (id === 'acto1_tala') { iniciarTala(); return; }
   if (id === 'acto1_barda') { mostrarBarda(); return; }
+  if (id === 'acto2_inconsistencia') { iniciarComparar(); return; }
 
   contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = 'none';
