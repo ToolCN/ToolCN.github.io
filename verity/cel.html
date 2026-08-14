@@ -65,9 +65,9 @@
 
     iniciarSondeo((evento) => {
       if (evento === 'reiniciar_todo') {
-        audio.pause();
-        audio.currentTime = 0;
         ultimoEventoReproducido = null;
+        audio.src = "audios/silencio.mp3";
+        audio.play().catch(() => {});
         estado.textContent = 'reiniciado, esperando eventos...';
         return;
       }
