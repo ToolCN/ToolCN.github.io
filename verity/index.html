@@ -151,6 +151,49 @@
   .clave-error { color: #e74c3c; font-size: 0.9rem; margin-top: 10px; display: none; }
   .imagen-objeto { width: 140px; height: 140px; object-fit: contain; margin: 12px 0; }
 
+  .panel-crafteo {
+    background: rgba(0,0,0,0.55);
+    padding: 24px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .crafteo-contenido {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .cuadricula-crafteo {
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(3, 48px);
+    gap: 6px;
+  }
+  .celda-crafteo {
+    width: 48px; height: 48px;
+    background: #222;
+    border: 2px solid #444;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    cursor: pointer;
+  }
+  .celda-crafteo.llena { background: #3a3a1a; border-color: #6a6a2a; }
+  .cuadricula-crafteo.patron .celda-patron {
+    width: 48px; height: 48px;
+    background: #1a1a1a;
+    border: 2px dashed #555;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    opacity: 0.85;
+  }
+  .flecha-crafteo { font-size: 1.5rem; }
+
   .panel-tala {
     position: relative; z-index: 10;
     background: rgba(0, 0, 0, 0.55);
@@ -624,7 +667,7 @@ function mostrarHacha() {
     <div class="panel">
       <h1>¡Encontraste un hacha!</h1>
       <img src="imagenes/hacha.png" alt="Hacha" class="imagen-objeto">
-      <p>Con esto podrás conseguir la madera que necesitas para el armazón de tu arma.</p>
+      <p>¡Bien hecho, Bruno! Conseguiste el hacha. Necesitamos madera para construir el armazón de tu arma — recolecta la madera y ve a la mesa de crafteo.</p>
       <div class="botones">
         <button id="btn-agarrar-hacha" onclick="agarrarHacha()" disabled>Agarrar el hacha</button>
       </div>
@@ -718,9 +761,77 @@ function golpearArbol(indice) {
   }
 
   if (maderaRecolectada >= MADERA_OBJETIVO) {
-    setTimeout(() => mostrarPantalla('acto1_barda'), 500);
+    setTimeout(() => mostrarPantalla('acto1_crafteo'), 500);
   } else {
     dibujarTala();
+  }
+}
+
+// =========================================================
+// Mesa de crafteo (Noche 1) — arma el patrón del armazón
+// =========================================================
+const PATRON_ARMAZON = [0, 1, 4, 5, 7]; // índices de la cuadrícula 3x3 (0-8) que deben llevar madera
+
+let celdasColocadas = [];
+
+function iniciarCrafteo() {
+  celdasColocadas = [];
+  dibujarCrafteo();
+}
+
+function dibujarCrafteo() {
+  contenedor.classList.remove('mapa-contenedor');
+
+  let celdasHtml = '';
+  for (let i = 0; i < 9; i++) {
+    const tieneMadera = celdasColocadas.includes(i);
+    celdasHtml += `<span class="celda-crafteo ${tieneMadera ? 'llena' : ''}" onclick="toggleCeldaCrafteo(${i})">${tieneMadera ? '🪵' : ''}</span>`;
+  }
+
+  let patronHtml = '';
+  for (let i = 0; i < 9; i++) {
+    const vaMadera = PATRON_ARMAZON.includes(i);
+    patronHtml += `<span class="celda-patron">${vaMadera ? '🪵' : ''}</span>`;
+  }
+
+  contenedor.innerHTML = `
+    <div class="panel-crafteo">
+      <h1>Mesa de crafteo</h1>
+      <p>Coloca la madera para formar el patrón del armazón.</p>
+      <div class="crafteo-contenido">
+        <div class="cuadricula-crafteo">${celdasHtml}</div>
+        <div class="flecha-crafteo">➡️</div>
+        <div class="cuadricula-crafteo patron">${patronHtml}</div>
+      </div>
+      <div class="botones" style="margin-top:16px;">
+        <button onclick="limpiarCrafteo()">Limpiar</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCeldaCrafteo(indice) {
+  const pos = celdasColocadas.indexOf(indice);
+  if (pos >= 0) {
+    celdasColocadas.splice(pos, 1);
+  } else {
+    if (celdasColocadas.length >= MADERA_OBJETIVO) return;
+    celdasColocadas.push(indice);
+  }
+  dibujarCrafteo();
+  verificarPatronArmazon();
+}
+
+function limpiarCrafteo() {
+  celdasColocadas = [];
+  dibujarCrafteo();
+}
+
+function verificarPatronArmazon() {
+  if (celdasColocadas.length !== PATRON_ARMAZON.length) return;
+  const coincide = PATRON_ARMAZON.every(i => celdasColocadas.includes(i));
+  if (coincide) {
+    setTimeout(() => mostrarPantalla('acto1_barda'), 400);
   }
 }
 
@@ -814,6 +925,7 @@ function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto1_hacha') { mostrarHacha(); return; }
   if (id === 'acto1_clave') { mostrarClave(); return; }
   if (id === 'acto1_tala') { iniciarTala(); return; }
+  if (id === 'acto1_crafteo') { iniciarCrafteo(); return; }
   if (id === 'acto1_barda') { mostrarBarda(); return; }
   if (id === 'acto2_inconsistencia') { iniciarComparar(); return; }
 
