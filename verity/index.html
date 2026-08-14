@@ -235,6 +235,30 @@
     font-size: 1.4rem; cursor: pointer;
   }
   .celda-laberinto.andado { background: #1a3a1a; }
+
+  .panel-ensamble {
+    background: rgba(0,0,0,0.55);
+    padding: 24px;
+    border-radius: 16px;
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .diagrama-tablilla {
+    background: #e8e4d8;
+    border-radius: 12px;
+    padding: 10px;
+    margin: 16px 0;
+  }
+  .leyenda-diagrama {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: #ccc;
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
@@ -515,13 +539,6 @@ const PANTALLAS = {
     texto: 'Verity: "Ahora necesitamos resistencias, un botón, y luces — vamos a recolectar un poco de todo."',
     eventoAuto: "acto2_cables_listos",
     botones: [{ texto: "Continuar", siguiente: "acto2_obstaculo3" }]
-  },
-
-  acto2_ensamble: {
-    titulo: "El armazón está casi listo",
-    texto: 'Verity: "Con todo lo que fabricaste, arma la tablilla completa y colócala en el armazón. Ya casi está listo."',
-    eventoAuto: "acto2_ensamble",
-    botones: [{ texto: "Continuar", siguiente: "acto2_cierre" }]
   },
 
   acto2_cierre: {
@@ -1075,6 +1092,80 @@ function fundirMetal() {
   }, 800);
 }
 
+function mostrarEnsamble() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+
+  contenedor.innerHTML = `
+    <div class="panel-ensamble">
+      <h1>El armazón está casi listo</h1>
+      <p>Con todo lo que fabricaste, arma la tablilla completa y colócala en el armazón. Sigue este diagrama para conectar todo:</p>
+      <div class="diagrama-tablilla">
+        <svg viewBox="0 0 760 380" style="width:100%; max-width:700px; display:block; margin:0 auto;">
+          <line x1="40" y1="30" x2="740" y2="30" stroke="red" stroke-width="2"/>
+          <text x="20" y="34" font-size="14" fill="red" font-family="sans-serif">+</text>
+          <line x1="40" y1="45" x2="740" y2="45" stroke="blue" stroke-width="2"/>
+          <text x="18" y="49" font-size="14" fill="blue" font-family="sans-serif">−</text>
+
+          <text x="150" y="75" font-size="11" fill="#555" font-family="sans-serif">5</text>
+          <text x="222" y="75" font-size="11" fill="#555" font-family="sans-serif">8</text>
+          <text x="294" y="75" font-size="11" fill="#555" font-family="sans-serif">11</text>
+          <text x="318" y="75" font-size="11" fill="#555" font-family="sans-serif">12</text>
+
+          <text x="26" y="94" font-size="12" fill="#333" font-family="sans-serif">a</text>
+          <text x="26" y="119" font-size="12" fill="#333" font-family="sans-serif">b</text>
+          <text x="26" y="144" font-size="12" fill="#333" font-family="sans-serif">c</text>
+          <text x="26" y="169" font-size="12" fill="#333" font-family="sans-serif">d</text>
+          <text x="26" y="194" font-size="12" fill="#333" font-family="sans-serif">e</text>
+
+          <text x="26" y="229" font-size="12" fill="#333" font-family="sans-serif">f</text>
+          <text x="26" y="254" font-size="12" fill="#333" font-family="sans-serif">g</text>
+          <text x="26" y="279" font-size="12" fill="#333" font-family="sans-serif">h</text>
+          <text x="26" y="304" font-size="12" fill="#333" font-family="sans-serif">i</text>
+          <text x="26" y="329" font-size="12" fill="#333" font-family="sans-serif">j</text>
+
+          <line x1="40" y1="345" x2="740" y2="345" stroke="red" stroke-width="2"/>
+          <text x="20" y="349" font-size="14" fill="red" font-family="sans-serif">+</text>
+          <line x1="40" y1="360" x2="740" y2="360" stroke="blue" stroke-width="2"/>
+          <text x="18" y="364" font-size="14" fill="blue" font-family="sans-serif">−</text>
+
+          <line x1="156" y1="30" x2="156" y2="90" stroke="red" stroke-width="3"/>
+
+          <rect x="156" y="82" width="72" height="16" fill="#666" stroke="#222" stroke-width="1.5" rx="3"/>
+          <text x="160" y="72" font-size="11" fill="#333" font-family="sans-serif">BOTÓN</text>
+
+          <line x1="228" y1="90" x2="228" y2="115" stroke="#888" stroke-width="2" stroke-dasharray="4,3"/>
+
+          <rect x="228" y="107" width="72" height="16" fill="#d2b48c" stroke="#222" stroke-width="1.5" rx="3"/>
+          <text x="222" y="132" font-size="10" fill="#333" font-family="sans-serif">RESISTENCIA</text>
+
+          <line x1="300" y1="115" x2="300" y2="140" stroke="#888" stroke-width="2" stroke-dasharray="4,3"/>
+
+          <circle cx="312" cy="140" r="11" fill="#ffeb3b" stroke="#222" stroke-width="1.5"/>
+          <text x="298" y="162" font-size="11" fill="#333" font-family="sans-serif">LED</text>
+
+          <line x1="324" y1="140" x2="324" y2="360" stroke="blue" stroke-width="3"/>
+        </svg>
+        <div class="leyenda-diagrama">
+          <span>🔴 Cable al positivo (+)</span>
+          <span>🔵 Cable al negativo (−)</span>
+          <span>⋮ Misma columna (ya conectado)</span>
+        </div>
+      </div>
+      <p style="font-size:0.9rem; color:#aaa;">Si tienes más de un LED, repite el mismo patrón corriéndote a la derecha.</p>
+      <div class="botones">
+        <button id="btn-termine-conexion" onclick="mostrarPantalla('acto2_cierre')" disabled>Terminé la conexión</button>
+      </div>
+    </div>
+  `;
+
+  enviarEvento('acto2_ensamble');
+  esperarFinDeAudio('acto2_ensamble', () => {
+    const boton = document.getElementById('btn-termine-conexion');
+    if (boton) boton.disabled = false;
+  });
+}
+
 const TOTAL_MIXTO = 10;
 const MADERA_MIXTA_OBJETIVO = 3;
 const PIEDRA_MIXTA_OBJETIVO = 3;
@@ -1262,6 +1353,7 @@ function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto2_crafteo_resistencias') { iniciarCrafteoGenerico('resistencias'); return; }
   if (id === 'acto2_crafteo_boton') { iniciarCrafteoGenerico('boton'); return; }
   if (id === 'acto2_crafteo_leds') { iniciarCrafteoGenerico('leds'); return; }
+  if (id === 'acto2_ensamble') { mostrarEnsamble(); return; }
 
   contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = 'none';
