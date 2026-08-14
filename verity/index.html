@@ -41,6 +41,7 @@
     color: white;
   }
   button:active { background: #555; }
+  .botones button:disabled { opacity: 0.4; cursor: not-allowed; }
 
   @keyframes apareceSuave {
     from { opacity: 0; transform: translateY(8px); }
@@ -114,7 +115,6 @@
 
   .resumen-trivia { font-size: 1.3rem; letter-spacing: 6px; margin-bottom: 14px; }
 
-  /* --- Feedback visual de respuesta (marco + emoji) --- */
   #marco-respuesta {
     position: fixed; inset: 0; border: 16px solid transparent;
     z-index: 90; pointer-events: none; opacity: 0;
@@ -144,7 +144,6 @@
     100% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
   }
 
-  /* --- Clave secreta --- */
   .input-clave {
     padding: 12px; font-size: 1.1rem; border-radius: 8px;
     border: 2px solid #555; background: #1a1a1a; color: #fff;
@@ -153,13 +152,11 @@
   .clave-error { color: #e74c3c; font-size: 0.9rem; margin-top: 10px; display: none; }
   .imagen-objeto { width: 140px; height: 140px; object-fit: contain; margin: 12px 0; }
 
-  /* --- Tala de árboles --- */
   .bosque { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 16px; }
   .arbol { font-size: 2.8rem; cursor: pointer; user-select: none; transition: transform 0.15s; }
   .arbol:active { transform: scale(0.85); }
   .arbol.talado { opacity: 0.4; cursor: default; }
 
-  /* --- Construcción de la barda --- */
   .barda { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
   .barda span {
     font-size: 2.2rem; display: inline-block; opacity: 0;
@@ -192,8 +189,6 @@
 // =========================================================
 const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
 const CLAVE = "bruno2026";
-
-// Cámbiala por la palabra que vayas a escribir en la nota física con luz UV
 const CLAVE_SECRETA_NOCHE1 = "BOSQUE";
 
 // =========================================================
@@ -206,12 +201,13 @@ let nocheActual = null;
 let alCerrarPopupActual = null;
 let cancelarEsperaActual = null;
 let resultadosTrivia = [];
+let procesandoRespuestaTrivia = false;
 
 const EVENTOS_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 const PANTALLA_INICIO_NOCHE = { 1: 'acto1_inicio', 2: 'acto2_inicio', 3: 'acto3_inicio' };
 
-// Tiempo máximo que espera el popup por si el celular no avisa
-// que terminó el audio (celular apagado, sin conexión, etc.)
+// Tiempo máximo que esperamos por si el celular no avisa que
+// terminó el audio (apagado, sin conexión, etc.)
 const ESPERA_MAXIMA_MS = 20000;
 
 async function enviarEvento(nombreEvento) {
@@ -227,8 +223,6 @@ async function enviarEvento(nombreEvento) {
   }
 }
 
-// Sonidos que SOLO suenan en la tablet — no se mandan al Tablero,
-// no los escuchan ni el celular ni la TV.
 function reproducirSonidoLocal(nombreArchivo) {
   const audio = new Audio(`sonidos/${nombreArchivo}`);
   audio.play().catch(err => console.error("No se pudo reproducir sonido local:", err));
@@ -244,17 +238,54 @@ function iniciarMusicaFondo() {
 const contenedor = document.getElementById('contenedor');
 
 // =========================================================
+// Espera genérica de "audio terminado" — la usan el popup,
+// la trivia, y cualquier pantalla que tenga eventoAuto.
+// =========================================================
+function esperarFinDeAudio(eventoEsperado, alTerminar) {
+  let yaTermino = false;
+  const tiempoInicioEspera = new Date().getTime();
+
+  const intervalo = setInterval(async () => {
+    if (yaTermino) return;
+    try {
+      const resp = await fetch(`${TABLERO_URL}?clave=${CLAVE}`);
+      const datos = await resp.json();
+      // El timestamp evita que una señal VIEJA (de otra prueba)
+      // cierre esto antes de tiempo.
+      if (datos.audioTerminado === eventoEsperado && datos.audioTerminadoTs >= tiempoInicioEspera) {
+        terminar();
+      }
+    } catch (err) {
+      console.error("Error esperando fin de audio:", err);
+    }
+  }, 500);
+
+  const limiteSeguridad = setTimeout(terminar, ESPERA_MAXIMA_MS);
+
+  function terminar() {
+    if (yaTermino) return;
+    yaTermino = true;
+    clearInterval(intervalo);
+    clearTimeout(limiteSeguridad);
+    alTerminar();
+  }
+
+  return terminar;
+}
+
+// =========================================================
 // Reiniciar
 // =========================================================
 function reiniciarJuego() {
   if (!confirm('¿Reiniciar toda la aventura desde el principio?')) return;
 
-  enviarEvento('reiniciar_todo'); // avisa a celular y TV para que también reinicien
+  enviarEvento('reiniciar_todo');
 
   estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
   nocheEntrandoPendiente = null;
   nocheSuperadaPendiente = null;
   resultadosTrivia = [];
+  procesandoRespuestaTrivia = false;
 
   document.getElementById('verity-esquina').style.display = 'none';
   document.body.style.backgroundImage = 'none';
@@ -344,50 +375,18 @@ function completarNocheYDesbloquear(nTerminada, nSiguiente) {
 }
 
 // =========================================================
-// Popup reutilizable de Verity (inicio de noche Y grandes
-// revelaciones a mitad de la noche, como la nota UV)
+// Popup reutilizable de Verity
 // =========================================================
 function mostrarPopupVerity(evento, alCerrar) {
   document.getElementById('popup-verity').classList.add('activo');
   enviarEvento(evento);
   alCerrarPopupActual = alCerrar;
-  esperarFinDeAudio(evento);
-}
-
-// Pregunta cada 0.5s si el celular ya avisó que terminó ese audio.
-// Si no avisa en ESPERA_MAXIMA_MS, cierra el popup de todos modos.
-function esperarFinDeAudio(eventoEsperado) {
-  let yaTermino = false;
-
-  const intervalo = setInterval(async () => {
-    if (yaTermino) return;
-    try {
-      const resp = await fetch(`${TABLERO_URL}?clave=${CLAVE}`);
-      const datos = await resp.json();
-      if (datos.audioTerminado === eventoEsperado) {
-        terminarEspera();
-      }
-    } catch (err) {
-      console.error("Error esperando fin de audio:", err);
-    }
-  }, 500);
-
-  const limiteSeguridad = setTimeout(terminarEspera, ESPERA_MAXIMA_MS);
-
-  function terminarEspera() {
-    if (yaTermino) return;
-    yaTermino = true;
-    clearInterval(intervalo);
-    clearTimeout(limiteSeguridad);
-    cancelarEsperaActual = null;
-    cerrarPopupVerity();
-  }
-
-  cancelarEsperaActual = terminarEspera;
+  cancelarEsperaActual = esperarFinDeAudio(evento, cerrarPopupVerity);
 }
 
 function cerrarPopupVerity() {
   document.getElementById('popup-verity').classList.remove('activo');
+  cancelarEsperaActual = null;
   const callback = alCerrarPopupActual;
   alCerrarPopupActual = null;
   if (callback) callback();
@@ -519,7 +518,7 @@ const PANTALLAS = {
 };
 
 // =========================================================
-// TRIVIA (6 preguntas) + feedback visual
+// TRIVIA — ahora espera el audio real antes de avanzar
 // =========================================================
 const PREGUNTAS_TRIVIA = [
   { pregunta: "¿Cuántos días tiene una semana?", opciones: ["5", "7", "10"], correcta: 1 },
@@ -532,6 +531,7 @@ const PREGUNTAS_TRIVIA = [
 
 function iniciarTrivia() {
   resultadosTrivia = [];
+  procesandoRespuestaTrivia = false;
   contenedor.innerHTML = `<div class="panel"><p>Verity está preparando sus preguntas...</p></div>`;
   setTimeout(() => mostrarTrivia(0), 1400);
 }
@@ -581,18 +581,26 @@ function mostrarEfectoRespuesta(esCorrecta) {
 }
 
 function responderTrivia(indicePregunta, indiceOpcion) {
+  if (procesandoRespuestaTrivia) return; // evita doble clic mientras se espera el audio
+  procesandoRespuestaTrivia = true;
+
   const q = PREGUNTAS_TRIVIA[indicePregunta];
   const esCorrecta = indiceOpcion === q.correcta;
   resultadosTrivia[indicePregunta] = esCorrecta ? 'correcta' : 'incorrecta';
 
-  enviarEvento(esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto");
+  const nombreEvento = esCorrecta ? "acto1_trivia_correcto" : "acto1_trivia_incorrecto";
+  enviarEvento(nombreEvento);
   mostrarEfectoRespuesta(esCorrecta);
 
-  setTimeout(() => mostrarTrivia(indicePregunta + 1), 1500);
+  esperarFinDeAudio(nombreEvento, () => {
+    procesandoRespuestaTrivia = false;
+    mostrarTrivia(indicePregunta + 1);
+  });
 }
 
 // =========================================================
-// Clave secreta (de la nota UV)
+// Hacha — ahora manda el evento al APARECER la pantalla, y el
+// botón de agarrar queda deshabilitado hasta que acabe el audio
 // =========================================================
 function mostrarHacha() {
   contenedor.classList.remove('mapa-contenedor');
@@ -603,15 +611,20 @@ function mostrarHacha() {
       <img src="imagenes/hacha.png" alt="Hacha" class="imagen-objeto">
       <p>Con esto podrás talar madera y construir una barda para protegerte.</p>
       <div class="botones">
-        <button onclick="agarrarHacha()">Agarrar el hacha</button>
+        <button id="btn-agarrar-hacha" onclick="agarrarHacha()" disabled>Agarrar el hacha</button>
       </div>
     </div>
   `;
+
+  enviarEvento('acto1_hacha_obtenida');
+  esperarFinDeAudio('acto1_hacha_obtenida', () => {
+    const boton = document.getElementById('btn-agarrar-hacha');
+    if (boton) boton.disabled = false;
+  });
 }
 
 function agarrarHacha() {
   reproducirSonidoLocal('acto1_hacha_obtenida.mp3');
-  enviarEvento('acto1_hacha_obtenida');
   mostrarPantalla('acto1_tala');
 }
 
@@ -641,7 +654,7 @@ function verificarClave() {
 }
 
 // =========================================================
-// Tala de árboles (recolectar madera para la barda)
+// Tala de árboles
 // =========================================================
 const TOTAL_ARBOLES = 8;
 const GOLPES_POR_ARBOL = 3;
@@ -718,7 +731,8 @@ function mostrarBarda() {
 }
 
 // =========================================================
-// Motor de navegación general
+// Motor de navegación general — ahora deshabilita los botones
+// de CUALQUIER pantalla con eventoAuto hasta que el audio acabe
 // =========================================================
 function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto1_trivia') { iniciarTrivia(); return; }
@@ -731,17 +745,26 @@ function mostrarPantalla(id, opciones = {}) {
   document.body.style.backgroundImage = 'none';
 
   const p = PANTALLAS[id];
+  const debeEsperarAudio = !!(p.eventoAuto && !opciones.saltarEventoAuto);
+
   contenedor.innerHTML = `
     <div class="panel">
       <h1>${p.titulo}</h1>
       <p>${p.texto}</p>
       <div class="botones">
-        ${p.botones.map((b, i) => `<button onclick="clicBoton('${id}', ${i})">${b.texto}</button>`).join('')}
+        ${p.botones.map((b, i) => `<button onclick="clicBoton('${id}', ${i})" ${debeEsperarAudio ? 'disabled' : ''}>${b.texto}</button>`).join('')}
       </div>
     </div>
   `;
 
-  if (p.eventoAuto && !opciones.saltarEventoAuto) enviarEvento(p.eventoAuto);
+  if (debeEsperarAudio) {
+    enviarEvento(p.eventoAuto);
+    esperarFinDeAudio(p.eventoAuto, habilitarBotones);
+  }
+}
+
+function habilitarBotones() {
+  document.querySelectorAll('#contenedor .botones button').forEach(b => b.disabled = false);
 }
 
 function clicBoton(idPantallaActual, indiceBoton) {
