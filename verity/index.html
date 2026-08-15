@@ -701,21 +701,7 @@ const PANTALLAS = {
     titulo: "Noche 3 — La Transformación",
     texto: "Es esta noche. Verity ya no puede detenerlo.",
     eventoAuto: "acto3_inicio",
-    botones: [{ texto: "Comenzar", siguiente: "acto3_cuenta" }]
-  },
-
-  acto3_cuenta: {
-    titulo: "Cuenta regresiva",
-    texto: "El tiempo corre. Algo se acerca a la ventana.",
-    eventoAuto: "acto3_cuenta_regresiva_inicio",
-    botones: [{ texto: "Algo está pasando...", siguiente: "acto3_transformacion" }]
-  },
-
-  acto3_transformacion: {
-    titulo: "ALGO QUIERE ENTRAR",
-    texto: "Verity ya no suena como Verity.",
-    eventoAuto: "acto3_transformacion",
-    botones: [{ texto: "Encontrar la espada", siguiente: "acto3_memorama" }]
+    botones: [{ texto: "Comenzar", siguiente: "acto3_memorama" }]
   },
 
   acto3_pila_obtenida: {
@@ -730,26 +716,6 @@ const PANTALLAS = {
     titulo: "El desenlace",
     texto: "La batalla final está ocurriendo... obsérvala en la ventana. Cuando Verity se calme, toca continuar.",
     botones: [{ texto: "Continuar", completaNoche: 3, siguienteNoche: 4, siguiente: "mapa" }]
-  },
-
-  acto3_final_reto: {
-    titulo: "El enfrentamiento",
-    texto: "[PLACEHOLDER: aquí va el minijuego final de la batalla]",
-    botones: [{ texto: "¡Atacar!", evento: "acto3_reto_final_exito", siguiente: "acto3_resolucion" }]
-  },
-
-  acto3_resolucion: {
-    titulo: "¿Bruno? ¿Sigues ahí?",
-    texto: "La ventana vuelve a la calma. La tormenta se aleja.",
-    eventoAuto: "acto3_resolucion",
-    botones: [{ texto: "Continuar", siguiente: "acto3_final" }]
-  },
-
-  acto3_final: {
-    titulo: "Fin del Capítulo 1",
-    texto: "Todo está bien ahora, Bruno. De verdad... ¿o eso creemos? 👀",
-    eventoAuto: "acto3_final",
-    botones: []
   }
 
 };
