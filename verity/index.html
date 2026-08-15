@@ -359,7 +359,7 @@ const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9
 const CLAVE = "bruno2026";
 const CLAVE_SECRETA_NOCHE1 = "BOSQUE";
 
-let estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
+let estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada', 4: 'bloqueada' };
 let nocheEntrandoPendiente = null;
 let nocheSuperadaPendiente = null;
 let nocheActual = null;
@@ -453,7 +453,7 @@ function reiniciarJuego() {
 
   enviarEvento('reiniciar_todo');
 
-  estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada' };
+  estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada', 4: 'bloqueada' };
   nocheEntrandoPendiente = null;
   nocheSuperadaPendiente = null;
   resultadosTrivia = [];
@@ -541,7 +541,7 @@ function mostrarMapa() {
 function dibujarMapa({ nocheNueva = null, nocheSuperada = null } = {}) {
   contenedor.classList.add('mapa-contenedor');
   let html = '';
-  for (let n = 1; n <= 3; n++) {
+  for (let n = 1; n <= 4; n++) {
     const estado = estadoNoches[n];
     if (estado === 'bloqueada') continue;
     const clases = ['noche-nodo'];
@@ -549,10 +549,12 @@ function dibujarMapa({ nocheNueva = null, nocheSuperada = null } = {}) {
     if (n === nocheNueva) clases.push('aparece-nueva');
     const clickable = estado === 'activa';
     const badgeRecien = (estado === 'completada' && n === nocheSuperada) ? ' recien' : '';
+    const emoji = n === 4 ? '🔒' : '🌙☁️';
+    const etiqueta = n === 4 ? 'Top Secret' : `Noche ${n}`;
     html += `
       <div class="${clases.join(' ')}" ${clickable ? `onclick="iniciarNoche(${n})"` : ''}>
-        <span class="emoji">🌙☁️</span>
-        <span class="etiqueta">Noche ${n}</span>
+        <span class="emoji">${emoji}</span>
+        <span class="etiqueta">${etiqueta}</span>
         ${estado === 'completada' ? `<span class="badge-superado${badgeRecien}">✅</span>` : ''}
       </div>
     `;
@@ -582,6 +584,10 @@ function cerrarPopupVerity() {
 }
 
 function iniciarNoche(n) {
+  if (n === 4) {
+    mostrarNoche4();
+    return;
+  }
   nocheActual = n;
   document.getElementById('popup-verity-img').src = `imagenes/verity-noche${n}.png`;
   document.getElementById('verity-esquina').src = `imagenes/verity-noche${n}.png`;
@@ -713,10 +719,17 @@ const PANTALLAS = {
   },
 
   acto3_pila_obtenida: {
-    titulo: "¡Pila encontrada!",
-    texto: "Un zombie la tenía. Ahora tienes todo lo que necesitas.",
+    titulo: "¡Encontraste la pila!",
+    texto: "[PLACEHOLDER: diálogo de Verity sobre la pila — pendiente]",
     imagen: "imagenes/bateria.png",
-    botones: [{ texto: "Continuar", siguiente: "acto3_final_reto" }]
+    eventoAuto: "acto3_pila_obtenida",
+    botones: [{ texto: "Continuar", siguiente: "acto3_esperando" }]
+  },
+
+  acto3_esperando: {
+    titulo: "El desenlace",
+    texto: "La batalla final está ocurriendo... obsérvala en la ventana. Cuando Verity se calme, toca continuar.",
+    botones: [{ texto: "Continuar", completaNoche: 3, siguienteNoche: 4, siguiente: "mapa" }]
   },
 
   acto3_final_reto: {
@@ -1676,6 +1689,7 @@ let intervaloZombies = null;
 let zombiesPosiciones = [];
 
 function iniciarCombateZombies() {
+  enviarEvento('acto3_zombies_inicio');
   contenedor.classList.remove('mapa-contenedor');
   zombiesVida = Array(TOTAL_ZOMBIES).fill(GOLPES_POR_ZOMBIE);
   zombieTienePila = Math.floor(Math.random() * TOTAL_ZOMBIES);
@@ -1814,6 +1828,19 @@ function mostrarEnsamble() {
     const boton = document.getElementById('btn-termine-conexion');
     if (boton) boton.disabled = false;
   });
+}
+
+function mostrarNoche4() {
+  document.body.style.backgroundImage = 'none';
+  contenedor.classList.remove('mapa-contenedor');
+  document.getElementById('verity-esquina').style.display = 'none';
+  enviarEvento('noche4_top_secret');
+  contenedor.innerHTML = `
+    <div class="panel">
+      <img src="imagenes/continuara.png" alt="Continuará" class="imagen-objeto" style="width:220px; height:220px;">
+      <h1>¿Continuará...?</h1>
+    </div>
+  `;
 }
 
 function mostrarPantalla(id, opciones = {}) {
