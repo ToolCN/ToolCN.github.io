@@ -111,7 +111,7 @@
       audio.src = `audios/${evento}.mp3`;
       audio.play().catch(err => console.error("No se pudo reproducir:", err));
 
-      if (evento === 'acto3_pila_obtenida') {
+      if (evento === 'acto3_arma_lista') {
         loopPersecucion.src = 'audios/acto3_bruno_voy_por_ti.mp3';
         loopPersecucion.play().catch(() => {});
       }

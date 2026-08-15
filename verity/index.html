@@ -281,7 +281,7 @@
   }
   .puzzle-cuadricula {
     position: fixed;
-    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    top: 90px; left: 50%; transform: translateX(-50%);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(3, 1fr);
@@ -324,7 +324,7 @@
     border-color: #e74c3c;
   }
   .memorama-cuadricula {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
     display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
     width: 92vw; max-width: 640px; aspect-ratio: 1 / 1; gap: 8px; z-index: 5;
   }
@@ -338,6 +338,27 @@
     transform: translate(-50%, -50%); transition: top 1.5s ease, left 1.5s ease;
   }
   .zombie-combate:active { transform: translate(-50%, -50%) scale(0.85); }
+
+  .imagen-noche4-completa {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: 1;
+  }
+  .titulo-noche4 {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    background: rgba(0,0,0,0.6);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 1.6rem;
+    margin: 0;
+  }
 </style>
 </head>
 <body>
@@ -418,9 +439,10 @@ function barajar(arr) {
   return copia;
 }
 
-function esperarFinDeAudio(eventoEsperado, alTerminar) {
+function esperarFinDeAudio(eventoEsperado, alTerminar, esperaMaximaOverride) {
   let yaTermino = false;
   const tiempoInicioEspera = new Date().getTime();
+  const esperaMaxima = esperaMaximaOverride || ESPERA_MAXIMA_MS;
 
   const intervalo = setInterval(async () => {
     if (yaTermino) return;
@@ -435,7 +457,7 @@ function esperarFinDeAudio(eventoEsperado, alTerminar) {
     }
   }, 500);
 
-  const limiteSeguridad = setTimeout(terminar, ESPERA_MAXIMA_MS);
+  const limiteSeguridad = setTimeout(terminar, esperaMaxima);
 
   function terminar() {
     if (yaTermino) return;
@@ -550,7 +572,7 @@ function dibujarMapa({ nocheNueva = null, nocheSuperada = null } = {}) {
     const clickable = estado === 'activa';
     const badgeRecien = (estado === 'completada' && n === nocheSuperada) ? ' recien' : '';
     const emoji = n === 4 ? '🔒' : '🌙☁️';
-    const etiqueta = n === 4 ? 'Top Secret' : `Noche ${n}`;
+    const etiqueta = `Noche ${n}`;
     html += `
       <div class="${clases.join(' ')}" ${clickable ? `onclick="iniciarNoche(${n})"` : ''}>
         <span class="emoji">${emoji}</span>
@@ -709,13 +731,13 @@ const PANTALLAS = {
     texto: "[PLACEHOLDER: diálogo de Verity sobre la pila — pendiente]",
     imagen: "imagenes/bateria.png",
     eventoAuto: "acto3_pila_obtenida",
-    botones: [{ texto: "Continuar", siguiente: "acto3_esperando" }]
+    botones: [{ texto: "Continuar", siguiente: "acto3_arma_lista" }]
   },
 
-  acto3_esperando: {
-    titulo: "El desenlace",
-    texto: "La batalla final está ocurriendo... obsérvala en la ventana. Cuando Verity se calme, toca continuar.",
-    botones: [{ texto: "Continuar", completaNoche: 3, siguienteNoche: 4, siguiente: "mapa" }]
+  acto3_arma_lista: {
+    titulo: "El arma está lista",
+    texto: "Con la pila conectada, tu arma está casi completa. Cuando la tengas armada de verdad, confirma aquí.",
+    botones: [{ texto: "¡Arma lista!", evento: "acto3_arma_lista", siguiente: "acto3_esperando" }]
   }
 
 };
@@ -1598,6 +1620,7 @@ function voltearCarta(i) {
   const carta = memoramaCartas[i];
   if (carta.encontrada || carta.visible) return;
   carta.visible = true;
+  reproducirSonidoLocal('crafteo_colocar.mp3');
   memoramaVolteadas.push(i);
   dibujarMemorama();
   if (memoramaVolteadas.length === 2) {
@@ -1655,7 +1678,6 @@ let intervaloZombies = null;
 let zombiesPosiciones = [];
 
 function iniciarCombateZombies() {
-  enviarEvento('acto3_zombies_inicio');
   contenedor.classList.remove('mapa-contenedor');
   zombiesVida = Array(TOTAL_ZOMBIES).fill(GOLPES_POR_ZOMBIE);
   zombieTienePila = Math.floor(Math.random() * TOTAL_ZOMBIES);
@@ -1802,14 +1824,28 @@ function mostrarNoche4() {
   document.getElementById('verity-esquina').style.display = 'none';
   enviarEvento('noche4_top_secret');
   contenedor.innerHTML = `
-    <div class="panel">
-      <img src="imagenes/continuara.png" alt="Continuará" class="imagen-objeto" style="width:220px; height:220px;">
-      <h1>¿Continuará...?</h1>
-    </div>
+    <img src="imagenes/continuara.png" alt="Continuará" class="imagen-noche4-completa">
+    <h1 class="titulo-noche4">¿Continuará...?</h1>
   `;
 }
 
+function mostrarEsperandoFinal() {
+  contenedor.classList.remove('mapa-contenedor');
+  document.body.style.backgroundImage = 'none';
+  contenedor.innerHTML = `
+    <div class="panel">
+      <h1>El desenlace</h1>
+      <p>La batalla final está ocurriendo... obsérvala en la ventana.</p>
+    </div>
+  `;
+  esperarFinDeAudio('acto3_final', () => {
+    completarNocheYDesbloquear(3, 4);
+    mostrarMapa();
+  }, 60000);
+}
+
 function mostrarPantalla(id, opciones = {}) {
+  if (id === 'acto3_esperando') { mostrarEsperandoFinal(); return; }
   if (id === 'acto1_trivia') { iniciarTrivia(); return; }
   if (id === 'acto1_hacha') { mostrarHacha(); return; }
   if (id === 'acto1_clave') { mostrarClave(); return; }
