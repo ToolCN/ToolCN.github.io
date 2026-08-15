@@ -10,11 +10,13 @@
     color: #eee;
     font-family: sans-serif;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
     margin: 0;
     text-align: center;
+    gap: 16px;
   }
   button {
     padding: 24px 48px;
@@ -24,9 +26,16 @@
     background: #444;
     color: white;
   }
+  #btn-disparo {
+    position: fixed;
+    bottom: 20px;
+    padding: 14px 24px;
+    font-size: 0.95rem;
+    background: #6a1a1a;
+  }
   #estado {
     position: fixed;
-    bottom: 10px;
+    bottom: 80px;
     font-size: 0.8rem;
     color: #555;
   }
@@ -36,16 +45,20 @@
 
 <button id="btnIniciar">Toca para iniciar (conecta primero la bocina bluetooth)</button>
 <audio id="reproductor"></audio>
+<audio id="loop-persecucion" loop></audio>
 <div id="estado">esperando...</div>
+<button id="btn-disparo" onclick="dispararArma()">🔫 Bruno disparó</button>
 
 <script src="polling.js"></script>
 <script>
   const boton = document.getElementById('btnIniciar');
   const audio = document.getElementById('reproductor');
+  const loopPersecucion = document.getElementById('loop-persecucion');
   const estado = document.getElementById('estado');
 
-  // Recordamos qué evento se está reproduciendo para avisarle al
-  // Tablero exactamente cuándo termina ese audio.
+  // Ajusta esto a la duración real de videos/verity-destruida.mp4
+  const DURACION_VIDEO_DESTRUIDA_MS = 10000;
+
   let ultimoEventoReproducido = null;
 
   audio.addEventListener('ended', () => {
@@ -55,6 +68,13 @@
       body: JSON.stringify({ tipo: 'audio_terminado', evento: ultimoEventoReproducido })
     }).catch(err => console.error("No se pudo avisar fin de audio:", err));
   });
+
+  function dispararArma() {
+    fetch(`${TABLERO_URL}?clave=${CLAVE}`, {
+      method: "POST",
+      body: JSON.stringify({ evento: 'acto3_disparo_arma' })
+    }).catch(err => console.error("No se pudo enviar la señal:", err));
+  }
 
   boton.addEventListener('click', () => {
     audio.src = "audios/silencio.mp3";
@@ -68,7 +88,21 @@
         ultimoEventoReproducido = null;
         audio.src = "audios/silencio.mp3";
         audio.play().catch(() => {});
+        loopPersecucion.pause();
+        loopPersecucion.currentTime = 0;
         estado.textContent = 'reiniciado, esperando eventos...';
+        return;
+      }
+
+      if (evento === 'acto3_disparo_arma') {
+        loopPersecucion.pause();
+        loopPersecucion.currentTime = 0;
+        estado.textContent = 'esperando el final...';
+        setTimeout(() => {
+          ultimoEventoReproducido = 'acto3_final';
+          audio.src = 'audios/acto3_final.mp3';
+          audio.play().catch(err => console.error("No se pudo reproducir:", err));
+        }, DURACION_VIDEO_DESTRUIDA_MS);
         return;
       }
 
@@ -76,6 +110,11 @@
       ultimoEventoReproducido = evento;
       audio.src = `audios/${evento}.mp3`;
       audio.play().catch(err => console.error("No se pudo reproducir:", err));
+
+      if (evento === 'acto3_pila_obtenida') {
+        loopPersecucion.src = 'audios/acto3_bruno_voy_por_ti.mp3';
+        loopPersecucion.play().catch(() => {});
+      }
     });
   });
 </script>
