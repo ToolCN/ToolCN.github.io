@@ -272,6 +272,57 @@
     color: #ccc;
     margin-top: 10px;
   }
+
+  .puzzle-info {
+    position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+    z-index: 20; background: rgba(0,0,0,0.8); color: #fff;
+    padding: 10px 18px; border-radius: 10px; font-size: 0.95rem;
+    max-width: 92vw; text-align: center;
+  }
+  .puzzle-cuadricula {
+    position: fixed;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 92vw;
+    max-width: 900px;
+    aspect-ratio: 4 / 3;
+    gap: 3px;
+    z-index: 5;
+  }
+  .pieza-puzzle {
+    background-image: url('imagenes/rompecabezas.png');
+    background-size: 400% 300%;
+    border: 2px solid #333;
+    cursor: pointer;
+  }
+  .pieza-puzzle.seleccionada {
+    border-color: #e74c3c;
+    border-width: 4px;
+  }
+
+  .selector-herramienta {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    gap: 16px;
+  }
+  .icono-herramienta {
+    width: 64px; height: 64px;
+    object-fit: contain;
+    background: rgba(0,0,0,0.6);
+    border-radius: 12px;
+    padding: 8px;
+    border: 3px solid transparent;
+    cursor: pointer;
+  }
+  .icono-herramienta.seleccionada {
+    border-color: #e74c3c;
+  }
 </style>
 </head>
 <body>
@@ -321,6 +372,16 @@ async function enviarEvento(nombreEvento) {
 
 function reproducirSonidoLocal(nombreArchivo) {
   const audio = new Audio(`sonidos/${nombreArchivo}`);
+  audio.play().catch(err => console.error("No se pudo reproducir sonido local:", err));
+}
+
+// Reproduce varios sonidos EN SECUENCIA (uno espera a que acabe el anterior)
+function reproducirSonidoLocalSecuencial(archivos) {
+  if (archivos.length === 0) return;
+  const audio = new Audio(`sonidos/${archivos[0]}`);
+  audio.addEventListener('ended', () => {
+    reproducirSonidoLocalSecuencial(archivos.slice(1));
+  });
   audio.play().catch(err => console.error("No se pudo reproducir sonido local:", err));
 }
 
@@ -574,27 +635,37 @@ const PANTALLAS = {
     texto: 'Verity: "Ahora necesitamos resistencias, un botón, y luces — vamos a recolectar un poco de todo."',
     imagen: "imagenes/cables.png",
     eventoAuto: "acto2_cables_listos",
-    botones: [{ texto: "Continuar", siguiente: "acto2_recoleccion_mixta" }]
+    botones: [{ texto: "Continuar", siguiente: "acto2_explica_puzzle" }]
+  },
+
+  acto2_explica_puzzle: {
+    titulo: "Arma la imagen",
+    texto: 'Verity: "Antes de seguir, necesito que ordenes esto. Toca dos piezas para intercambiarlas hasta formar la imagen completa."',
+    eventoAuto: "acto2_explica_puzzle",
+    botones: [{ texto: "Comenzar", siguiente: "acto2_puzzle" }]
   },
 
   acto2_resistencias_listas: {
     titulo: "¡Resistencias listas!",
-    texto: "Un paso más cerca de terminar.",
+    texto: 'Verity: "Bien hecho, Bruno. Sigamos."',
     imagen: "imagenes/resistencias.png",
+    eventoAuto: "acto2_bien_hecho",
     botones: [{ texto: "Continuar", siguiente: "acto2_crafteo_boton" }]
   },
 
   acto2_boton_listo: {
     titulo: "¡Botón listo!",
-    texto: "Ya casi tenemos todo.",
+    texto: 'Verity: "Bien hecho, Bruno. Sigamos."',
     imagen: "imagenes/boton.png",
+    eventoAuto: "acto2_bien_hecho",
     botones: [{ texto: "Continuar", siguiente: "acto2_crafteo_leds" }]
   },
 
   acto2_leds_listos: {
     titulo: "¡Luces listas!",
-    texto: "Es la última pieza. Ahora sí, vamos al ensamble final.",
+    texto: 'Verity: "Bien hecho, Bruno. Sigamos."',
     imagen: "imagenes/leds.png",
+    eventoAuto: "acto2_bien_hecho",
     botones: [{ texto: "Continuar", siguiente: "acto2_ensamble" }]
   },
 
@@ -1138,15 +1209,19 @@ function dibujarMineria() {
 function golpearPiedra(indice) {
   if (estadoPiedras[indice] >= GOLPES_POR_PIEDRA) return;
 
-  reproducirSonidoLocal('piedra_golpe.mp3');
   estadoPiedras[indice]++;
+  const completado = estadoPiedras[indice] >= GOLPES_POR_PIEDRA;
+  const tieneMetal = completado && rondaMineria === 2 && piedrasConMetal.includes(indice);
 
-  if (estadoPiedras[indice] >= GOLPES_POR_PIEDRA) {
+  if (tieneMetal) {
+    reproducirSonidoLocalSecuencial(['piedra_golpe.mp3', 'metal_encontrado.mp3']);
+  } else {
+    reproducirSonidoLocal('piedra_golpe.mp3');
+  }
+
+  if (completado) {
     piedraRecolectada++;
-    if (rondaMineria === 2 && piedrasConMetal.includes(indice)) {
-      metalRecolectado++;
-      reproducirSonidoLocal('metal_encontrado.mp3');
-    }
+    if (tieneMetal) metalRecolectado++;
   }
 
   const metaCumplida = rondaMineria === 1
@@ -1205,6 +1280,7 @@ let tiposMixto = [];
 let posicionesMixto = [];
 let maderaMixta = 0;
 let piedraMixta = 0;
+let herramientaSeleccionada = 'hacha';
 
 function iniciarRecoleccionMixta() {
   estadoMixto = Array(TOTAL_MIXTO).fill(0);
@@ -1215,6 +1291,12 @@ function iniciarRecoleccionMixta() {
   }));
   maderaMixta = 0;
   piedraMixta = 0;
+  herramientaSeleccionada = 'hacha';
+  dibujarMixto();
+}
+
+function seleccionarHerramienta(herramienta) {
+  herramientaSeleccionada = herramienta;
   dibujarMixto();
 }
 
@@ -1231,15 +1313,21 @@ function dibujarMixto() {
   contenedor.innerHTML = `
     <div class="panel-tala">
       <h1>Recolecta lo último</h1>
-      <p>Toca árboles y piedras — necesitamos ambos materiales.</p>
+      <p>Elige tu herramienta abajo y toca árboles o piedras — necesitamos ambos materiales.</p>
       <p style="font-size:1rem; margin:0;">🪵 Madera: ${maderaMixta}/${MADERA_MIXTA_OBJETIVO} &nbsp; 🪨 Piedra: ${piedraMixta}/${PIEDRA_MIXTA_OBJETIVO}</p>
     </div>
     <div class="bosque-pantalla">${html}</div>
+    <div class="selector-herramienta">
+      <img src="imagenes/hacha.png" class="icono-herramienta ${herramientaSeleccionada === 'hacha' ? 'seleccionada' : ''}" onclick="seleccionarHerramienta('hacha')">
+      <img src="imagenes/pico.png" class="icono-herramienta ${herramientaSeleccionada === 'pico' ? 'seleccionada' : ''}" onclick="seleccionarHerramienta('pico')">
+    </div>
   `;
 }
 
 function golpearMixto(indice) {
   if (estadoMixto[indice] >= GOLPES_POR_ARBOL) return;
+  if (tiposMixto[indice] === 'madera' && herramientaSeleccionada !== 'hacha') return;
+  if (tiposMixto[indice] === 'piedra' && herramientaSeleccionada !== 'pico') return;
 
   reproducirSonidoLocal(tiposMixto[indice] === 'madera' ? 'tala_golpe.mp3' : 'piedra_golpe.mp3');
   estadoMixto[indice]++;
@@ -1412,6 +1500,68 @@ function tocarCeldaLaberinto(indice) {
   }
 }
 
+const PUZZLE_COLS = 4;
+const PUZZLE_FILAS = 3;
+const PUZZLE_TOTAL = PUZZLE_COLS * PUZZLE_FILAS;
+
+let puzzleOrden = [];
+let puzzleSeleccionada = null;
+
+function iniciarPuzzle() {
+  puzzleOrden = barajar(Array.from({ length: PUZZLE_TOTAL }, (_, i) => i));
+  while (puzzleOrden.every((v, i) => v === i)) {
+    puzzleOrden = barajar(puzzleOrden);
+  }
+  puzzleSeleccionada = null;
+  dibujarPuzzle();
+}
+
+function dibujarPuzzle() {
+  contenedor.classList.remove('mapa-contenedor');
+
+  let piezasHtml = '';
+  for (let pos = 0; pos < PUZZLE_TOTAL; pos++) {
+    const pieza = puzzleOrden[pos];
+    const filaPieza = Math.floor(pieza / PUZZLE_COLS);
+    const colPieza = pieza % PUZZLE_COLS;
+    const posX = (colPieza / (PUZZLE_COLS - 1)) * 100;
+    const posY = (filaPieza / (PUZZLE_FILAS - 1)) * 100;
+    const seleccionada = puzzleSeleccionada === pos;
+
+    piezasHtml += `<div class="pieza-puzzle ${seleccionada ? 'seleccionada' : ''}" style="background-position: ${posX}% ${posY}%;" onclick="tocarPiezaPuzzle(${pos})"></div>`;
+  }
+
+  contenedor.innerHTML = `
+    <div class="puzzle-info">Toca dos piezas para intercambiarlas y arma la imagen completa.</div>
+    <div class="puzzle-cuadricula">${piezasHtml}</div>
+  `;
+}
+
+function tocarPiezaPuzzle(pos) {
+  if (puzzleSeleccionada === null) {
+    puzzleSeleccionada = pos;
+    dibujarPuzzle();
+    return;
+  }
+  if (puzzleSeleccionada === pos) {
+    puzzleSeleccionada = null;
+    dibujarPuzzle();
+    return;
+  }
+
+  const temp = puzzleOrden[puzzleSeleccionada];
+  puzzleOrden[puzzleSeleccionada] = puzzleOrden[pos];
+  puzzleOrden[pos] = temp;
+  puzzleSeleccionada = null;
+  dibujarPuzzle();
+
+  const resuelto = puzzleOrden.every((v, i) => v === i);
+  if (resuelto) {
+    reproducirSonidoLocal('acto1_trivia_correcto.mp3');
+    setTimeout(() => mostrarPantalla('acto2_recoleccion_mixta'), 600);
+  }
+}
+
 function mostrarEnsamble() {
   contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = 'none';
@@ -1502,6 +1652,7 @@ function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto2_mineria2') { iniciarMineria(2); return; }
   if (id === 'acto2_horno') { mostrarHorno(); return; }
   if (id === 'acto2_crafteo_cables') { iniciarCrafteoGenerico('cables'); return; }
+  if (id === 'acto2_puzzle') { iniciarPuzzle(); return; }
   if (id === 'acto2_recoleccion_mixta') { iniciarRecoleccionMixta(); return; }
   if (id === 'acto2_crafteo_resistencias') { iniciarCrafteoGenerico('resistencias'); return; }
   if (id === 'acto2_crafteo_boton') { iniciarCrafteoGenerico('boton'); return; }
