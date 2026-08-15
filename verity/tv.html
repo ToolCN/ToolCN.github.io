@@ -66,6 +66,7 @@
     "acto2_inicio": "videos/fondo-noche1.mp4",
     "acto3_inicio": "videos/fondo-noche1.mp4",
     "acto3_pila_obtenida": "videos/verity-observando.mp4",
+    "acto3_arma_lista": "videos/verity-atacando.mp4",
     "noche4_top_secret": "videos/continuara.mp4"
   };
 
@@ -74,11 +75,6 @@
     "acto1_cierre": "videos/amanecer-noche1.mp4",
     "acto2_cierre": "videos/amanecer-noche1.mp4",
     "acto3_disparo_arma": "videos/verity-destruida.mp4"
-  };
-
-  // Fondo en loop que ADEMÁS enciende una música de fondo aparte
-  const EVENTOS_FONDO_CON_MUSICA = {
-    "acto3_arma_lista": { video: "videos/verity-atacando.mp4", musica: "musica/cancion-atacando.mp3" }
   };
 
   const EVENTOS_EFECTO = {
@@ -130,12 +126,7 @@
         return;
       }
 
-      if (EVENTOS_FONDO_CON_MUSICA[evento]) {
-        const cfg = EVENTOS_FONDO_CON_MUSICA[evento];
-        iniciarNocheFondo(cfg.video);
-        musica.src = cfg.musica;
-        musica.play().catch(() => {});
-      } else if (EVENTOS_INICIO_NOCHE_FONDO[evento]) {
+      if (EVENTOS_INICIO_NOCHE_FONDO[evento]) {
         iniciarNocheFondo(EVENTOS_INICIO_NOCHE_FONDO[evento]);
       } else if (EVENTOS_CIERRE_NOCHE_FONDO[evento]) {
         iniciarAmanecer(EVENTOS_CIERRE_NOCHE_FONDO[evento]);

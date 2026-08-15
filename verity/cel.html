@@ -27,12 +27,15 @@
     color: white;
   }
   #btn-disparo {
+    display: none;
     position: fixed;
     bottom: 20px;
-    padding: 14px 24px;
-    font-size: 0.95rem;
+    padding: 26px 44px;
+    font-size: 1.4rem;
     background: #6a1a1a;
+    border-radius: 16px;
   }
+  #btn-disparo.visible { display: block; }
   #estado {
     position: fixed;
     bottom: 80px;
@@ -46,6 +49,7 @@
 <button id="btnIniciar">Toca para iniciar (conecta primero la bocina bluetooth)</button>
 <audio id="reproductor"></audio>
 <audio id="loop-persecucion" loop></audio>
+<audio id="cancion-fondo" loop></audio>
 <div id="estado">esperando...</div>
 <button id="btn-disparo" onclick="dispararArma()">🔫 Bruno disparó</button>
 
@@ -54,6 +58,7 @@
   const boton = document.getElementById('btnIniciar');
   const audio = document.getElementById('reproductor');
   const loopPersecucion = document.getElementById('loop-persecucion');
+  const cancionFondo = document.getElementById('cancion-fondo');
   const estado = document.getElementById('estado');
 
   // Ajusta esto a la duración real de videos/verity-destruida.mp4
@@ -90,6 +95,9 @@
         audio.play().catch(() => {});
         loopPersecucion.pause();
         loopPersecucion.currentTime = 0;
+        cancionFondo.pause();
+        cancionFondo.currentTime = 0;
+        document.getElementById('btn-disparo').classList.remove('visible');
         estado.textContent = 'reiniciado, esperando eventos...';
         return;
       }
@@ -97,6 +105,9 @@
       if (evento === 'acto3_disparo_arma') {
         loopPersecucion.pause();
         loopPersecucion.currentTime = 0;
+        cancionFondo.pause();
+        cancionFondo.currentTime = 0;
+        document.getElementById('btn-disparo').classList.remove('visible');
         estado.textContent = 'esperando el final...';
         setTimeout(() => {
           ultimoEventoReproducido = 'acto3_final';
@@ -114,6 +125,10 @@
       if (evento === 'acto3_arma_lista') {
         loopPersecucion.src = 'audios/acto3_bruno_voy_por_ti.mp3';
         loopPersecucion.play().catch(() => {});
+        cancionFondo.src = 'audios/cancion-atacando.mp3';
+        cancionFondo.volume = 0.4;
+        cancionFondo.play().catch(() => {});
+        document.getElementById('btn-disparo').classList.add('visible');
       }
     });
   });

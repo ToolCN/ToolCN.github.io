@@ -281,7 +281,7 @@
   }
   .puzzle-cuadricula {
     position: fixed;
-    top: 90px; left: 50%; transform: translateX(-50%);
+    top: 110px; left: 50%; transform: translateX(-50%);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(3, 1fr);
@@ -324,7 +324,7 @@
     border-color: #e74c3c;
   }
   .memorama-cuadricula {
-    position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
+    position: fixed; top: 110px; left: 50%; transform: translateX(-50%);
     display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
     width: 92vw; max-width: 640px; aspect-ratio: 1 / 1; gap: 8px; z-index: 5;
   }
@@ -369,6 +369,7 @@
 <div id="emoji-respuesta"></div>
 <img id="verity-esquina" src="" alt="Verity">
 <audio id="musica-fondo" loop></audio>
+<audio id="musica-final" loop></audio>
 <div id="popup-verity">
   <img id="popup-verity-img" src="" alt="Verity activa">
 </div>
@@ -426,6 +427,19 @@ function iniciarMusicaFondo() {
   musica.src = 'sonidos/musica_fondo.mp3';
   musica.volume = 0.15;
   musica.play().catch(err => console.error("No se pudo iniciar la música:", err));
+}
+
+function iniciarCancionFinal() {
+  const musica = document.getElementById('musica-final');
+  musica.src = 'audios/cancion-atacando.mp3';
+  musica.volume = 0.4;
+  musica.play().catch(err => console.error("No se pudo iniciar la canción:", err));
+}
+
+function detenerCancionFinal() {
+  const musica = document.getElementById('musica-final');
+  musica.pause();
+  musica.currentTime = 0;
 }
 
 const contenedor = document.getElementById('contenedor');
@@ -1620,32 +1634,39 @@ function voltearCarta(i) {
   const carta = memoramaCartas[i];
   if (carta.encontrada || carta.visible) return;
   carta.visible = true;
-  reproducirSonidoLocal('crafteo_colocar.mp3');
   memoramaVolteadas.push(i);
   dibujarMemorama();
-  if (memoramaVolteadas.length === 2) {
-    memoramaBloqueado = true;
-    const [a, b] = memoramaVolteadas;
-    if (memoramaCartas[a].simbolo === memoramaCartas[b].simbolo) {
-      memoramaCartas[a].encontrada = true;
-      memoramaCartas[b].encontrada = true;
-      memoramaEncontradas++;
-      document.getElementById('mem-encontradas').textContent = memoramaEncontradas;
+
+  if (memoramaVolteadas.length < 2) {
+    reproducirSonidoLocal('crafteo_colocar.mp3');
+    return;
+  }
+
+  memoramaBloqueado = true;
+  const [a, b] = memoramaVolteadas;
+  const esPar = memoramaCartas[a].simbolo === memoramaCartas[b].simbolo;
+
+  reproducirSonidoLocalSecuencial(['crafteo_colocar.mp3', esPar ? 'acto1_trivia_correcto.mp3' : 'acto1_trivia_incorrecto.mp3']);
+
+  if (esPar) {
+    memoramaCartas[a].encontrada = true;
+    memoramaCartas[b].encontrada = true;
+    memoramaEncontradas++;
+    document.getElementById('mem-encontradas').textContent = memoramaEncontradas;
+    memoramaVolteadas = [];
+    memoramaBloqueado = false;
+    dibujarMemorama();
+    if (memoramaEncontradas >= 8) {
+      setTimeout(() => mostrarPantalla('acto3_espada'), 700);
+    }
+  } else {
+    setTimeout(() => {
+      memoramaCartas[a].visible = false;
+      memoramaCartas[b].visible = false;
       memoramaVolteadas = [];
       memoramaBloqueado = false;
       dibujarMemorama();
-      if (memoramaEncontradas >= 8) {
-        setTimeout(() => mostrarPantalla('acto3_espada'), 700);
-      }
-    } else {
-      setTimeout(() => {
-        memoramaCartas[a].visible = false;
-        memoramaCartas[b].visible = false;
-        memoramaVolteadas = [];
-        memoramaBloqueado = false;
-        dibujarMemorama();
-      }, 900);
-    }
+    }, 900);
   }
 }
 
@@ -1839,6 +1860,7 @@ function mostrarEsperandoFinal() {
     </div>
   `;
   esperarFinDeAudio('acto3_final', () => {
+    detenerCancionFinal();
     completarNocheYDesbloquear(3, 4);
     mostrarMapa();
   }, 60000);
@@ -1901,6 +1923,7 @@ function habilitarBotones() {
 function clicBoton(idPantallaActual, indiceBoton) {
   const boton = PANTALLAS[idPantallaActual].botones[indiceBoton];
   if (boton.evento) enviarEvento(boton.evento);
+  if (boton.evento === 'acto3_arma_lista') iniciarCancionFinal();
   if (boton.completaNoche) completarNocheYDesbloquear(boton.completaNoche, boton.siguienteNoche);
   irA(boton.siguiente);
 }
