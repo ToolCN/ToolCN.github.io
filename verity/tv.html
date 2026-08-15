@@ -48,6 +48,7 @@
 <video id="fondo-tv" playsinline loop></video>
 <video id="efecto-tv" playsinline></video>
 <video id="cinematica-tv" playsinline></video>
+<audio id="musica-tv" loop></audio>
 
 <script src="polling.js"></script>
 <script>
@@ -55,32 +56,37 @@
   const fondo = document.getElementById('fondo-tv');
   const efecto = document.getElementById('efecto-tv');
   const cinematica = document.getElementById('cinematica-tv');
+  const musica = document.getElementById('musica-tv');
 
   const FONDO_DIA = "videos/dia.mp4";
 
-  // Al iniciar cada noche, el fondo cambia y se queda en loop
+  // Fondos que cambian y se quedan en loop
   const EVENTOS_INICIO_NOCHE_FONDO = {
     "acto1_inicio": "videos/fondo-noche1.mp4",
     "acto2_inicio": "videos/fondo-noche1.mp4",
-    "acto3_inicio": "videos/fondo-noche1.mp4"
+    "acto3_inicio": "videos/fondo-noche1.mp4",
+    "acto3_zombies_inicio": "videos/verity-observando.mp4",
+    "noche4_top_secret": "videos/continuara.mp4"
   };
 
-  // Al cerrar cada noche, se reproduce el amanecer UNA VEZ y
-  // luego se regresa solo al video de día (ver 'ended' más abajo)
+  // Fondos de "una vez" que al terminar regresan solos a dia.mp4
   const EVENTOS_CIERRE_NOCHE_FONDO = {
     "acto1_cierre": "videos/amanecer-noche1.mp4",
-    "acto2_cierre": "videos/amanecer-noche1.mp4"
+    "acto2_cierre": "videos/amanecer-noche1.mp4",
+    "acto3_disparo_arma": "videos/verity-destruida.mp4"
   };
 
-  // Efectos cortos que aparecen ENCIMA del fondo (no lo reemplazan).
-  // El clip debe tener fondo NEGRO — se vuelve transparente solo.
+  // Fondo en loop que ADEMÁS enciende una música de fondo aparte
+  const EVENTOS_FONDO_CON_MUSICA = {
+    "acto3_pila_obtenida": { video: "videos/verity-atacando.mp4", musica: "musica/cancion-atacando.mp3" }
+  };
+
   const EVENTOS_EFECTO = {
     "acto1_trivia_correcto":   "efectos/acto1_trivia_correcto.mp4",
     "acto1_trivia_incorrecto": "efectos/acto1_trivia_incorrecto.mp4",
     "acto1_pista_uv":          "efectos/acto1_pista_uv.mp4"
   };
 
-  // Momentos grandes de una sola vez que sí tapan toda la pantalla
   const EVENTOS_CINEMATICA = [
     "acto3_transformacion",
     "acto3_reto_final_exito"
@@ -96,6 +102,8 @@
     fondo.loop = false;
     fondo.src = ruta;
     fondo.play().catch(() => {});
+    musica.pause();
+    musica.currentTime = 0;
   }
 
   function volverADia() {
@@ -104,7 +112,6 @@
     fondo.play().catch(() => {});
   }
 
-  // Cuando el amanecer (que no está en loop) termina, regresa al día
   fondo.addEventListener('ended', () => {
     if (!fondo.loop) volverADia();
   });
@@ -117,11 +124,18 @@
       if (evento === 'reiniciar_todo') {
         efecto.style.opacity = '0';
         cinematica.style.opacity = '0';
+        musica.pause();
+        musica.currentTime = 0;
         volverADia();
         return;
       }
 
-      if (EVENTOS_INICIO_NOCHE_FONDO[evento]) {
+      if (EVENTOS_FONDO_CON_MUSICA[evento]) {
+        const cfg = EVENTOS_FONDO_CON_MUSICA[evento];
+        iniciarNocheFondo(cfg.video);
+        musica.src = cfg.musica;
+        musica.play().catch(() => {});
+      } else if (EVENTOS_INICIO_NOCHE_FONDO[evento]) {
         iniciarNocheFondo(EVENTOS_INICIO_NOCHE_FONDO[evento]);
       } else if (EVENTOS_CIERRE_NOCHE_FONDO[evento]) {
         iniciarAmanecer(EVENTOS_CIERRE_NOCHE_FONDO[evento]);
