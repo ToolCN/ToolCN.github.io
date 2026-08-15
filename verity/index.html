@@ -923,16 +923,18 @@ function mostrarBarda() {
 }
 
 const MAPA_LABERINTO_2 = [
-  [1,1,1,1,1,1,1,1,1],
-  [1,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,0,1],
-  [1,0,0,0,0,0,0,0,1],
-  [1,0,1,1,1,1,1,1,1],
-  [1,0,0,0,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1,1]
+  [1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,0,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1]
 ];
 const INICIO_LABERINTO2 = { fila: 1, col: 1 };
-const SALIDA_LABERINTO2 = { fila: 5, col: 7 };
+const SALIDA_LABERINTO2 = { fila: 7, col: 9 };
 const CELDA_LABERINTO2_PX = 80;
 
 let posicionBruno = null;
@@ -943,10 +945,9 @@ let laberinto2Activo = false;
 function iniciarLaberinto2() {
   posicionBruno = { fila: INICIO_LABERINTO2.fila, col: INICIO_LABERINTO2.col };
   enemigosLaberinto2 = [
-    { tipo: 'esqueleto', fila: 1, col: 5, intervalo: 500 },
+    { tipo: 'esqueleto', fila: 3, col: 5, intervalo: 500 },
     { tipo: 'esqueleto', fila: 5, col: 3, intervalo: 500 },
-    { tipo: 'zombie', fila: 3, col: 4, intervalo: 1000 },
-    { tipo: 'zombie', fila: 3, col: 2, intervalo: 1000 }
+    { tipo: 'zombie', fila: 3, col: 3, intervalo: 1000 }
   ];
   laberinto2Activo = true;
   dibujarLaberinto2();
