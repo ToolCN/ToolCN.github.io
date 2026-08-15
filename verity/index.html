@@ -244,9 +244,7 @@
   }
   .celda-laberinto2 {
     position: absolute;
-    width: 80px; height: 80px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 2.2rem;
     box-sizing: border-box;
   }
   .celda-laberinto2.muro { background: #2a2a2a; border: 1px solid #1a1a1a; }
@@ -935,7 +933,16 @@ const MAPA_LABERINTO_2 = [
 ];
 const INICIO_LABERINTO2 = { fila: 1, col: 1 };
 const SALIDA_LABERINTO2 = { fila: 7, col: 9 };
-const CELDA_LABERINTO2_PX = 80;
+
+// Calcula el tamaño de celda según la pantalla real, para que el
+// laberinto siempre quepa completo (nunca se corte en los bordes).
+function obtenerTamanoCeldaLaberinto2() {
+  const cols = MAPA_LABERINTO_2[0].length;
+  const filas = MAPA_LABERINTO_2.length;
+  const anchoDisponible = window.innerWidth * 0.94;
+  const altoDisponible = window.innerHeight * 0.78; // deja espacio para el texto de arriba
+  return Math.max(30, Math.floor(Math.min(anchoDisponible / cols, altoDisponible / filas, 80)));
+}
 
 let posicionBruno = null;
 let enemigosLaberinto2 = [];
@@ -1021,6 +1028,7 @@ function dibujarLaberinto2() {
   contenedor.classList.remove('mapa-contenedor');
   const filas = MAPA_LABERINTO_2.length;
   const cols = MAPA_LABERINTO_2[0].length;
+  const tam = obtenerTamanoCeldaLaberinto2();
 
   let celdas = '';
   for (let f = 0; f < filas; f++) {
@@ -1035,13 +1043,13 @@ function dibujarLaberinto2() {
       else if (enemigoAqui) contenido = enemigoAqui.tipo === 'esqueleto' ? '💀' : '🧟';
       else if (esSalida) contenido = '🚪';
 
-      celdas += `<span class="celda-laberinto2 ${esMuro ? 'muro' : 'camino'}" style="top:${f * CELDA_LABERINTO2_PX}px; left:${c * CELDA_LABERINTO2_PX}px;" onclick="${esMuro ? '' : `moverBruno(${f},${c})`}">${contenido}</span>`;
+      celdas += `<span class="celda-laberinto2 ${esMuro ? 'muro' : 'camino'}" style="top:${f * tam}px; left:${c * tam}px; width:${tam}px; height:${tam}px; font-size:${tam * 0.45}px;" onclick="${esMuro ? '' : `moverBruno(${f},${c})`}">${contenido}</span>`;
     }
   }
 
   contenedor.innerHTML = `
     <div class="laberinto2-info">Toca una casilla junto a ti para moverte. ¡Evita a los esqueletos 💀 (rápidos) y zombis 🧟 (lentos)! Llega a la puerta 🚪.</div>
-    <div class="laberinto2-mapa" style="width:${cols * CELDA_LABERINTO2_PX}px; height:${filas * CELDA_LABERINTO2_PX}px;">
+    <div class="laberinto2-mapa" style="width:${cols * tam}px; height:${filas * tam}px;">
       ${celdas}
     </div>
   `;
