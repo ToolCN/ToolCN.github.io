@@ -66,17 +66,17 @@
 <audio id="loop-persecucion" loop></audio>
 <audio id="cancion-fondo" loop></audio>
 <div id="estado">esperando...</div>
-<div id="soundboard" class="soundboard">
-  <button onclick="reproducirFraseGuia('guia_norte.mp3')">🧭 Pista Norte</button>
-  <button onclick="reproducirFraseGuia('guia_sur.mp3')">🧭 Pista Sur</button>
-  <button onclick="reproducirFraseGuia('guia_este.mp3')">🧭 Pista Este</button>
-  <button onclick="reproducirFraseGuia('guia_oeste.mp3')">🧭 Pista Oeste</button>
-  <button onclick="reproducirFraseGuia('guia_arriba.mp3')">🧭 Pista Arriba</button>
-  <button onclick="reproducirFraseGuia('guia_abajo.mp3')">🧭 Pista Abajo</button>
-  <button onclick="reproducirFraseGuia('guia_frio.mp3')">🥶 Frío</button>
-  <button onclick="reproducirFraseGuia('guia_caliente.mp3')">🔥 Caliente</button>
-  <button onclick="reproducirFraseGuia('guia_muy_caliente.mp3')">🔥🔥 Muy caliente</button>
-  <button onclick="reproducirFraseGuia('guia_lo_tienes.mp3')">✅ ¡Lo tienes!</button>
+<div id="soundboard-guia" class="soundboard">
+  <button onclick="reproducirFraseGuia('acto1_guia_llevame')">🎒 Llévame contigo</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_comenzar')">🔍 Comencemos</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_derecho')">⬆️ Sigue derecho</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_izquierda')">⬅️ Izquierda</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_derecha')">➡️ Derecha</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_atras')">↩️ Te pasaste</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_bano')">🚽 Baño</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_gas')">💨 Gas</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_ya_no_bano')">😅 Ya no</button>
+  <button onclick="reproducirFraseGuia('acto1_guia_regresa')">📱 Regresa a la tablet</button>
 </div>
 <button id="btn-disparo" onclick="dispararArma()">🔫 Bruno disparó</button>
 
@@ -102,8 +102,15 @@
   });
 
   function reproducirFraseGuia(nombreArchivo) {
-    audio.src = `audios/${nombreArchivo}`;
-    audio.play().catch(err => console.error("No se pudo reproducir frase:", err));
+    const audioGuia = new Audio(`audios/${nombreArchivo}.mp3`);
+    audioGuia.play().catch(err => console.error("No se pudo reproducir:", err));
+
+    if (nombreArchivo === 'acto1_guia_regresa') {
+      fetch(`${TABLERO_URL}?clave=${CLAVE}`, {
+        method: "POST",
+        body: JSON.stringify({ evento: 'acto1_guia_regresa' })
+      }).catch(err => console.error("No se pudo avisar a la tablet:", err));
+    }
   }
 
   function dispararArma() {
@@ -130,7 +137,7 @@
         cancionFondo.pause();
         cancionFondo.currentTime = 0;
         document.getElementById('btn-disparo').classList.remove('visible');
-        document.getElementById('soundboard').classList.remove('visible');
+        document.getElementById('soundboard-guia').classList.remove('visible');
         estado.textContent = 'reiniciado, esperando eventos...';
         return;
       }
@@ -156,11 +163,11 @@
       audio.play().catch(err => console.error("No se pudo reproducir:", err));
 
       if (evento === 'acto1_guia_inicio') {
-        document.getElementById('soundboard').classList.add('visible');
+        document.getElementById('soundboard-guia').classList.add('visible');
       }
 
       if (evento === 'acto1_hacha_obtenida') {
-        document.getElementById('soundboard').classList.remove('visible');
+        document.getElementById('soundboard-guia').classList.remove('visible');
       }
 
       if (evento === 'acto3_arma_lista') {
