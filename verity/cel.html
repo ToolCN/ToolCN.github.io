@@ -36,6 +36,21 @@
     border-radius: 16px;
   }
   #btn-disparo.visible { display: block; }
+  .soundboard {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    width: 90%;
+    max-width: 360px;
+    margin-bottom: 80px;
+  }
+  .soundboard.visible { display: flex; }
+  .soundboard button {
+    padding: 14px 20px;
+    font-size: 1rem;
+    background: #1a3a5c;
+    border-radius: 10px;
+  }
   #estado {
     position: fixed;
     bottom: 80px;
@@ -51,6 +66,18 @@
 <audio id="loop-persecucion" loop></audio>
 <audio id="cancion-fondo" loop></audio>
 <div id="estado">esperando...</div>
+<div id="soundboard" class="soundboard">
+  <button onclick="reproducirFraseGuia('guia_norte.mp3')">🧭 Pista Norte</button>
+  <button onclick="reproducirFraseGuia('guia_sur.mp3')">🧭 Pista Sur</button>
+  <button onclick="reproducirFraseGuia('guia_este.mp3')">🧭 Pista Este</button>
+  <button onclick="reproducirFraseGuia('guia_oeste.mp3')">🧭 Pista Oeste</button>
+  <button onclick="reproducirFraseGuia('guia_arriba.mp3')">🧭 Pista Arriba</button>
+  <button onclick="reproducirFraseGuia('guia_abajo.mp3')">🧭 Pista Abajo</button>
+  <button onclick="reproducirFraseGuia('guia_frio.mp3')">🥶 Frío</button>
+  <button onclick="reproducirFraseGuia('guia_caliente.mp3')">🔥 Caliente</button>
+  <button onclick="reproducirFraseGuia('guia_muy_caliente.mp3')">🔥🔥 Muy caliente</button>
+  <button onclick="reproducirFraseGuia('guia_lo_tienes.mp3')">✅ ¡Lo tienes!</button>
+</div>
 <button id="btn-disparo" onclick="dispararArma()">🔫 Bruno disparó</button>
 
 <script src="polling.js"></script>
@@ -73,6 +100,11 @@
       body: JSON.stringify({ tipo: 'audio_terminado', evento: ultimoEventoReproducido })
     }).catch(err => console.error("No se pudo avisar fin de audio:", err));
   });
+
+  function reproducirFraseGuia(nombreArchivo) {
+    audio.src = `audios/${nombreArchivo}`;
+    audio.play().catch(err => console.error("No se pudo reproducir frase:", err));
+  }
 
   function dispararArma() {
     fetch(`${TABLERO_URL}?clave=${CLAVE}`, {
@@ -98,6 +130,7 @@
         cancionFondo.pause();
         cancionFondo.currentTime = 0;
         document.getElementById('btn-disparo').classList.remove('visible');
+        document.getElementById('soundboard').classList.remove('visible');
         estado.textContent = 'reiniciado, esperando eventos...';
         return;
       }
@@ -121,6 +154,14 @@
       ultimoEventoReproducido = evento;
       audio.src = `audios/${evento}.mp3`;
       audio.play().catch(err => console.error("No se pudo reproducir:", err));
+
+      if (evento === 'acto1_guia_inicio') {
+        document.getElementById('soundboard').classList.add('visible');
+      }
+
+      if (evento === 'acto1_hacha_obtenida') {
+        document.getElementById('soundboard').classList.remove('visible');
+      }
 
       if (evento === 'acto3_arma_lista') {
         loopPersecucion.src = 'audios/acto3_bruno_voy_por_ti.mp3';

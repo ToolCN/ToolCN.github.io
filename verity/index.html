@@ -379,7 +379,6 @@
 <script>
 const TABLERO_URL = "https://script.google.com/macros/s/AKfycbyQHFmrZeorHSBa-1D9hoDPPosxMsH_vqaCPl6SyUvRXlUpR42xFr07vDZSFIkfIfwS/exec";
 const CLAVE = "bruno2026";
-const CLAVE_SECRETA_NOCHE1 = "BOSQUE";
 
 let estadoNoches = { 1: 'bloqueada', 2: 'bloqueada', 3: 'bloqueada', 4: 'bloqueada' };
 let nocheEntrandoPendiente = null;
@@ -636,7 +635,7 @@ const PANTALLAS = {
   acto1_uv: {
     titulo: "Un secreto que pocos ven",
     texto: 'Verity: "Ya te conozco un poco mejor, Bruno. Ahora yo también quiero enseñarte algo que casi nadie puede ver." Busca la lámpara UV que tienes preparada y recorre la casa con ella — hay una nota escondida que solo se revela con esa luz.',
-    botones: [{ texto: "Ya encontré la nota", siguiente: "acto1_clave" }]
+    botones: [{ texto: "Ya encontré la nota", siguiente: "acto1_guia_verity" }]
   },
 
   acto1_cierre: {
@@ -847,29 +846,19 @@ function agarrarHacha() {
   mostrarPantalla('acto1_tala');
 }
 
-function mostrarClave() {
+function mostrarGuiaVerity() {
   contenedor.classList.remove('mapa-contenedor');
   document.body.style.backgroundImage = 'none';
+  enviarEvento('acto1_guia_inicio');
   contenedor.innerHTML = `
     <div class="panel">
-      <h1>La clave oculta</h1>
-      <p>La nota tiene una palabra extraña escrita con luz UV. Escríbela aquí:</p>
-      <input type="text" id="input-clave" class="input-clave" autocomplete="off">
-      <div class="botones" style="margin-top:16px;">
-        <button onclick="verificarClave()">Confirmar</button>
+      <h1>Verity te guía</h1>
+      <p>Verity está hablándote ahora mismo. Escúchala con atención...</p>
+      <div class="botones" style="margin-top:24px;">
+        <button onclick="mostrarPantalla('acto1_hacha')">¡La encontré!</button>
       </div>
-      <p id="clave-error" class="clave-error">Esa no es la clave... intenta de nuevo.</p>
     </div>
   `;
-}
-
-function verificarClave() {
-  const valor = document.getElementById('input-clave').value.trim().toUpperCase();
-  if (valor === CLAVE_SECRETA_NOCHE1) {
-    mostrarPantalla('acto1_hacha');
-  } else {
-    document.getElementById('clave-error').style.display = 'block';
-  }
 }
 
 const TOTAL_ARBOLES = 8;
@@ -1858,7 +1847,7 @@ function mostrarPantalla(id, opciones = {}) {
   if (id === 'acto3_esperando') { mostrarEsperandoFinal(); return; }
   if (id === 'acto1_trivia') { iniciarTrivia(); return; }
   if (id === 'acto1_hacha') { mostrarHacha(); return; }
-  if (id === 'acto1_clave') { mostrarClave(); return; }
+  if (id === 'acto1_guia_verity') { mostrarGuiaVerity(); return; }
   if (id === 'acto1_tala') { iniciarTala(); return; }
   if (id === 'acto1_crafteo') { iniciarCrafteo(); return; }
   if (id === 'acto1_barda') { mostrarBarda(); return; }
