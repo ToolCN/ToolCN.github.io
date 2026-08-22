@@ -53,6 +53,11 @@
     padding: 8px 12px; font-size: 0.75rem; border-radius: 8px;
     border: 1px solid #444; background: rgba(0,0,0,0.5); color: #ccc;
   }
+  #btn-reiniciar-minijuego {
+    position: fixed; top: 12px; right: 100px; z-index: 60;
+    padding: 8px 12px; font-size: 0.9rem; border-radius: 8px;
+    border: 1px solid #444; background: rgba(0,0,0,0.5); color: #ccc;
+  }
 
   #flash {
     position: fixed; inset: 0; background: #fff; opacity: 0;
@@ -363,6 +368,7 @@
 </head>
 <body>
 
+<button id="btn-reiniciar-minijuego" onclick="reiniciarMinijuego()" title="Reiniciar solo este minijuego">🔄</button>
 <button id="btn-reiniciar" onclick="reiniciarJuego()">↺ Reiniciar</button>
 <div id="flash"></div>
 <div id="marco-respuesta"></div>
@@ -1867,7 +1873,16 @@ function mostrarEsperandoFinal() {
   }, 60000);
 }
 
+let pantallaActualId = null;
+
+function reiniciarMinijuego() {
+  if (!pantallaActualId) return;
+  mostrarPantalla(pantallaActualId);
+}
+
 function mostrarPantalla(id, opciones = {}) {
+  pantallaActualId = id;
+
   if (id === 'acto3_esperando') { mostrarEsperandoFinal(); return; }
   if (id === 'acto1_trivia') { iniciarTrivia(); return; }
   if (id === 'acto1_hacha') { mostrarHacha(); return; }
